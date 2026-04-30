@@ -15,6 +15,9 @@ namespace TaskManagementSystem.Data.Configuration
                 options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
 
             return services;
+
         }
+
     }
+
 }

@@ -5,18 +5,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using TaskManagementSystem.Data.Configuration;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Identity.Configuration;
-using TaskManagementSystem.Data.Configuration;
+
+using TaskManagementSystem.Data.Domain.Enums;
+
 var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddControllers()
 //    .AddApplicationPart(
 //        typeof(TaskManagementSystem.Modules.Identity.Presentation.IdentityController).Assembly);
-//builder.Services.AddOpenApi();    
+builder.Services.AddOpenApi();    
 
 //Adding Modules (Controllers And DI)-------------------------------------------------
 builder.Services.AddControllers();
@@ -47,37 +49,42 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 //--------------------------------------------------------------------------------------
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("frontend",
+        policy => policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<TMSDbContext>();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var context = scope.ServiceProvider.GetRequiredService<TMSDbContext>();
+    if (!context.Users.Any(u => u.Role == Role.Admin))
+    {
+        var admin = new User
+        {
+            Username = "admin",
+            Role = Role.Admin,
+        };
 
-//    if (!context.Users.Any(u => u.Role == "Admin"))
-//    {
-//        var admin = new User
-//        {
-//            Username = "adi",
-//            Role = "Admin"
-//        };
+        admin.PasswordHash = new PasswordHasher<User>()
+            .HashPassword(admin, "admin");
 
-//        admin.PasswordHash = new PasswordHasher<User>()
-//            .HashPassword(admin, "adi");
-
-//        context.Users.Add(admin);
-//        context.SaveChanges();
-//    }
-//}
-
+        context.Users.Add(admin);
+        context.SaveChanges();
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-
+app.UseCors("frontend");
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

@@ -1,13 +1,107 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections.Generic;
 using System.Text;
-using TaskManagementSystem.Modules.Identity.Application.Interfaces;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Persistance;
+using TaskManagementSystem.Modules.Identity.Application.Interfaces;
+using TaskManagementSystem.Modules.Identity.Application.UserDto_s;
 
-namespace TaskManagementSystem.Modules.Identity.Infrastructure.Service
+namespace TaskManagementSystem.Modules.Identity.Infrastructure.Service;
+
+public class AuthService(TMSDbContext context, IConfiguration configuration) : IAuthService
 {
-    public class AuthService(TMSDbContext context, IConfiguration configuration) : IAuthService
+    //Login---------------------------------------------------------------------------------
+    public async Task<(TokenResponseDto? tokenRespone, string? error)> LoginAsync(UserDto request)
     {
+
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+        if (user is null)
+        {
+            return (null, "User not found");
+        }
+        if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, request.Password)
+            == PasswordVerificationResult.Failed)
+        {
+            await context.SaveChangesAsync();
+            return (null, "User not found");
+        }
+        await context.SaveChangesAsync();
+        return (await CreateTokenResponse(user), null);
     }
+    //--------------------------------------------------------------------------------------
+
+    //Create Token---------------------------------------------------------------
+    private string CreateToken(User user)
+    {
+        var claims = new List<Claim> {
+        new Claim(ClaimTypes.Name, user.Username),
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Role, user.Role.ToString()),
+      };
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+        var tokenDescriptor = new JwtSecurityToken(
+            issuer: configuration.GetValue<string>("AppSettings:Issuer"),
+            audience: configuration.GetValue<string>("AppSettings:Audience"),
+            claims: claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: creds
+);
+        return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+    }
+    //Create Token---------------------------------------------------------------
+
+    private string GenerateRefreshToken()
+    {
+        var randomBytes = RandomNumberGenerator.GetBytes(32);
+
+        var token = Convert.ToBase64String(randomBytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+        return token;
+    }
+
+    private async Task<string> GenerateAndSaveRefreshTokenAsync(User user)
+    {
+        var refreshToken = GenerateRefreshToken();
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        await context.SaveChangesAsync();
+        return refreshToken;
+    }
+
+    private async Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
+    {
+        var user = await context.Users.FindAsync(userId);
+        if (user is null || user.RefreshToken != refreshToken
+            || user.RefreshTokenExpiryTime <= DateTime.UtcNow) return null;
+        return user;
+    }
+    public async Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request)
+    {
+        var user = await ValidateRefreshTokenAsync(request.UserId, request.RefreshToken);
+        if (user is null) return null;
+
+        return await CreateTokenResponse(user);
+    }
+
+    //Token Response-------------------------------------------------------------
+    //Used in both Login and Refresh TokenS methods 
+    private async Task<TokenResponseDto> CreateTokenResponse(User user)
+    {
+        return new TokenResponseDto
+        {
+            AccessToken = CreateToken(user),
+            RefreshToken = await GenerateAndSaveRefreshTokenAsync(user)
+        };
+    }
+    //Token Response-------------------------------------------------------------
 }

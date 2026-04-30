@@ -7,7 +7,7 @@ namespace TaskManagementSystem.Data.Domain.Entities;
 
 public class User
 {
-    public int id { get; set; }
+    public int Id { get; set; }
 
     [Required]
     [Length(3, 20)]
@@ -19,7 +19,7 @@ public class User
     [Length(8, 30)]
     public string PasswordHash { get; set; } = string.Empty;
 
-    public Role? Role { get; set; }
+    public Role Role { get; set; }
 
     int? ManagerId;
     User? Manager;
