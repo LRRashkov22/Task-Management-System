@@ -1,0 +1,74 @@
+[
+  {
+    "ContainingType": "TaskManagementSystem.Modules.Identity.Presentation.IdentityController",
+    "Method": "AuthenticatedOnlyEndpoint",
+    "RelativePath": "api/identity",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskManagementSystem.Modules.Identity.Presentation.IdentityController",
+    "Method": "AdminOnlyEndpoint",
+    "RelativePath": "api/identity/Admin-only",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "TaskManagementSystem.Modules.Identity.Presentation.IdentityController",
+    "Method": "login",
+    "RelativePath": "api/identity/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "TaskManagementSystem.Modules.Identity.Application.UserDto_s.UserDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "TaskManagementSystem.Modules.Identity.Application.UserDto_s.TokenResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "TaskManagementSystem.Modules.Identity.Presentation.IdentityController",
+    "Method": "RefreshToken",
+    "RelativePath": "api/identity/refresh-token",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "requestDto",
+        "Type": "TaskManagementSystem.Modules.Identity.Application.UserDto_s.RefreshTokenRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "TaskManagementSystem.Modules.Identity.Application.UserDto_s.TokenResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  }
+]
