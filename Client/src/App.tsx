@@ -68,12 +68,12 @@ function App() {
         <h1 id="login-title">Login</h1>
 
         <form className="login-form" onSubmit={handleLogin}>
-          <label htmlFor="username">Email</label>
+          <label htmlFor="username">Username</label>
           <input
             id="username"
             name="username"
-            type="email"
-            autoComplete="email"
+            type="username"
+            autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
           />
@@ -101,7 +101,7 @@ function App() {
 
         <div className="demo-box">
           <p>Demo accounts:</p>
-          <strong>Admin:</strong> admin@taskman.com / Admin123!
+          <strong>Admin:</strong> admin / admin
           <br />
           <strong>Manager:</strong> manager@taskman.com / Manager123!
           <br />

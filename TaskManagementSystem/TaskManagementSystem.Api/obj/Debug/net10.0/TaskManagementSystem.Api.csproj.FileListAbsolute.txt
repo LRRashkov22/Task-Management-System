@@ -42,7 +42,6 @@ D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\staticwebassets.development.json
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\staticwebassets.build.endpoints.json
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\swae.build.ex.cache
-D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\TaskMana.3C1F93DD.Up2Date
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\TaskManagementSystem.Api.dll
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\refint\TaskManagementSystem.Api.dll
@@ -135,3 +134,4 @@ D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\bin\Debug\net10.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\bin\Debug\net10.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\bin\Debug\net10.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Api\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
