@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="TaskManagementSystem.Data/TaskManagementSystem.Data.csproj" />
+  </Folder>
+  <Project Path="TaskManagementSystem.Api/TaskManagementSystem.Api.csproj" Id="4e95e928-c950-4474-9998-255413549696" />
+  <Project Path="TaskManagementSystem.Data/TaskManagementSystem.Data.csproj" />
+  <Project Path="TaskManagementSystem.Modules.Identity/TaskManagementSystem.Modules.Identity.csproj" />
+</Solution>

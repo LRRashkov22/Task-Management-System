@@ -1,0 +1,13 @@
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\bin\Debug\net10.0\TaskManagementSystem.Modules.Identity.deps.json
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\bin\Debug\net10.0\TaskManagementSystem.Modules.Identity.dll
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\bin\Debug\net10.0\TaskManagementSystem.Modules.Identity.pdb
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.csproj.AssemblyReference.cache
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.GeneratedMSBuildEditorConfig.editorconfig
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.AssemblyInfoInputs.cache
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.AssemblyInfo.cs
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.csproj.CoreCompileInputs.cache
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.sourcelink.json
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.dll
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\refint\TaskManagementSystem.Modules.Identity.dll
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\TaskManagementSystem.Modules.Identity.pdb
+D:\TMS\on-the-job-training-11v-tms\TaskManagementSystem\TaskManagementSystem.Modules.Identity\obj\Debug\net10.0\ref\TaskManagementSystem.Modules.Identity.dll
