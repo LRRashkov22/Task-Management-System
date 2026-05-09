@@ -19,13 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-
     <ProjectReference Include="..\TaskManagementSystem.Data\TaskManagementSystem.Data.csproj" />
     <ProjectReference Include="..\TaskManagementSystem.Modules.Identity\TaskManagementSystem.Modules.Identity.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>

@@ -22,7 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\TaskManagementSystem.Data\TaskManagementSystem.Data.csproj" />
+	  <ProjectReference Include="..\TaskManagementSystem.Data\TaskManagementSystem.Data.csproj"/>
 	</ItemGroup>
 	
 

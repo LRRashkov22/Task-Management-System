@@ -30,6 +30,9 @@ namespace TaskManagementSystem.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
@@ -49,7 +52,18 @@ namespace TaskManagementSystem.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ManagerId");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("TaskManagementSystem.Data.Domain.Entities.User", b =>
+                {
+                    b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "Manager")
+                        .WithMany()
+                        .HasForeignKey("ManagerId");
+
+                    b.Navigation("Manager");
                 });
 #pragma warning restore 612, 618
         }

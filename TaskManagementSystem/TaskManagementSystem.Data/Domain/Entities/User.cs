@@ -20,15 +20,14 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
 
     public Role Role { get; set; }
-
-    int? ManagerId;
-    User? Manager;
+    public int? ManagerId { get; set; }
+    public User? Manager { get; set; }
 
     //ICollection<TaskAssignment> TaskAssignments;
     //ICollection<Comment> Comments;
     //ICollection<Notification> Notifications;
 
-    //DateTime CreatedAt;
+    public DateTime CreatedAt;
 
     public string? RefreshToken { get; set; }
 

@@ -69,6 +69,8 @@ using (var scope = app.Services.CreateScope())
         {
             Username = "admin",
             Role = Role.Admin,
+            ManagerId = null,
+            Manager = null,
         };
 
         admin.PasswordHash = new PasswordHasher<User>()

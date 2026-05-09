@@ -6,8 +6,8 @@ namespace TaskManagementSystem.Data.Domain.Enums
 {
     public enum Role
     {
-        Admin,
-        Manager,
-        User
+        Admin = 1,
+        Manager = 2,
+        Employee = 3
     }
 }

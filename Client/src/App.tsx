@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { loginApi } from './api/authApi'
+import AdminPage from './pages/AdminPage'
 import { getRole, saveAuth } from './utils/auth'
 import './App.css'
 
@@ -10,10 +11,28 @@ type Message = {
 }
 
 function App() {
+  const [path, setPath] = useState(window.location.pathname)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState<Message | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  function navigate(pathname: string) {
+    window.history.pushState(null, '', pathname)
+    setPath(pathname)
+  }
+
+  useEffect(() => {
+    function handlePopState() {
+      setPath(window.location.pathname)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [])
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -45,11 +64,13 @@ function App() {
       saveAuth(await response.json())
       const role = getRole()
 
+      if (role === 'Admin') {
+        navigate('/admin')
+        return
+      }
+
       setMessage({
-        text:
-          role === 'Admin'
-            ? 'Admin login successful.'
-            : 'Login successful.',
+        text: 'Login successful.',
         type: 'success',
       })
     } catch {
@@ -60,6 +81,10 @@ function App() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (path === '/admin' && getRole() === 'Admin') {
+    return <AdminPage />
   }
 
   return (
