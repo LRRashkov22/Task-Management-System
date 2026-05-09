@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-	<!--<ItemGroup>
-		<ProjectReference Include="..\TaskManagementSystem.Modules.Identity\TaskManagementSystem.Modules.Identity.csproj" />
-	</ItemGroup>-->
 	
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.7" />

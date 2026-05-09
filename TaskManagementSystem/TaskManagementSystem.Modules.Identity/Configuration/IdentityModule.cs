@@ -16,6 +16,7 @@ public static class IdentityModule
                 new AssemblyPart(typeof(IdentityController).Assembly));
 
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ICreateUser, CreateUserService>();
 
         return services;
     }
