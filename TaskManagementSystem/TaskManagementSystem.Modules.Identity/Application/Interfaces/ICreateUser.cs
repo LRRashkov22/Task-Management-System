@@ -9,5 +9,4 @@ namespace TaskManagementSystem.Modules.Identity.Application.Interfaces;
 public interface ICreateUser
 {
     Task<(User? user, string? error)> RegisterUser(CreateUserDto request);
-    Task<List<GetUsersDto>> GetAllUsersByRole(Role role);
 }
