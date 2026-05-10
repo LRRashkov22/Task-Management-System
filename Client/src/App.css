@@ -431,6 +431,35 @@
   background: #fff0dc;
 }
 
+.empty-state-card {
+  min-height: 205px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #edf0f4;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 3px 7px rgba(17, 24, 39, 0.1);
+}
+
+.empty-state-content {
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  color: #6b7280;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.empty-state-content svg {
+  width: 54px;
+  height: 54px;
+  fill: none;
+  stroke: #d1d5db;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 @media (max-width: 1180px) {
   .admin-shell {
     grid-template-columns: 270px 1fr;

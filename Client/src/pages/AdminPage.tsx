@@ -13,9 +13,9 @@ type IconName =
   | 'activity'
 
 type NavItem = {
+  id: AdminView
   label: string
   icon: IconName
-  active?: boolean
 }
 
 type StatCard = {
@@ -26,6 +26,7 @@ type StatCard = {
 }
 
 type Language = 'en' | 'bg'
+type AdminView = 'dashboard' | 'notifications' | 'users' | 'managers' | 'logs'
 
 const translations = {
   en: {
@@ -42,6 +43,7 @@ const translations = {
     teams: 'Teams',
     closeMenu: 'Close menu',
     openMenu: 'Open menu',
+    noNotifications: 'No notifications yet',
   },
   bg: {
     brand: 'TaskMan',
@@ -57,6 +59,7 @@ const translations = {
     teams: 'Екипи',
     closeMenu: 'Затвори менюто',
     openMenu: 'Отвори менюто',
+    noNotifications: 'Все още няма известия',
   },
 } satisfies Record<Language, Record<string, string>>
 
@@ -163,14 +166,15 @@ function Icon({ name }: { name: IconName }) {
 function AdminPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [language, setLanguage] = useState<Language>('en')
+  const [activeView, setActiveView] = useState<AdminView>('dashboard')
   const t = translations[language]
 
   const navItems: NavItem[] = [
-    { label: t.dashboard, icon: 'dashboard', active: true },
-    { label: t.notifications, icon: 'bell' },
-    { label: t.users, icon: 'users' },
-    { label: t.managers, icon: 'manager' },
-    { label: t.logs, icon: 'logs' },
+    { id: 'dashboard', label: t.dashboard, icon: 'dashboard' },
+    { id: 'notifications', label: t.notifications, icon: 'bell' },
+    { id: 'users', label: t.users, icon: 'users' },
+    { id: 'managers', label: t.managers, icon: 'manager' },
+    { id: 'logs', label: t.logs, icon: 'logs' },
   ]
 
   const statCards: StatCard[] = [
@@ -179,6 +183,9 @@ function AdminPage() {
     { label: t.tasks, value: '0', icon: 'activity', tone: 'green' },
     { label: t.teams, value: '0', icon: 'users', tone: 'orange' },
   ]
+
+  const pageTitle =
+    navItems.find((item) => item.id === activeView)?.label ?? t.dashboard
 
   return (
     <main className={`admin-shell ${isSidebarOpen ? '' : 'sidebar-closed'}`}>
@@ -192,9 +199,10 @@ function AdminPage() {
           <nav className="admin-nav">
             {navItems.map((item) => (
               <button
-                className={item.active ? 'active' : ''}
+                className={activeView === item.id ? 'active' : ''}
                 type="button"
                 key={item.label}
+                onClick={() => setActiveView(item.id)}
               >
                 <Icon name={item.icon} />
                 <span>{item.label}</span>
@@ -210,7 +218,7 @@ function AdminPage() {
           </div>
       </aside>
 
-      <section className="admin-main" aria-labelledby="admin-dashboard-title">
+      <section className="admin-main" aria-labelledby="admin-page-title">
         <header className="admin-topbar">
           <button
             className="admin-icon-button"
@@ -233,21 +241,30 @@ function AdminPage() {
         </header>
 
         <div className="admin-content">
-          <h2 id="admin-dashboard-title">{t.dashboard}</h2>
+          <h2 id="admin-page-title">{pageTitle}</h2>
 
-          <div className="stats-grid">
-            {statCards.map((card) => (
-              <article className="stat-card" key={card.label}>
-                <div>
-                  <p>{card.label}</p>
-                  <strong>{card.value}</strong>
-                </div>
-                <span className={`stat-icon ${card.tone}`}>
-                  <Icon name={card.icon} />
-                </span>
-              </article>
-            ))}
-          </div>
+          {activeView === 'notifications' ? (
+            <section className="empty-state-card" aria-label={t.notifications}>
+              <div className="empty-state-content">
+                <Icon name="bell" />
+                <p>{t.noNotifications}</p>
+              </div>
+            </section>
+          ) : (
+            <div className="stats-grid">
+              {statCards.map((card) => (
+                <article className="stat-card" key={card.label}>
+                  <div>
+                    <p>{card.label}</p>
+                    <strong>{card.value}</strong>
+                  </div>
+                  <span className={`stat-icon ${card.tone}`}>
+                    <Icon name={card.icon} />
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </main>
