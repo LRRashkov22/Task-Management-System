@@ -23,9 +23,9 @@ public class User
     public int? ManagerId { get; set; }
     public User? Manager { get; set; }
 
-    //ICollection<TaskAssignment> TaskAssignments;
-    //ICollection<Comment> Comments;
-    //ICollection<Notification> Notifications;
+    ICollection<TaskAssignment> TaskAssignments;
+    ICollection<Comment> Comments;
+    ICollection<Notification> Notifications;
 
     public DateTime CreatedAt;
 
