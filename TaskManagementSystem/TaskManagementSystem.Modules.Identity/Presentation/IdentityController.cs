@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Modules.Identity.Application.Interfaces;
 using TaskManagementSystem.Modules.Identity.Application.UserDto_s;
@@ -13,7 +14,7 @@ namespace TaskManagementSystem.Modules.Identity.Presentation;
 
 [ApiController]
 [Route("api/identity")]
-public class IdentityController(IAuthService AuthService, ICreateUser createUser) : ControllerBase
+public class IdentityController(IAuthService AuthService, ICreateUser createUser, IManageUsers manageUsers) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<ActionResult<TokenResponseDto>> login(UserDto request)
@@ -50,7 +51,7 @@ public class IdentityController(IAuthService AuthService, ICreateUser createUser
     [HttpGet("managers")]
     public async Task<ActionResult<List<UserDto>>> GetAllManagers()
     {
-        var result = await createUser.GetAllUsersByRole(Role.Manager);
+        var result = await manageUsers.GetAllUsersByRole(Role.Manager);
         return Ok(result);
     }
 
@@ -58,9 +59,42 @@ public class IdentityController(IAuthService AuthService, ICreateUser createUser
     [HttpGet("employee")]
     public async Task<ActionResult<List<UserDto>>> GetAllEmployees()
     {
-        var result = await createUser.GetAllUsersByRole(Role.Employee);
+        var result = await manageUsers.GetAllUsersByRole(Role.Employee);
         return Ok(result);
     }
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult<TokenResponseDto>> ChangePassword(ChangePasswordDto request)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (result, error) = await AuthService.ChangePassword(request, userId);
+        if (error != null) return BadRequest(error);
+        return Ok(result);
+    }
+    [Authorize(Roles ="Admin")]
+    [HttpPatch("edit-user")]
+    public async Task<ActionResult<EditUserDto>> EditUser(EditUserDto request)
+    {
+       // var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var result = await manageUsers.EditUser(request);
+        if (result == null) return BadRequest("User not found or invalid input");
+        return Ok(result);
+    }
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("delete-user")]
+    public async Task<ActionResult> DeleteUser(GetUsersDto request)
+    {
+        var result = await manageUsers.DeleteUser(request);
+        if (!result) return BadRequest("User not found");
+        return Ok();
+    }
 
-
+    [Authorize(Roles = "Admin")]
+    [HttpPost("logout")]
+    public async Task<ActionResult> Logout()
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        await manageUsers.Logout(userId);
+        return Ok();
+    }
 }

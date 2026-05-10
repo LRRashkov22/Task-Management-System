@@ -17,6 +17,7 @@ public static class IdentityModule
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICreateUser, CreateUserService>();
+            services.AddScoped<IManageUsers, ManageUsersService>();
 
         return services;
     }

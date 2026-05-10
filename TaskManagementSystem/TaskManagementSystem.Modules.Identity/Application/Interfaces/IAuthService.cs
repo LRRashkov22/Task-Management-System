@@ -9,4 +9,5 @@ public interface IAuthService
 {
     Task<(TokenResponseDto? tokenRespone, string? error)> LoginAsync(UserDto request);
     Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request);
+    Task<(TokenResponseDto? tokenRespone, string? error)> ChangePassword(ChangePasswordDto request, int userid);
 }

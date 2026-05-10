@@ -37,6 +37,32 @@ public class AuthService(TMSDbContext context, IConfiguration configuration) : I
     }
     //--------------------------------------------------------------------------------------
 
+    //Change Password----------------------------------------------------------------------------------
+    public async Task<(TokenResponseDto? tokenRespone, string? error)> ChangePassword(ChangePasswordDto request, int userid)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userid);
+        if (user is null) return (null, "User not found");
+        if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
+            return (null, "Current password is incorrect");
+
+        if (string.IsNullOrEmpty(request.NewPassword) ||
+           request.NewPassword.Length < 8 ||
+           request.NewPassword.Length > 30 ||
+           !request.NewPassword.Any(char.IsUpper) ||
+           !request.NewPassword.Any(char.IsLower) ||
+           !request.NewPassword.Any(char.IsDigit) ||
+           !request.NewPassword.Any(ch => !char.IsLetterOrDigit(ch)))
+            return (null, "Password:" +
+                 "\n must be at least 8 characters long" +
+                 "\n must be maximum 30 characters long" +
+                 "\n must contain at least one uppercase, lowercase letter, digit and special character");
+        user.PasswordHash = new PasswordHasher<User>().HashPassword(user, request.NewPassword);
+        await context.SaveChangesAsync();
+        return (await CreateTokenResponse(user), null);
+
+    }
+    //---------------------------------------------------------------------------------------
+
     //Create Token---------------------------------------------------------------
     private string CreateToken(User user)
     {
