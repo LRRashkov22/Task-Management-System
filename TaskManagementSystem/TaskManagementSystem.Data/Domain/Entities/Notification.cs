@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 using TaskManagementSystem.Data.Domain.Enums;
 
 namespace TaskManagementSystem.Data.Domain.Entities;
@@ -11,11 +9,13 @@ public class Notification
 
     public int UserId { get; set; }
 
-    public User User { get; set; }
+    public User User { get; set; } = null!;
 
-    public NotificationType NotificationType { get; set; }
+    public string Message { get; set; } = string.Empty;
+
+    public NotificationType Type { get; set; }
 
     public bool IsRead { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

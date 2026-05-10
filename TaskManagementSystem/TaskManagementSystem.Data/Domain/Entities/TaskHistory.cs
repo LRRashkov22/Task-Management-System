@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 
 namespace TaskManagementSystem.Data.Domain.Entities;
 
@@ -10,17 +8,17 @@ public class TaskHistory
 
     public int TaskId { get; set; }
 
-    public TaskItem Item { get; set; }  
+    public TaskItem TaskItem { get; set; } = null!;
 
-    public string Action { get; set; }
+    public string Action { get; set; } = string.Empty;
 
-    public string OldValue { get; set; }
+    public string? OldValue { get; set; }
 
-    public string NewValue { get; set; }
+    public string? NewValue { get; set; }
 
     public int ChangedById { get; set; }
 
-    public User User { get; set; }
+    public User ChangedBy { get; set; } = null!;
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

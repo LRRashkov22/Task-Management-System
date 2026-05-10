@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace TaskManagementSystem.Data.Domain.Entities;
 
 public class CommentMention
@@ -10,9 +6,9 @@ public class CommentMention
 
     public int CommentId { get; set; }
 
-    public Comment Comment { get; set; }
+    public Comment Comment { get; set; } = null!;
 
     public int MentionedUserId { get; set; }
 
-    public User User { get; set; }
+    public User MentionedUser { get; set; } = null!;
 }
