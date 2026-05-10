@@ -201,6 +201,7 @@ function AdminPage() {
   const [language, setLanguage] = useState<Language>('en')
   const [activeView, setActiveView] = useState<AdminView>('dashboard')
   const [createModal, setCreateModal] = useState<CreateModal>(null)
+  const [logFilter, setLogFilter] = useState('All')
   const t = translations[language]
 
   const navItems: NavItem[] = [
@@ -331,6 +332,31 @@ function AdminPage() {
                   <span role="columnheader">{t.edit.toUpperCase()}</span>
                 </div>
               </div>
+            </section>
+          ) : activeView === 'logs' ? (
+            <section className="logs-panel" aria-label={t.logs}>
+              <div className="admin-table-card logs-table-card">
+                <div className="admin-table admin-table-logs" role="table">
+                  <div className="admin-table-row admin-table-head" role="row">
+                    <span role="columnheader">ACTION</span>
+                    <span role="columnheader">USER</span>
+                    <span role="columnheader">TASK ID</span>
+                    <span role="columnheader">TIME</span>
+                  </div>
+                </div>
+              </div>
+
+              <select
+                className="logs-filter"
+                aria-label="Log filter"
+                value={logFilter}
+                onChange={(event) => setLogFilter(event.target.value)}
+              >
+                <option>All</option>
+                <option>Created</option>
+                <option>Status Changed</option>
+                <option>Assigned</option>
+              </select>
             </section>
           ) : (
             <div className="stats-grid">
