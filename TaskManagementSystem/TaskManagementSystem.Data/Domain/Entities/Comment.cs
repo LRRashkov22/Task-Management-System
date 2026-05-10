@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TaskManagementSystem.Data.Domain.Entities;
 
@@ -8,15 +7,17 @@ public class Comment
 {
     public int Id { get; set; }
 
-    public required string Content { get; set; }
+    public string Content { get; set; } = string.Empty;
 
     public int UserId { get; set; }
 
-    public required User User { get; set; }
+    public User User { get; set; } = null!;
 
     public int TaskId { get; set; }
 
-    public required TaskItem TaskItem { get; set; }
+    public TaskItem TaskItem { get; set; } = null!;
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<CommentMention> Mentions { get; set; } = new HashSet<CommentMention>();
 }
