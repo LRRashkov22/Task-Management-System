@@ -11,6 +11,7 @@ type IconName =
   | 'menu'
   | 'globe'
   | 'activity'
+  | 'search'
 
 type NavItem = {
   id: AdminView
@@ -27,6 +28,7 @@ type StatCard = {
 
 type Language = 'en' | 'bg'
 type AdminView = 'dashboard' | 'notifications' | 'users' | 'managers' | 'logs'
+type CreateModal = 'user' | 'manager' | null
 
 const translations = {
   en: {
@@ -44,6 +46,17 @@ const translations = {
     closeMenu: 'Close menu',
     openMenu: 'Open menu',
     noNotifications: 'No notifications yet',
+    createUser: 'Create User',
+    createManager: 'Create Manager',
+    password: 'Password',
+    selectManager: 'Select manager',
+    cancel: 'Cancel',
+    save: 'Save',
+    search: 'Search',
+    name: 'Name',
+    email: 'Email',
+    manager: 'Manager',
+    edit: 'Edit',
   },
   bg: {
     brand: 'TaskMan',
@@ -60,6 +73,17 @@ const translations = {
     closeMenu: 'Затвори менюто',
     openMenu: 'Отвори менюто',
     noNotifications: 'Все още няма известия',
+    createUser: 'Създай потребител',
+    createManager: 'Създай мениджър',
+    password: 'Парола',
+    selectManager: 'Избери мениджър',
+    cancel: 'Отказ',
+    save: 'Запази',
+    search: 'Търсене',
+    name: 'Име',
+    email: 'Имейл',
+    manager: 'Мениджър',
+    edit: 'Редакция',
   },
 } satisfies Record<Language, Record<string, string>>
 
@@ -156,6 +180,15 @@ function Icon({ name }: { name: IconName }) {
     )
   }
 
+  if (name === 'search') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-4-4" />
+      </svg>
+    )
+  }
+
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M3 12h4l3-7 4 14 3-7h4" />
@@ -167,6 +200,7 @@ function AdminPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [language, setLanguage] = useState<Language>('en')
   const [activeView, setActiveView] = useState<AdminView>('dashboard')
+  const [createModal, setCreateModal] = useState<CreateModal>(null)
   const t = translations[language]
 
   const navItems: NavItem[] = [
@@ -241,13 +275,61 @@ function AdminPage() {
         </header>
 
         <div className="admin-content">
-          <h2 id="admin-page-title">{pageTitle}</h2>
+          <div className="admin-page-heading">
+            <h2 id="admin-page-title">{pageTitle}</h2>
+            {activeView === 'users' ? (
+              <button
+                className="admin-create-button"
+                type="button"
+                onClick={() => setCreateModal('user')}
+              >
+                <span aria-hidden="true">+</span>
+                {t.createUser}
+              </button>
+            ) : null}
+            {activeView === 'managers' ? (
+              <button
+                className="admin-create-button"
+                type="button"
+                onClick={() => setCreateModal('manager')}
+              >
+                <span aria-hidden="true">+</span>
+                {t.createManager}
+              </button>
+            ) : null}
+          </div>
 
           {activeView === 'notifications' ? (
             <section className="empty-state-card" aria-label={t.notifications}>
               <div className="empty-state-content">
                 <Icon name="bell" />
                 <p>{t.noNotifications}</p>
+              </div>
+            </section>
+          ) : activeView === 'users' ? (
+            <section className="admin-table-card" aria-label={t.users}>
+              <div className="admin-search">
+                <Icon name="search" />
+                <input placeholder={t.search} aria-label={t.search} />
+              </div>
+              <div className="admin-table admin-table-users" role="table">
+                <div className="admin-table-row admin-table-head" role="row">
+                  <span role="columnheader">{t.name.toUpperCase()}</span>
+                  <span role="columnheader">{t.email.toUpperCase()}</span>
+                  <span role="columnheader">{t.manager.toUpperCase()}</span>
+                  <span role="columnheader">{t.edit.toUpperCase()}</span>
+                </div>
+              </div>
+            </section>
+          ) : activeView === 'managers' ? (
+            <section className="admin-table-card manager-table-card" aria-label={t.managers}>
+              <div className="admin-table admin-table-managers" role="table">
+                <div className="admin-table-row admin-table-head" role="row">
+                  <span role="columnheader">{t.name.toUpperCase()}</span>
+                  <span role="columnheader">{t.email.toUpperCase()}</span>
+                  <span role="columnheader">{t.teams.toUpperCase()}</span>
+                  <span role="columnheader">{t.edit.toUpperCase()}</span>
+                </div>
               </div>
             </section>
           ) : (
@@ -267,6 +349,60 @@ function AdminPage() {
           )}
         </div>
       </section>
+
+      {createModal ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <form
+            className="admin-modal"
+            aria-label={createModal === 'user' ? t.createUser : t.createManager}
+            onSubmit={(event) => {
+              event.preventDefault()
+              setCreateModal(null)
+            }}
+          >
+            <h2>{createModal === 'user' ? t.createUser : t.createManager}</h2>
+
+            <label>
+              <span>{t.name}</span>
+              <input />
+            </label>
+
+            <label>
+              <span>{t.email}</span>
+              <input type="email" />
+            </label>
+
+            <label>
+              <span>{t.password}</span>
+              <input type="password" />
+            </label>
+
+            {createModal === 'user' ? (
+              <label>
+                <span>{t.manager}</span>
+                <select defaultValue="">
+                  <option value="" disabled>
+                    {t.selectManager}
+                  </option>
+                </select>
+              </label>
+            ) : null}
+
+            <div className="admin-modal-actions">
+              <button
+                className="admin-modal-cancel"
+                type="button"
+                onClick={() => setCreateModal(null)}
+              >
+                {t.cancel}
+              </button>
+              <button className="admin-modal-save" type="submit">
+                {t.save}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </main>
   )
 }
