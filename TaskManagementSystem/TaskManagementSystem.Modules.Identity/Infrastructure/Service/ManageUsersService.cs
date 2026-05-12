@@ -9,8 +9,13 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Immutable;
 namespace TaskManagementSystem.Modules.Identity.Infrastructure.Service;
 
-public class ManageUsersService(TMSDbContext context) : IManageUsers
+public class ManageUsersService : IManageUsers
 {
+    private readonly TaskManagementDbContext context;
+    public ManageUsersService(TaskManagementDbContext context)
+    {
+        this.context = context;
+    }
     public async Task<List<GetUsersDto>> GetAllUsersByRole(Role role)
     {
         return await context.Users.Where(m => m.Role == role).Select(m => new GetUsersDto { Id = m.Id, Username = m.Username }).ToListAsync();

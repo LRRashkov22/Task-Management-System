@@ -1,28 +1,27 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using System;
 using System.Text;
 using TaskManagementSystem.Data.Configuration;
 using TaskManagementSystem.Data.Domain.Entities;
+using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Identity.Configuration;
-
-using TaskManagementSystem.Data.Domain.Enums;
+using TaskManagementSystem.Modules.Teams.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddControllers()
 //    .AddApplicationPart(
 //        typeof(TaskManagementSystem.Modules.Identity.Presentation.IdentityController).Assembly);
-builder.Services.AddOpenApi();    
+builder.Services.AddOpenApi();
 
 //Adding Modules (Controllers And DI)-------------------------------------------------
 builder.Services.AddControllers();
 builder.Services.AddIdentityModule();
+builder.Services.AddTeamsModule();
 //------------------------------------------------------------------------------------
 
 builder.Services.AddData(builder.Configuration);
@@ -61,7 +60,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<TMSDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<TaskManagementDbContext>();
 
     if (!context.Users.Any(u => u.Role == Role.Admin))
     {

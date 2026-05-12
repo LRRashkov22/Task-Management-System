@@ -14,8 +14,18 @@ namespace TaskManagementSystem.Modules.Identity.Presentation;
 
 [ApiController]
 [Route("api/identity")]
-public class IdentityController(IAuthService AuthService, ICreateUser createUser, IManageUsers manageUsers) : ControllerBase
+public class IdentityController : ControllerBase
 {
+    private readonly IAuthService AuthService;
+    private readonly ICreateUser createUser;
+    private readonly IManageUsers manageUsers;
+    public IdentityController(IAuthService AuthService, ICreateUser createUser, IManageUsers manageUsers)
+    {
+        this.AuthService = AuthService;
+        this.createUser = createUser;
+        this.manageUsers = manageUsers;
+    }
+
     [HttpPost("login")]
     public async Task<ActionResult<TokenResponseDto>> login(UserDto request)
     {
