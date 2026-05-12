@@ -15,8 +15,15 @@ using TaskManagementSystem.Modules.Identity.Application.UserDto_s;
 
 namespace TaskManagementSystem.Modules.Identity.Infrastructure.Service;
 
-public class AuthService(TMSDbContext context, IConfiguration configuration) : IAuthService
+public class AuthService : IAuthService
 {
+    private readonly TaskManagementDbContext context;
+    private readonly IConfiguration configuration;
+    public AuthService(TaskManagementDbContext context, IConfiguration configuration)
+    {
+        this.context = context;
+        this.configuration = configuration;
+    }
     //Login---------------------------------------------------------------------------------
     public async Task<(TokenResponseDto? tokenRespone, string? error)> LoginAsync(UserDto request)
     {
