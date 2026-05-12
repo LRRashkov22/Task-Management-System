@@ -2,4 +2,5 @@
   <Project Path="TaskManagementSystem.Api/TaskManagementSystem.Api.csproj" Id="4e95e928-c950-4474-9998-255413549696" />
   <Project Path="TaskManagementSystem.Data/TaskManagementSystem.Data.csproj" />
   <Project Path="TaskManagementSystem.Modules.Identity/TaskManagementSystem.Modules.Identity.csproj" />
+  <Project Path="TaskManagementSystem.Modules.Teams/TaskManagementSystem.Modules.Teams.csproj" />
 </Solution>
