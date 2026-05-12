@@ -12,9 +12,13 @@ using TaskManagementSystem.Data.Domain.Enums;
 
 namespace TaskManagementSystem.Modules.Identity.Infrastructure.Service;
 
-public class CreateUserService(TMSDbContext context) : ICreateUser
+public class CreateUserService : ICreateUser
 {
-
+    private readonly TaskManagementDbContext context;
+    public CreateUserService(TaskManagementDbContext context)
+   {
+        this.context = context;
+    }
     public async Task<(User? user, string? error)> RegisterUser(CreateUserDto request)
     {
         var (_, nameError) = await HelperCheckNameFunc(request);

@@ -11,7 +11,7 @@ namespace TaskManagementSystem.Data.Configuration
     {
         public static IServiceCollection AddData(this IServiceCollection services, IConfiguration config)
         {
-            services.AddDbContext<TMSDbContext>(options =>
+            services.AddDbContext<TaskManagementDbContext>(options =>
                 options.UseNpgsql(config.GetConnectionString("DefaultConnection")));
 
             return services;

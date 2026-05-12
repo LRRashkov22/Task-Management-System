@@ -14,5 +14,5 @@ public class Team
 
     public ICollection<TeamMembership> Memberships { get; set; } = new HashSet<TeamMembership>();
 
-    public ICollection<TaskItem> Tasks { get; set; } = new HashSet<TaskItem>();
+    public ICollection<TaskItem>? Tasks { get; set; } = new HashSet<TaskItem>();
 }

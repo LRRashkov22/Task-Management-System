@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementSystem.Data.Domain.Entities;
 
-namespace TaskManagementSystem.Data;
+namespace TaskManagementSystem.Data.Persistance;
 
 public class TaskManagementDbContext : DbContext
 {
@@ -48,7 +48,7 @@ public class TaskManagementDbContext : DbContext
                 .HasMaxLength(30);
 
             entity.Property(user => user.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.Property(user => user.RefreshToken)
                 .HasMaxLength(512);
@@ -88,11 +88,11 @@ public class TaskManagementDbContext : DbContext
                 membership.UserId
             });
 
-            entity.Property(membership => membership.JoinedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+            //entity.Property(membership => membership.JoinedAt)
+            //    .HasDefaultValueSql("GETUTCDATE()");
 
-            entity.Property(membership => membership.IsActive)
-                .HasDefaultValue(true);
+            //entity.Property(membership => membership.IsActive)
+            //    .HasDefaultValue(true);
 
             entity.HasOne(membership => membership.Team)
                 .WithMany(team => team.Memberships)
@@ -127,7 +127,7 @@ public class TaskManagementDbContext : DbContext
                 .HasMaxLength(30);
 
             entity.Property(task => task.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(task => task.Team)
                 .WithMany(team => team.Tasks)
@@ -150,8 +150,8 @@ public class TaskManagementDbContext : DbContext
                 assignment.UserId
             });
 
-            entity.Property(assignment => assignment.AssignedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+            //entity.Property(assignment => assignment.AssignedAt)
+            //    .HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasOne(assignment => assignment.TaskItem)
                 .WithMany(task => task.Assignments)
@@ -175,7 +175,7 @@ public class TaskManagementDbContext : DbContext
                 .HasMaxLength(2000);
 
             entity.Property(comment => comment.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(comment => comment.User)
                 .WithMany(user => user.Comments)
@@ -229,7 +229,7 @@ public class TaskManagementDbContext : DbContext
                 .HasDefaultValue(false);
 
             entity.Property(notification => notification.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(notification => notification.User)
                 .WithMany(user => user.Notifications)
@@ -254,7 +254,7 @@ public class TaskManagementDbContext : DbContext
                 .HasMaxLength(1000);
 
             entity.Property(history => history.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(history => history.TaskItem)
                 .WithMany(task => task.History)
@@ -274,7 +274,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasKey(session => session.Id);
 
             entity.Property(session => session.Date)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(session => session.TaskItem)
                 .WithMany(task => task.WorkSessions)
@@ -301,7 +301,7 @@ public class TaskManagementDbContext : DbContext
                 .HasMaxLength(4000);
 
             entity.Property(log => log.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(log => log.User)
                 .WithMany(user => user.Logs)
