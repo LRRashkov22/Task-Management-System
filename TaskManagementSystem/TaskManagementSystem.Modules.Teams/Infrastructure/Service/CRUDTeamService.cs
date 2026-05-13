@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Persistance;
@@ -46,7 +47,7 @@ public class CRUDTeamService : ICRUDTeamService
         await context.SaveChangesAsync();
         return (team, null);
     }
-    public async Task<List<GetTeamDto>> GetAllTeams(int userid)
+    public async Task<List<GetTeamDto>> GetAllTeamsAsync(int userid)
     {
         var managerExists = await context.Users.AnyAsync(m => m.Id == userid);
         // if (!managerExists) throw new Exception("Error finding teams");
@@ -61,29 +62,64 @@ public class CRUDTeamService : ICRUDTeamService
         return teams.Select(t => new GetTeamDto
         {
             Id = t.Id,
-
             Name = t.Name,
-
             ManagerId = t.ManagerId,
-
             ManagerUsername = t.Manager.Username,
-
             Members = t.Memberships.Select(m =>
             new MemberDto
-        {
-            Id = m.UserId,
-            Username = m.User.Username
-        })
-        .ToList(),
-
+            {
+                Id = m.UserId,
+                Username = m.User.Username
+            }).ToList(),
             Tasks = t.Tasks!.Select(task =>
             new TaskDto
-        {
-            Id = task.Id,
-            Title = task.Title
-        })
-        .ToList()
-
+            {
+                Id = task.Id,
+                Title = task.Title
+            }).ToList()
         }).ToList();
     }
+
+    public async Task<(EditTeamDto? teams, string? error)> UpdateTeamAsync(EditTeamDto request) {
+
+        bool hasAnyTeam = await context.Teams.AsNoTracking().AnyAsync(t => request.Id == t.Id);
+        if (!hasAnyTeam) return (null, "No teams found");
+
+        var team = await context.Teams
+            .Include(u => u.Memberships)
+            .FirstAsync(t => request.Id == t.Id);
+
+        if (request.Name != null) team.Name = request.Name;
+        
+        if (request.Members != null) {
+            var currentMemberIds = team.Memberships.Select(n => n.UserId).ToList();
+
+            var requestMemberIds = request.Members.Select(m => m.Id).ToList();
+
+            var membersToRemove = team.Memberships
+                .Where(m => !requestMemberIds.Contains(m.UserId))
+                .ToList();
+
+            var membersToAdd = request.Members
+                .Where(m => !currentMemberIds.Contains(m.Id))
+                .ToList();
+
+            context.TeamMemberships.RemoveRange(membersToRemove);
+            foreach (var member in membersToAdd)
+            {
+                team.Memberships.Add(new TeamMembership
+                {
+                    UserId = member.Id,
+                    TeamId = team.Id
+                });
+            }
+            await context.SaveChangesAsync();
+        }
+        return (null, "Erro Editing Team");
+
+
+    }
+
+
+    
 }
