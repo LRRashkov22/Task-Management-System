@@ -7,11 +7,10 @@ namespace TaskManagementSystem.Modules.Teams.Application.Interfaces
 {
     public interface ICRUDTeamService
     {
+        Task<(EditTeamResponseDto? teams, string? error)> UpdateTeamAsync(EditTeamDto request);
         Task<(Team? team, string? error)> CreateTeamAsync(CreateTeamDto request, int userid);
-        //Task<(GetTeamDto? team, string? error)> GetTeamById(int id);
-        Task<List<GetTeamDto>> GetAllTeamsAsync(int userid);
-       // Task<(GetTeamDto? team, string? error)> UpdateTeamAsync(EditTeamDto request);
-        //Task<(bool isDeleted, string? error)> DeleteTeam(int id);
+
+        Task<(bool isDeleted, string? error)> DeleteTeam(int id);
 
     }
 }

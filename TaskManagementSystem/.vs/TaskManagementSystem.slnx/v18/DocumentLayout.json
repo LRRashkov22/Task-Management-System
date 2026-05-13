@@ -3,60 +3,104 @@
   "WorkspaceRootPath": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\presentation\\teamscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\presentation\\teamscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\infrastructure\\service\\manageusersservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|solutionrelative:taskmanagementsystem.modules.identity\\infrastructure\\service\\manageusersservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\infrastructure\\service\\crudteamservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\infrastructure\\service\\crudteamservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\dto\u0027s\\editteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\dto\u0027s\\editteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.data\\domain\\entities\\team.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|solutionrelative:taskmanagementsystem.data\\domain\\entities\\team.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\interfaces\\icrudteamservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\interfaces\\icrudteamservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\dto\u0027s\\memberdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\dto\u0027s\\memberdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\dto\u0027s\\getteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\dto\u0027s\\getteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\dto\u0027s\\editteamresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\dto\u0027s\\editteamresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.data\\domain\\entities\\teammembership.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|solutionrelative:taskmanagementsystem.data\\domain\\entities\\teammembership.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\dto\u0027s\\editteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\dto\u0027s\\editteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\dto\u0027s\\createteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\dto\u0027s\\createteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\application\\interfaces\\icrudteamservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\application\\interfaces\\icrudteamservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\presentation\\identitycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|solutionrelative:taskmanagementsystem.modules.identity\\presentation\\identitycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\taskmanagementsystem.modules.statistics.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\taskmanagementsystem.modules.statistics.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.teams\\presentation\\teamscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2211D838-494A-554D-706A-3E0985F7C396}|TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj|solutionrelative:taskmanagementsystem.modules.teams\\presentation\\teamscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\interface\\igetmanagerinformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\interface\\igetmanagerinformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\infrastructure\\service\\managerpanel\\getmanagerinformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\infrastructure\\service\\managerpanel\\getmanagerinformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\presentation\\managerinformationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\presentation\\managerinformationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\presentation\\admininformationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\presentation\\admininformationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\configuration\\statisticmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\configuration\\statisticmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\managersdto\\memberdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\managersdto\\memberdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\managersdto\\taskdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\managersdto\\taskdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\managersdto\\getteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\managersdto\\getteamdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\infrastructure\\service\\adminpanel\\getadmininformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\infrastructure\\service\\adminpanel\\getadmininformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\admindto\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\admindto\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.data\\domain\\entities\\team.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|solutionrelative:taskmanagementsystem.data\\domain\\entities\\team.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.data\\domain\\entities\\taskitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|solutionrelative:taskmanagementsystem.data\\domain\\entities\\taskitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.data\\domain\\entities\\teammembership.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|solutionrelative:taskmanagementsystem.data\\domain\\entities\\teammembership.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\interface\\igetadmininformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\interface\\igetadmininformation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\getusersdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\getusersdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\presentation\\identitycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|solutionrelative:taskmanagementsystem.modules.identity\\presentation\\identitycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\admindto\\getusersdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\admindto\\getusersdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\taskmanagementsystem.modules.identity.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
@@ -79,12 +123,8 @@
       "RelativeMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|solutionrelative:taskmanagementsystem.modules.identity\\infrastructure\\service\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\dashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\dashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\configuration\\statisticmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\configuration\\statisticmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\admindto\\dashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\admindto\\dashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4E95E928-C950-4474-9998-255413549696}|TaskManagementSystem.Api\\TaskManagementSystem.Api.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -93,14 +133,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\configuration\\identitymodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|solutionrelative:taskmanagementsystem.modules.identity\\configuration\\identitymodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\taskmanagementsystem.modules.statistics.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\taskmanagementsystem.modules.statistics.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E5F0EF2B-2681-4DB6-9FC9-3046CE805D03}|TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj|solutionrelative:taskmanagementsystem.modules.statistics\\application\\dto\u0027s\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\application\\userdto\u0027s\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -117,10 +149,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\application\\userdto\u0027s\\getusersdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|solutionrelative:taskmanagementsystem.modules.identity\\application\\userdto\u0027s\\getusersdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.modules.identity\\infrastructure\\service\\manageusersservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B65E4C39-0530-1FA1-7738-60C032551D80}|TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj|solutionrelative:taskmanagementsystem.modules.identity\\infrastructure\\service\\manageusersservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{09C1B6B2-435B-AEB4-6F11-535C4C3632EB}|TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj|d:\\tms\\on-the-job-training-11v-tms\\taskmanagementsystem\\taskmanagementsystem.data\\persistance\\tmsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -238,40 +266,42 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "GetTeamDto.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\GetTeamDto.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\GetTeamDto.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\GetTeamDto.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\GetTeamDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAIAAAAAAAAAA==",
+              "DocumentIndex": 4,
+              "Title": "EditTeamResponseDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamResponseDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamResponseDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamResponseDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamResponseDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T18:20:43.711Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "EditTeamDto.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAmAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T18:19:45.972Z",
+              "WhenOpened": "2026-05-13T20:51:07.137Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "AdminInformationController.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
-              "ViewState": "AgIAACUAAAAAAAAAAAAkwDQAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 3,
+              "Title": "MemberDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T14:36:31.998Z"
+              "WhenOpened": "2026-05-13T18:48:36.052Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ICRUDTeamService.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwBAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T14:17:36.658Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -281,7 +311,7 @@
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Infrastructure\\Service\\CRUDTeamService.cs",
               "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Infrastructure\\Service\\CRUDTeamService.cs",
               "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Infrastructure\\Service\\CRUDTeamService.cs",
-              "ViewState": "AgIAAFsAAAAAAAAAAAAowHUAAAArAAAAAAAAAA==",
+              "ViewState": "AgIAAGUAAAAAAAAAAAAwwH0AAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-13T14:17:44.833Z",
               "EditorCaption": ""
@@ -289,31 +319,227 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "ManageUsersService.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAYwBIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-09T18:55:08.693Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "EditTeamDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\EditTeamDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T18:19:45.972Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "CreateTeamDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T14:17:33.223Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "IdentityController.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAswCkAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-12T16:29:21.593Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "TaskManagementSystem.Modules.Statistics.csproj",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-05-13T14:20:09.671Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "TeamsController.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Presentation\\TeamsController.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Presentation\\TeamsController.cs",
               "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Presentation\\TeamsController.cs",
               "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Presentation\\TeamsController.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAAAlwCUAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAABAAAAAAAAAAAAAQwCwAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-13T14:17:48.566Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "MemberDto.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\MemberDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAPAAAAAAAAAA==",
+              "DocumentIndex": 10,
+              "Title": "IGetManagerInformation.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\Interface\\IGetManagerInformation.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\Interface\\IGetManagerInformation.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\Interface\\IGetManagerInformation.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\Interface\\IGetManagerInformation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAABGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T18:48:36.052Z"
+              "WhenOpened": "2026-05-13T21:51:55.179Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 11,
+              "Title": "GetManagerInformation.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\ManagerPanel\\GetManagerInformation.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\ManagerPanel\\GetManagerInformation.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\ManagerPanel\\GetManagerInformation.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\ManagerPanel\\GetManagerInformation.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAYAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T21:44:21.226Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "AdminInformationController.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Presentation\\AdminInformationController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T14:36:31.998Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ManagerInformationController.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Presentation\\ManagerInformationController.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Presentation\\ManagerInformationController.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Presentation\\ManagerInformationController.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Presentation\\ManagerInformationController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T21:54:10.645Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "StatisticModule.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAUAAABPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T14:56:09.727Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "MemberDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\MemberDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\MemberDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\MemberDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\MemberDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAABQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T21:50:25.312Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "TaskDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\TaskDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\TaskDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\TaskDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\TaskDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAABQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T21:48:26.048Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "GetTeamDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\GetTeamDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\GetTeamDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\GetTeamDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\ManagersDto\\GetTeamDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T21:49:32.589Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "UserDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\UserDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\UserDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\UserDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\UserDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T14:48:45.593Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "GetAdminInformation.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAABAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T14:21:43.97Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "TaskItem.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\TaskItem.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\TaskItem.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\TaskItem.cs",
+              "RelativeToolTip": "TaskManagementSystem.Data\\Domain\\Entities\\TaskItem.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T21:32:15.5Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
               "Title": "IGetAdminInformation.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\Interface\\IGetAdminInformation.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\Interface\\IGetAdminInformation.cs",
@@ -325,67 +551,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "CreateTeamDto.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Dto\u0027s\\CreateTeamDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T14:17:33.223Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 24,
               "Title": "GetUsersDto.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\GetUsersDto.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\GetUsersDto.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\GetUsersDto.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\GetUsersDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\GetUsersDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\GetUsersDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\GetUsersDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\GetUsersDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-13T14:31:36.571Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "ICRUDTeamService.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\Application\\Interfaces\\ICRUDTeamService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T14:17:36.658Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "GetAdminInformation.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Infrastructure\\Service\\AdminPanel\\GetAdminInformation.cs",
-              "ViewState": "AgIAAEMAAAAAAAAAAAAkwFYAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T14:21:43.97Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "IdentityController.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Identity\\Presentation\\IdentityController.cs",
-              "ViewState": "AgIAACgAAAAAAAAAAAAgwCkAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-12T16:29:21.593Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 28,
               "Title": "IAuthService.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\Interfaces\\IAuthService.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\Interfaces\\IAuthService.cs",
@@ -397,7 +575,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 27,
               "Title": "IManageUsers.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\Interfaces\\IManageUsers.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\Interfaces\\IManageUsers.cs",
@@ -409,7 +587,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 29,
               "Title": "AuthService.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\AuthService.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\AuthService.cs",
@@ -421,7 +599,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 25,
               "Title": "TaskManagementSystem.Modules.Identity.csproj",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj",
@@ -429,11 +607,12 @@
               "RelativeToolTip": "TaskManagementSystem.Modules.Identity\\TaskManagementSystem.Modules.Identity.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAkwBwAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-05-09T12:49:13.281Z"
+              "WhenOpened": "2026-05-09T12:49:13.281Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 26,
               "Title": "ICreateUser.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\Interfaces\\ICreateUser.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\Interfaces\\ICreateUser.cs",
@@ -445,19 +624,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 30,
               "Title": "DashboardDto.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\DashboardDto.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\DashboardDto.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\DashboardDto.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\DashboardDto.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\DashboardDto.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\DashboardDto.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\DashboardDto.cs",
+              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\AdminDto\\DashboardDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-13T15:25:52.713Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 31,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Api\\Program.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Api\\Program.cs",
@@ -469,7 +648,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 32,
               "Title": "IdentityModule.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Configuration\\IdentityModule.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Configuration\\IdentityModule.cs",
@@ -481,43 +660,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
-              "Title": "UserDto.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\UserDto.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\UserDto.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\UserDto.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Application\\DTO\u0027s\\UserDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T14:48:45.593Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "StatisticModule.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\Configuration\\StatisticModule.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAoAAAA2AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T14:56:09.727Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 23,
-              "Title": "TaskManagementSystem.Modules.Statistics.csproj",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Statistics\\TaskManagementSystem.Modules.Statistics.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-05-13T14:20:09.671Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 33,
               "Title": "UserDto.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\UserDto.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\UserDto.cs",
@@ -529,7 +672,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 34,
               "Title": "TaskManagementSystem.Api.csproj",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Api\\TaskManagementSystem.Api.csproj",
               "RelativeDocumentMoniker": "TaskManagementSystem.Api\\TaskManagementSystem.Api.csproj",
@@ -537,11 +680,12 @@
               "RelativeToolTip": "TaskManagementSystem.Api\\TaskManagementSystem.Api.csproj",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAAB0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-05-12T17:12:59.291Z"
+              "WhenOpened": "2026-05-12T17:12:59.291Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 35,
               "Title": "TaskManagementSystem.Modules.Teams.csproj",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj",
@@ -549,23 +693,12 @@
               "RelativeToolTip": "TaskManagementSystem.Modules.Teams\\TaskManagementSystem.Modules.Teams.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-05-13T14:42:38.263Z"
+              "WhenOpened": "2026-05-13T14:42:38.263Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "ManageUsersService.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
-              "RelativeToolTip": "TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\ManageUsersService.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-09T18:55:08.693Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 36,
               "Title": "GetUsersDto.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\GetUsersDto.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\GetUsersDto.cs",
@@ -577,7 +710,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 37,
               "Title": "TMSDbContext.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Persistance\\TMSDbContext.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Persistance\\TMSDbContext.cs",
@@ -589,7 +722,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 38,
               "Title": "TeamModule.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Teams\\Configuration\\TeamModule.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Teams\\Configuration\\TeamModule.cs",
@@ -601,7 +734,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 39,
               "Title": "TaskManagementSystem.Data.csproj",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj",
@@ -609,11 +742,12 @@
               "RelativeToolTip": "TaskManagementSystem.Data\\TaskManagementSystem.Data.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-05-09T12:48:38.002Z"
+              "WhenOpened": "2026-05-09T12:48:38.002Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 40,
               "Title": "User.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\User.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\User.cs",
@@ -625,7 +759,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 41,
               "Title": "WorkSession.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\WorkSession.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\WorkSession.cs",
@@ -637,7 +771,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 42,
               "Title": "CreateUserService.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\CreateUserService.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Infrastructure\\Service\\CreateUserService.cs",
@@ -649,7 +783,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 43,
               "Title": "TaskAssignment.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\TaskAssignment.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\TaskAssignment.cs",
@@ -661,7 +795,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 44,
               "Title": "TaskHistory.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\TaskHistory.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\TaskHistory.cs",
@@ -673,7 +807,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 45,
               "Title": "DataModule.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Configuration\\DataModule.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Configuration\\DataModule.cs",
@@ -685,7 +819,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 56,
               "Title": "TeamModule.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Team\\Configuration\\TeamModule.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Team\\Configuration\\TeamModule.cs",
@@ -696,7 +830,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 57,
               "Title": "TeamsController.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Team\\Presentation\\TeamsController.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Team\\Presentation\\TeamsController.cs",
@@ -707,7 +841,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 51,
+              "DocumentIndex": 58,
               "Title": "ICRUDTeamService.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Team\\Application\\Interfaces\\ICRUDTeamService.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Team\\Application\\Interfaces\\ICRUDTeamService.cs",
@@ -718,7 +852,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 52,
+              "DocumentIndex": 59,
               "Title": "CRUDTeamService.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Team\\Infrastructure\\Service\\CRUDTeamService.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Team\\Infrastructure\\Service\\CRUDTeamService.cs",
@@ -729,7 +863,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 53,
+              "DocumentIndex": 60,
               "Title": "GetTeamDto.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Team\\Application\\Dto\u0027s\\GetTeamDto.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Team\\Application\\Dto\u0027s\\GetTeamDto.cs",
@@ -740,7 +874,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 46,
               "Title": "20260512165730_Initial.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Migrations\\20260512165730_Initial.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Migrations\\20260512165730_Initial.cs",
@@ -752,7 +886,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 49,
               "Title": "Priority.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Enums\\Priority.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Enums\\Priority.cs",
@@ -764,7 +898,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 48,
               "Title": "20260512164807_SyncModel.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Migrations\\20260512164807_SyncModel.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Migrations\\20260512164807_SyncModel.cs",
@@ -775,7 +909,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 47,
               "Title": "20260512165315_Initial.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Migrations\\20260512165315_Initial.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Migrations\\20260512165315_Initial.cs",
@@ -786,7 +920,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 50,
               "Title": "Status.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Enums\\Status.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Enums\\Status.cs",
@@ -798,7 +932,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 51,
               "Title": "EditUserDto.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\EditUserDto.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\EditUserDto.cs",
@@ -810,7 +944,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 52,
               "Title": "CreateUserDto.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\CreateUserDto.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\CreateUserDto.cs",
@@ -822,7 +956,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 53,
               "Title": "ChangePasswordDto.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\ChangePasswordDto.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Modules.Identity\\Application\\UserDto\u0027s\\ChangePasswordDto.cs",
@@ -834,7 +968,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 54,
               "Title": "Role.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Enums\\Role.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Enums\\Role.cs",
@@ -846,7 +980,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 55,
               "Title": "CommentMention.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\CommentMention.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\CommentMention.cs",
@@ -855,40 +989,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-12T16:16:12.035Z"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "Orientation": 0,
-      "VerticalTabListWidth": 256,
-      "FloatingWindowState": {
-        "Id": "39556c19-9050-4899-bcfe-11f49184d484",
-        "Display": 1,
-        "X": -8,
-        "Y": 403,
-        "Width": 1135,
-        "Height": 724,
-        "WindowState": 2
-      },
-      "DocumentGroups": [
-        {
-          "DockedWidth": 200,
-          "SelectedChildIndex": 0,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Team.cs",
-              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
-              "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
-              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
-              "RelativeToolTip": "TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-13T18:22:53.831Z",
-              "EditorCaption": ""
             }
           ]
         }
@@ -913,7 +1013,7 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 22,
               "Title": "TeamMembership.cs",
               "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\TeamMembership.cs",
               "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\TeamMembership.cs",
@@ -922,6 +1022,40 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-12T15:52:21.114Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "39556c19-9050-4899-bcfe-11f49184d484",
+        "Display": 1,
+        "X": -8,
+        "Y": 403,
+        "Width": 1135,
+        "Height": 724,
+        "WindowState": 2
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Team.cs",
+              "DocumentMoniker": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
+              "RelativeDocumentMoniker": "TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
+              "ToolTip": "D:\\TMS\\on-the-job-training-11v-tms\\TaskManagementSystem\\TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
+              "RelativeToolTip": "TaskManagementSystem.Data\\Domain\\Entities\\Team.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-13T18:22:53.831Z",
               "EditorCaption": ""
             }
           ]

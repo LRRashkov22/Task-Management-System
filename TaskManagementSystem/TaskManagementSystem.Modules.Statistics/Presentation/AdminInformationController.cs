@@ -6,7 +6,7 @@ using TaskManagementSystem.Modules.Statistics.Application.Interface;
 namespace TaskManagementSystem.Modules.Statistics.Presentation;
 
 [ApiController]
-[Route("api/Statistics")]
+[Route("api/Statistics/Admin")]
 public class AdminInformationController : ControllerBase
 {
     private readonly IGetAdminInformation adminInfo;
