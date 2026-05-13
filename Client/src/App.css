@@ -372,6 +372,20 @@
   margin-bottom: 24px;
 }
 
+.admin-message {
+  margin: -8px 0 18px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-message.error {
+  color: #b91c1c;
+}
+
+.admin-message.success {
+  color: #047857;
+}
+
 .admin-create-button {
   min-height: 44px;
   display: inline-flex;
@@ -592,6 +606,48 @@
   text-align: right;
 }
 
+.admin-table-body-row {
+  min-height: 52px;
+  padding: 0 28px;
+  border-bottom: 1px solid #edf0f4;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-table-body-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-table-body-row span:last-child {
+  text-align: right;
+}
+
+.admin-table-empty {
+  padding: 22px 28px;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-table-action {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #cfd6e0;
+  border-radius: 8px;
+  color: #315af2;
+  background: #ffffff;
+  font: 800 13px/1 Arial, sans-serif;
+  cursor: pointer;
+}
+
+.admin-table-action:hover {
+  background: #eef5ff;
+}
+
 .logs-panel {
   position: relative;
 }
@@ -691,6 +747,11 @@
   border-radius: 10px;
   font: 800 17px/1 Arial, sans-serif;
   cursor: pointer;
+}
+
+.admin-modal-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 .admin-modal-cancel {
