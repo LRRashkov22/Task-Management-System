@@ -1,4 +1,14 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import {
+  createUserApi,
+  editUserApi,
+  getAdminDashboardApi,
+  getEmployeesApi,
+  getManagersApi,
+  searchEmployeesApi,
+} from '../api/adminApi'
+import type { AdminDashboardDto, AdminUserDto } from '../api/adminApi'
 
 type IconName =
   | 'dashboard'
@@ -30,6 +40,17 @@ type Language = 'en' | 'bg'
 type AdminView = 'dashboard' | 'notifications' | 'users' | 'managers' | 'logs'
 type CreateModal = 'user' | 'manager' | null
 
+type CreateForm = {
+  username: string
+  password: string
+  managerId: string
+}
+
+type StatusMessage = {
+  text: string
+  type: 'error' | 'success'
+}
+
 const translations = {
   en: {
     brand: 'TaskMan',
@@ -57,6 +78,12 @@ const translations = {
     email: 'Email',
     manager: 'Manager',
     edit: 'Edit',
+    loading: 'Loading...',
+    empty: 'No data yet',
+    username: 'Username',
+    apiError: 'Could not load data from the server.',
+    created: 'Created successfully.',
+    updated: 'Updated successfully.',
   },
   bg: {
     brand: 'TaskMan',
@@ -84,8 +111,27 @@ const translations = {
     email: 'Имейл',
     manager: 'Мениджър',
     edit: 'Редакция',
+    loading: 'Зареждане...',
+    empty: 'Все още няма данни',
+    username: 'Потребителско име',
+    apiError: 'Данните не могат да бъдат заредени от сървъра.',
+    created: 'Създадено успешно.',
+    updated: 'Обновено успешно.',
   },
 } satisfies Record<Language, Record<string, string>>
+
+const emptyDashboard: AdminDashboardDto = {
+  firstEntity: 0,
+  secondEntitu: 0,
+  thirdEntity: 0,
+  fourthEntity: 0,
+}
+
+const emptyCreateForm: CreateForm = {
+  username: '',
+  password: '',
+  managerId: '',
+}
 
 function Icon({ name }: { name: IconName }) {
   if (name === 'dashboard') {
@@ -201,8 +247,166 @@ function AdminPage() {
   const [language, setLanguage] = useState<Language>('en')
   const [activeView, setActiveView] = useState<AdminView>('dashboard')
   const [createModal, setCreateModal] = useState<CreateModal>(null)
+  const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null)
+  const [createForm, setCreateForm] = useState<CreateForm>(emptyCreateForm)
   const [logFilter, setLogFilter] = useState('All')
+  const [dashboard, setDashboard] =
+    useState<AdminDashboardDto>(emptyDashboard)
+  const [employees, setEmployees] = useState<AdminUserDto[]>([])
+  const [managers, setManagers] = useState<AdminUserDto[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [message, setMessage] = useState<StatusMessage | null>(null)
   const t = translations[language]
+
+  const loadAdminData = useCallback(async () => {
+    try {
+      const [dashboardData, employeeData, managerData] = await Promise.all([
+        getAdminDashboardApi(),
+        getEmployeesApi(),
+        getManagersApi(),
+      ])
+
+      setDashboard(dashboardData)
+      setEmployees(employeeData)
+      setManagers(managerData)
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : t.apiError,
+        type: 'error',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [t.apiError])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadAdminData()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [loadAdminData])
+
+  useEffect(() => {
+    let isCurrent = true
+
+    async function loadEmployeesBySearch() {
+      if (!searchQuery.trim()) {
+        try {
+          const employeeData = await getEmployeesApi()
+          if (isCurrent) setEmployees(employeeData)
+        } catch (error) {
+          if (isCurrent) {
+            setMessage({
+              text: error instanceof Error ? error.message : t.apiError,
+              type: 'error',
+            })
+          }
+        }
+        return
+      }
+
+      try {
+        const employeeData = await searchEmployeesApi(searchQuery.trim())
+        if (isCurrent) setEmployees(employeeData)
+      } catch (error) {
+        if (isCurrent) {
+          setMessage({
+            text: error instanceof Error ? error.message : t.apiError,
+            type: 'error',
+          })
+        }
+      }
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void loadEmployeesBySearch()
+    }, 300)
+
+    return () => {
+      isCurrent = false
+      window.clearTimeout(timeoutId)
+    }
+  }, [searchQuery, t.apiError])
+
+  function openCreateModal(modal: Exclude<CreateModal, null>) {
+    setEditingUser(null)
+    setCreateForm(emptyCreateForm)
+    setMessage(null)
+    setCreateModal(modal)
+  }
+
+  function openEditModal(user: AdminUserDto, modal: Exclude<CreateModal, null>) {
+    const manager = managers.find(
+      (currentManager) => currentManager.username === user.managerName,
+    )
+
+    setEditingUser(user)
+    setCreateForm({
+      username: user.username,
+      password: '',
+      managerId: manager ? String(manager.id) : '',
+    })
+    setMessage(null)
+    setCreateModal(modal)
+  }
+
+  async function handleCreateSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!createModal) return
+
+    const username = createForm.username.trim()
+    if (!username || (!editingUser && !createForm.password)) {
+      setMessage({ text: 'Username and password are required.', type: 'error' })
+      return
+    }
+
+    if (createModal === 'user' && !createForm.managerId) {
+      setMessage({ text: 'Select manager for the user.', type: 'error' })
+      return
+    }
+
+    setIsSaving(true)
+    setMessage(null)
+
+    try {
+      if (editingUser) {
+        await editUserApi({
+          id: editingUser.id,
+          username,
+          managerId:
+            createModal === 'user' ? Number(createForm.managerId) : null,
+        })
+      } else {
+        await createUserApi({
+          username,
+          password: createForm.password,
+          role: createModal === 'manager' ? 2 : 3,
+          managerId:
+            createModal === 'user' ? Number(createForm.managerId) : null,
+        })
+      }
+
+      setCreateModal(null)
+      setEditingUser(null)
+      setCreateForm(emptyCreateForm)
+      setMessage({
+        text: editingUser ? t.updated : t.created,
+        type: 'success',
+      })
+      await loadAdminData()
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : t.apiError,
+        type: 'error',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: t.dashboard, icon: 'dashboard' },
@@ -213,10 +417,30 @@ function AdminPage() {
   ]
 
   const statCards: StatCard[] = [
-    { label: t.users, value: '0', icon: 'users', tone: 'blue' },
-    { label: t.managers, value: '0', icon: 'manager', tone: 'purple' },
-    { label: t.tasks, value: '0', icon: 'activity', tone: 'green' },
-    { label: t.teams, value: '0', icon: 'users', tone: 'orange' },
+    {
+      label: t.users,
+      value: String(dashboard.firstEntity),
+      icon: 'users',
+      tone: 'blue',
+    },
+    {
+      label: t.managers,
+      value: String(dashboard.secondEntitu),
+      icon: 'manager',
+      tone: 'purple',
+    },
+    {
+      label: t.tasks,
+      value: String(dashboard.thirdEntity),
+      icon: 'activity',
+      tone: 'green',
+    },
+    {
+      label: t.teams,
+      value: String(dashboard.fourthEntity),
+      icon: 'users',
+      tone: 'orange',
+    },
   ]
 
   const pageTitle =
@@ -282,7 +506,7 @@ function AdminPage() {
               <button
                 className="admin-create-button"
                 type="button"
-                onClick={() => setCreateModal('user')}
+                onClick={() => openCreateModal('user')}
               >
                 <span aria-hidden="true">+</span>
                 {t.createUser}
@@ -292,13 +516,19 @@ function AdminPage() {
               <button
                 className="admin-create-button"
                 type="button"
-                onClick={() => setCreateModal('manager')}
+                onClick={() => openCreateModal('manager')}
               >
                 <span aria-hidden="true">+</span>
                 {t.createManager}
               </button>
             ) : null}
           </div>
+
+          {message ? (
+            <p className={`admin-message ${message.type}`} role="status">
+              {message.text}
+            </p>
+          ) : null}
 
           {activeView === 'notifications' ? (
             <section className="empty-state-card" aria-label={t.notifications}>
@@ -311,26 +541,83 @@ function AdminPage() {
             <section className="admin-table-card" aria-label={t.users}>
               <div className="admin-search">
                 <Icon name="search" />
-                <input placeholder={t.search} aria-label={t.search} />
+                <input
+                  placeholder={t.search}
+                  aria-label={t.search}
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
               </div>
               <div className="admin-table admin-table-users" role="table">
                 <div className="admin-table-row admin-table-head" role="row">
-                  <span role="columnheader">{t.name.toUpperCase()}</span>
-                  <span role="columnheader">{t.email.toUpperCase()}</span>
+                  <span role="columnheader">{t.username.toUpperCase()}</span>
+                  <span role="columnheader">ID</span>
                   <span role="columnheader">{t.manager.toUpperCase()}</span>
                   <span role="columnheader">{t.edit.toUpperCase()}</span>
                 </div>
+                {isLoading ? (
+                  <div className="admin-table-empty">{t.loading}</div>
+                ) : employees.length ? (
+                  employees.map((employee) => (
+                    <div
+                      className="admin-table-row admin-table-body-row"
+                      role="row"
+                      key={employee.id}
+                    >
+                      <span role="cell">{employee.username}</span>
+                      <span role="cell">{employee.id}</span>
+                      <span role="cell">{employee.managerName || '-'}</span>
+                      <span role="cell">
+                        <button
+                          className="admin-table-action"
+                          type="button"
+                          onClick={() => openEditModal(employee, 'user')}
+                        >
+                          {t.edit}
+                        </button>
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="admin-table-empty">{t.empty}</div>
+                )}
               </div>
             </section>
           ) : activeView === 'managers' ? (
             <section className="admin-table-card manager-table-card" aria-label={t.managers}>
               <div className="admin-table admin-table-managers" role="table">
                 <div className="admin-table-row admin-table-head" role="row">
-                  <span role="columnheader">{t.name.toUpperCase()}</span>
-                  <span role="columnheader">{t.email.toUpperCase()}</span>
+                  <span role="columnheader">{t.username.toUpperCase()}</span>
+                  <span role="columnheader">ID</span>
                   <span role="columnheader">{t.teams.toUpperCase()}</span>
                   <span role="columnheader">{t.edit.toUpperCase()}</span>
                 </div>
+                {isLoading ? (
+                  <div className="admin-table-empty">{t.loading}</div>
+                ) : managers.length ? (
+                  managers.map((manager) => (
+                    <div
+                      className="admin-table-row admin-table-body-row"
+                      role="row"
+                      key={manager.id}
+                    >
+                      <span role="cell">{manager.username}</span>
+                      <span role="cell">{manager.id}</span>
+                      <span role="cell">{manager.teams ?? 0}</span>
+                      <span role="cell">
+                        <button
+                          className="admin-table-action"
+                          type="button"
+                          onClick={() => openEditModal(manager, 'manager')}
+                        >
+                          {t.edit}
+                        </button>
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="admin-table-empty">{t.empty}</div>
+                )}
               </div>
             </section>
           ) : activeView === 'logs' ? (
@@ -381,35 +668,65 @@ function AdminPage() {
           <form
             className="admin-modal"
             aria-label={createModal === 'user' ? t.createUser : t.createManager}
-            onSubmit={(event) => {
-              event.preventDefault()
-              setCreateModal(null)
-            }}
+            onSubmit={handleCreateSubmit}
           >
-            <h2>{createModal === 'user' ? t.createUser : t.createManager}</h2>
+            <h2>
+              {editingUser
+                ? t.edit
+                : createModal === 'user'
+                  ? t.createUser
+                  : t.createManager}
+            </h2>
 
             <label>
-              <span>{t.name}</span>
-              <input />
+              <span>{t.username}</span>
+              <input
+                value={createForm.username}
+                onChange={(event) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    username: event.target.value,
+                  }))
+                }
+              />
             </label>
 
-            <label>
-              <span>{t.email}</span>
-              <input type="email" />
-            </label>
-
-            <label>
-              <span>{t.password}</span>
-              <input type="password" />
-            </label>
+            {editingUser ? null : (
+              <label>
+                <span>{t.password}</span>
+                <input
+                  type="password"
+                  value={createForm.password}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            )}
 
             {createModal === 'user' ? (
               <label>
                 <span>{t.manager}</span>
-                <select defaultValue="">
+                <select
+                  value={createForm.managerId}
+                  onChange={(event) =>
+                    setCreateForm((current) => ({
+                      ...current,
+                      managerId: event.target.value,
+                    }))
+                  }
+                >
                   <option value="" disabled>
                     {t.selectManager}
                   </option>
+                  {managers.map((manager) => (
+                    <option value={manager.id} key={manager.id}>
+                      {manager.username}
+                    </option>
+                  ))}
                 </select>
               </label>
             ) : null}
@@ -418,12 +735,16 @@ function AdminPage() {
               <button
                 className="admin-modal-cancel"
                 type="button"
-                onClick={() => setCreateModal(null)}
+                disabled={isSaving}
+                onClick={() => {
+                  setCreateModal(null)
+                  setEditingUser(null)
+                }}
               >
                 {t.cancel}
               </button>
-              <button className="admin-modal-save" type="submit">
-                {t.save}
+              <button className="admin-modal-save" type="submit" disabled={isSaving}>
+                {isSaving ? t.loading : t.save}
               </button>
             </div>
           </form>
