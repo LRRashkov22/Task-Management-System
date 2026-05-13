@@ -33,7 +33,7 @@ private readonly ICRUDTeamService teamService;
     public async Task<ActionResult> GetTeam()
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var teams = await teamService.GetAllTeams(userid);
+        var teams = await teamService.GetAllTeamsAsync(userid);
         return Ok(teams);
     }
 
