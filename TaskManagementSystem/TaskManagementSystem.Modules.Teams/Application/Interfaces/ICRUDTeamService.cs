@@ -9,8 +9,8 @@ namespace TaskManagementSystem.Modules.Teams.Application.Interfaces
     {
         Task<(Team? team, string? error)> CreateTeamAsync(CreateTeamDto request, int userid);
         //Task<(GetTeamDto? team, string? error)> GetTeamById(int id);
-        Task<List<GetTeamDto>> GetAllTeams(int userid);
-        //Task<(GetTeamDto? team, string? error)> UpdateTeam(EditTeamDto request);
+        Task<List<GetTeamDto>> GetAllTeamsAsync(int userid);
+       // Task<(GetTeamDto? team, string? error)> UpdateTeamAsync(EditTeamDto request);
         //Task<(bool isDeleted, string? error)> DeleteTeam(int id);
 
     }

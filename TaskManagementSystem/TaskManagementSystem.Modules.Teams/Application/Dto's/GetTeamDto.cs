@@ -14,10 +14,8 @@ namespace TaskManagementSystem.Modules.Teams.Application.Dto_s
 
         public string ManagerUsername { get; set; } = string.Empty;
 
-        public ICollection<MemberDto> Members { get; set; }
-            = new List<MemberDto>();
+        public ICollection<MemberDto> Members { get; set; } = new List<MemberDto>();
 
-        public ICollection<TaskDto> Tasks { get; set; }
-            = new List<TaskDto>();
+        public ICollection<TaskDto> Tasks { get; set; } = new List<TaskDto>();
     }
 }
