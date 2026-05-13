@@ -8,6 +8,6 @@ namespace TaskManagementSystem.Modules.Teams.Application.Dto_s
     {
         public int Id { get; set; }
         public string? Name { get; set; } = string.Empty;
-        public ICollection<MemberDto>? Members { get; set; } = new List<MemberDto>();
+        public ICollection<int>? Members { get; set; }
     }
 }

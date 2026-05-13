@@ -47,61 +47,30 @@ public class CRUDTeamService : ICRUDTeamService
         await context.SaveChangesAsync();
         return (team, null);
     }
-    public async Task<List<GetTeamDto>> GetAllTeamsAsync(int userid)
-    {
-        var managerExists = await context.Users.AnyAsync(m => m.Id == userid);
-        // if (!managerExists) throw new Exception("Error finding teams");
-        var teams = await context.Teams
-            .Include(t => t.Manager)
-            .Include(t => t.Memberships)
-                .ThenInclude(m => m.User)
-            .Include(t => t.Tasks)
-            .Where(t => t.ManagerId == userid)
-            .ToListAsync();
+ 
 
-        return teams.Select(t => new GetTeamDto
-        {
-            Id = t.Id,
-            Name = t.Name,
-            ManagerId = t.ManagerId,
-            ManagerUsername = t.Manager.Username,
-            Members = t.Memberships.Select(m =>
-            new MemberDto
-            {
-                Id = m.UserId,
-                Username = m.User.Username
-            }).ToList(),
-            Tasks = t.Tasks!.Select(task =>
-            new TaskDto
-            {
-                Id = task.Id,
-                Title = task.Title
-            }).ToList()
-        }).ToList();
-    }
-
-    public async Task<(EditTeamDto? teams, string? error)> UpdateTeamAsync(EditTeamDto request) {
-
-        bool hasAnyTeam = await context.Teams.AsNoTracking().AnyAsync(t => request.Id == t.Id);
-        if (!hasAnyTeam) return (null, "No teams found");
+    public async Task<(EditTeamResponseDto? teams, string? error)> UpdateTeamAsync(EditTeamDto request) {
 
         var team = await context.Teams
-            .Include(u => u.Memberships)
-            .FirstAsync(t => request.Id == t.Id);
+            .Include(t => t.Memberships)
+                .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(t => t.Id == request.Id);
 
+        if (team == null)
+            return (null, "No teams found");
         if (request.Name != null) team.Name = request.Name;
         
-        if (request.Members != null) {
+        if (request.Members != null && request.Members.Count != 0) {
             var currentMemberIds = team.Memberships.Select(n => n.UserId).ToList();
 
-            var requestMemberIds = request.Members.Select(m => m.Id).ToList();
+            var requestMemberIds = request.Members.ToList();
 
             var membersToRemove = team.Memberships
                 .Where(m => !requestMemberIds.Contains(m.UserId))
                 .ToList();
 
             var membersToAdd = request.Members
-                .Where(m => !currentMemberIds.Contains(m.Id))
+                .Where(m => !currentMemberIds.Contains(m))
                 .ToList();
 
             context.TeamMemberships.RemoveRange(membersToRemove);
@@ -109,17 +78,50 @@ public class CRUDTeamService : ICRUDTeamService
             {
                 team.Memberships.Add(new TeamMembership
                 {
-                    UserId = member.Id,
+                    UserId = member,
                     TeamId = team.Id
                 });
             }
-            await context.SaveChangesAsync();
+
         }
-        return (null, "Erro Editing Team");
+        await context.SaveChangesAsync();
 
-
+        team = await context.Teams.AsNoTracking()
+            .Include(t => t.Memberships)
+                .ThenInclude(m => m.User)
+            .FirstAsync(t => t.Id == team.Id);
+        return (new EditTeamResponseDto
+        {
+            Id = team.Id,
+            Name = team.Name,
+            Members = team.Memberships
+        .Select(m => new MemberDto
+        {
+            Id = m.UserId,
+            Username = m.User.Username
+        }).ToList()}, null);
     }
 
+    public async Task<(bool isDeleted, string? error)> DeleteTeam(int id)
+    {
+        var team = await context.Teams
+            .Include(t => t.Memberships)
+            .Include(t => t.Tasks)
+            .FirstOrDefaultAsync(t => t.Id == id);
 
-    
+        if (team == null)
+            return (false, "Team not found");
+
+        // if team has tasks do not allow delete
+         if (team.Tasks != null && team.Tasks.Any())
+             return (false, "Cannot delete team with tasks");
+
+        context.TeamMemberships.RemoveRange(team.Memberships);
+
+        context.Teams.Remove(team);
+
+        await context.SaveChangesAsync();
+
+        return (true, null);
+    }
 }
