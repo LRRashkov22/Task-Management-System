@@ -16,10 +16,8 @@ public class ManageUsersService : IManageUsers
     {
         this.context = context;
     }
-    public async Task<List<GetUsersDto>> GetAllUsersByRole(Role role)
-    {
-        return await context.Users.Where(m => m.Role == role).Select(m => new GetUsersDto { Id = m.Id, Username = m.Username }).ToListAsync();
-    }
+
+
     public async Task<EditUserDto?> EditUser(EditUserDto request)
     {
         var user =  await context.Users.FirstOrDefaultAsync(u => u.Id == request.Id);

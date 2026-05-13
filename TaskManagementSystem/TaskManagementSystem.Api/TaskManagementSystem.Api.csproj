@@ -21,7 +21,9 @@
   <ItemGroup>
     <ProjectReference Include="..\TaskManagementSystem.Data\TaskManagementSystem.Data.csproj" />
     <ProjectReference Include="..\TaskManagementSystem.Modules.Identity\TaskManagementSystem.Modules.Identity.csproj" />
-	<ProjectReference Include="..\TaskManagementSystem.Modules.Teams\TaskManagementSystem.Modules.Teams.csproj" />
+    <ProjectReference Include="..\TaskManagementSystem.Modules.Statistics\TaskManagementSystem.Modules.Statistics.csproj" />
+    <ProjectReference Include="..\TaskManagementSystem.Modules.Teams\TaskManagementSystem.Modules.Teams.csproj" />  
+	  
   </ItemGroup>
 
 </Project>

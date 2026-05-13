@@ -57,21 +57,6 @@ public class IdentityController : ControllerBase
         if (error != null) return BadRequest(error);
         return Ok();
     }
-    [Authorize(Roles = "Admin")]
-    [HttpGet("managers")]
-    public async Task<ActionResult<List<UserDto>>> GetAllManagers()
-    {
-        var result = await manageUsers.GetAllUsersByRole(Role.Manager);
-        return Ok(result);
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpGet("employee")]
-    public async Task<ActionResult<List<UserDto>>> GetAllEmployees()
-    {
-        var result = await manageUsers.GetAllUsersByRole(Role.Employee);
-        return Ok(result);
-    }
     [Authorize]
     [HttpPost("change-password")]
     public async Task<ActionResult<TokenResponseDto>> ChangePassword(ChangePasswordDto request)

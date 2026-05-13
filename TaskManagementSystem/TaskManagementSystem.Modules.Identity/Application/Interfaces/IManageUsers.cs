@@ -8,7 +8,6 @@ namespace TaskManagementSystem.Modules.Identity.Application.Interfaces;
 
 public interface IManageUsers
 {
-    Task<List<GetUsersDto>> GetAllUsersByRole(Role role);
     Task<EditUserDto?> EditUser(EditUserDto request);
     Task Logout(int userId);
     Task<bool> DeleteUser(GetUsersDto request);
