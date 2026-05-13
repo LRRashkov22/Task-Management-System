@@ -9,6 +9,7 @@ using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Identity.Configuration;
+using TaskManagementSystem.Modules.Statistics.Configuration;
 using TaskManagementSystem.Modules.Teams.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddIdentityModule();
 builder.Services.AddTeamsModule();
+builder.Services.AddStasticsModule();
 //------------------------------------------------------------------------------------
 
 builder.Services.AddData(builder.Configuration);
