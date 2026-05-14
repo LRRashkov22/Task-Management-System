@@ -10,5 +10,5 @@ public interface IManageUsers
 {
     Task<EditUserDto?> EditUser(EditUserDto request);
     Task Logout(int userId);
-    Task<bool> DeleteUser(GetUsersDto request);
+    Task<bool> DeleteUser(DeleteDto request);
 }

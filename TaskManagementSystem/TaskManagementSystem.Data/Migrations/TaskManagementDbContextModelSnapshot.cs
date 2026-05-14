@@ -513,7 +513,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "User")
                         .WithMany("TeamMemberships")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Team");

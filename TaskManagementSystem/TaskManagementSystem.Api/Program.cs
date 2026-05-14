@@ -8,6 +8,7 @@ using TaskManagementSystem.Data.Configuration;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
+using TaskManagementSystem.Modules.Tasks.Configuration;
 using TaskManagementSystem.Modules.Identity.Configuration;
 using TaskManagementSystem.Modules.Statistics.Configuration;
 using TaskManagementSystem.Modules.Teams.Configuration;
@@ -24,6 +25,7 @@ builder.Services.AddControllers();
 builder.Services.AddIdentityModule();
 builder.Services.AddTeamsModule();
 builder.Services.AddStasticsModule();
+builder.Services.AddTaskModule();
 //------------------------------------------------------------------------------------
 
 builder.Services.AddData(builder.Configuration);

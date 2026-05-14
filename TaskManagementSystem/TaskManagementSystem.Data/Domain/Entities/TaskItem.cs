@@ -14,7 +14,7 @@ public class TaskItem
 
     public Priority Priority { get; set; }
 
-    public Status Status { get; set; }
+    public Status Status { get; set; } = Status.InProgress;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
