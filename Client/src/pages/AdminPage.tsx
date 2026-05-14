@@ -290,6 +290,11 @@
 useEffect(() => {
   void loadAdminData()
 }, [loadAdminData])
+
+useEffect(() => {
+  setMessage(null)
+}, [activeView])
+
     // useEffect(() => {
     //   const timeoutId = window.setTimeout(() => {
     //     void loadAdminData()
