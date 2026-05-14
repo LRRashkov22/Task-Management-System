@@ -102,7 +102,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(membership => membership.User)
                 .WithMany(user => user.TeamMemberships)
                 .HasForeignKey(membership => membership.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<TaskItem>(entity =>

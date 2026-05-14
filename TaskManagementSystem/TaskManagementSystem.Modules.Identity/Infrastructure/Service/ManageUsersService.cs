@@ -32,7 +32,7 @@ public class ManageUsersService : IManageUsers
         await context.SaveChangesAsync();
         return new EditUserDto { ManagerId = user.ManagerId, Username = user.Username };
     }
-        public async Task<bool> DeleteUser(GetUsersDto request)
+        public async Task<bool> DeleteUser(DeleteDto request)
     {
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.Id);
         if (user == null) return false;

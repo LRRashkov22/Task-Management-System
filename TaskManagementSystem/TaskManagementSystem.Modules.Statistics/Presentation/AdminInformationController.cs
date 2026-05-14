@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
 using TaskManagementSystem.Data.Domain.Enums;
+using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
 using TaskManagementSystem.Modules.Statistics.Application.Interface;
 namespace TaskManagementSystem.Modules.Statistics.Presentation;
 

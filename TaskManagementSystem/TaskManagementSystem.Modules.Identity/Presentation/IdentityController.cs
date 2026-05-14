@@ -77,11 +77,11 @@ public class IdentityController : ControllerBase
     }
     [Authorize(Roles = "Admin")]
     [HttpDelete("delete-user")]
-    public async Task<ActionResult> DeleteUser(GetUsersDto request)
+    public async Task<ActionResult> DeleteUser(DeleteDto request)
     {
         var result = await manageUsers.DeleteUser(request);
         if (!result) return BadRequest("User not found");
-        return NoContent();
+        return Ok(result);
     }
 
     [Authorize(Roles = "Admin")]
