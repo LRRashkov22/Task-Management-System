@@ -55,7 +55,7 @@ public class IdentityController : ControllerBase
     {
         var (result, error) = await createUser.RegisterUser(request);
         if (error != null) return BadRequest(error);
-        return Ok();
+        return NoContent();
     }
     [Authorize]
     [HttpPost("change-password")]
@@ -81,7 +81,7 @@ public class IdentityController : ControllerBase
     {
         var result = await manageUsers.DeleteUser(request);
         if (!result) return BadRequest("User not found");
-        return Ok();
+        return NoContent();
     }
 
     [Authorize(Roles = "Admin")]
@@ -90,6 +90,6 @@ public class IdentityController : ControllerBase
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
         await manageUsers.Logout(userId);
-        return Ok();
+        return NoContent();
     }
 }

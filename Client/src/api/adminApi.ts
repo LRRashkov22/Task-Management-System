@@ -28,15 +28,15 @@ export type EditUserRequest = {
 }
 
 export function getAdminDashboardApi() {
-  return apiJson<AdminDashboardDto>('/Statistics/get-Admin-Dashboard')
+  return apiJson<AdminDashboardDto>('/Statistics/Admin/get-Admin-Dashboard')
 }
 
 export function getEmployeesApi() {
-  return apiJson<AdminUserDto[]>('/Statistics/get-employee')
+  return apiJson<AdminUserDto[]>('/Statistics/Admin/get-employee')
 }
 
 export function getManagersApi() {
-  return apiJson<AdminUserDto[]>('/Statistics/get-managers')
+  return apiJson<AdminUserDto[]>('/Statistics/Admin/get-managers')
 }
 
 export function searchEmployeesApi(text: string, page = 1, pageSize = 10) {
@@ -47,7 +47,7 @@ export function searchEmployeesApi(text: string, page = 1, pageSize = 10) {
   })
 
   return apiJson<AdminUserDto[]>(
-    `/Statistics/search-employee?${searchParams.toString()}`,
+    `/Statistics/Admin/search-employee?${searchParams.toString()}`,
   )
 }
 
