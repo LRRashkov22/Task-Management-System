@@ -1,9 +1,10 @@
-  import { useEffect, useState } from 'react'
-  import type { FormEvent } from 'react'
-  import { loginApi } from './api/authApi'
-  import AdminPage from './pages/AdminPage'
-  import { getRole, saveAuth } from './utils/auth'
-  import './App.css'
+import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import { loginApi, logoutApi } from './api/authApi'
+import AdminPage from './pages/AdminPage'
+import ManagerPage from './pages/ManagerPage'
+import { getRole, logout, saveAuth } from './utils/auth'
+import './App.css'
 
   type Message = {
     text: string
@@ -69,6 +70,11 @@
           return
         }
 
+        if (role === 'Manager') {
+          navigate('/manager')
+          return
+        }
+
         setMessage({
           text: 'Login successful.',
           type: 'success',
@@ -83,8 +89,30 @@
       }
     }
 
+    async function handleLogout() {
+      try {
+        await logoutApi()
+      } catch {
+        // ignore logout endpoint failures and clear local auth anyway
+      }
+
+      logout()
+      navigate('/')
+    }
+
     if (path === '/admin' && getRole() === 'Admin') {
-      return <AdminPage />
+      return <AdminPage onLogout={handleLogout} />
+    }
+
+    if (path === '/manager' && getRole() === 'Manager') {
+      return (
+        <ManagerPage
+          onLogout={() => {
+            logout()
+            navigate('/')
+          }}
+        />
+      )
     }
 
     return (
