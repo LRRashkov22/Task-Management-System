@@ -3,8 +3,8 @@ import type { FormEvent } from 'react'
 import { loginApi, logoutApi } from './api/authApi'
 import AdminPage from './pages/AdminPage'
 import ManagerPage from './pages/ManagerPage'
+import { commonStyles, loginStyles } from './styles'
 import { getRole, logout, saveAuth } from './utils/auth'
-import './App.css'
 
   type Message = {
     text: string
@@ -116,13 +116,18 @@ import './App.css'
     }
 
     return (
-      <main className="login-page">
-        <section className="login-panel" aria-labelledby="login-title">
-          <h1 id="login-title">Login</h1>
+      <main className={loginStyles.page}>
+        <section className={loginStyles.panel} aria-labelledby="login-title">
+          <h1 className={loginStyles.title} id="login-title">
+            Login
+          </h1>
 
-          <form className="login-form" onSubmit={handleLogin}>
-            <label htmlFor="username">Username</label>
+          <form className={loginStyles.form} onSubmit={handleLogin}>
+            <label className={loginStyles.label} htmlFor="username">
+              Username
+            </label>
             <input
+              className={loginStyles.input}
               id="username"
               name="username"
               type="username"
@@ -131,8 +136,11 @@ import './App.css'
               onChange={(event) => setUsername(event.target.value)}
             />
 
-            <label htmlFor="password">Password</label>
+            <label className={loginStyles.label} htmlFor="password">
+              Password
+            </label>
             <input
+              className={loginStyles.input}
               id="password"
               name="password"
               type="password"
@@ -142,17 +150,20 @@ import './App.css'
             />
 
             {message ? (
-              <p className={`form-message ${message.type}`} role="status">
+              <p
+                className={`${loginStyles.message} ${commonStyles.message(message.type)}`}
+                role="status"
+              >
                 {message.text}
               </p>
             ) : null}
 
-            <button type="submit" disabled={isSubmitting}>
+            <button className={loginStyles.submit} type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
-          <div className="demo-box">
+          <div className={loginStyles.demo}>
             <p>Demo accounts:</p>
             <strong>Admin:</strong> admin / admin
             <br />
