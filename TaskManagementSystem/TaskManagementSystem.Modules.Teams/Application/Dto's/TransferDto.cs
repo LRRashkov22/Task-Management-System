@@ -4,7 +4,10 @@ using System.Text;
 
 namespace TaskManagementSystem.Modules.Teams.Application.Dto_s
 {
-    internal class TransferDto
+    public class TransferDto
     {
+        public int TeamId { get; set; }
+        //public int currentid {  get; set; }
+        public int NewManagerId { get; set; }
     }
 }

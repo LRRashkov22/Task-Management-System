@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TaskManagementSystem.Modules.Statistics.Application.DTO_s.ManagersDto;
 
 namespace TaskManagementSystem.Modules.Teams.Application.Dto_s
 {

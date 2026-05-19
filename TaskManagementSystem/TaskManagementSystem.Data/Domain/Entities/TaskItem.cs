@@ -14,19 +14,21 @@ public class TaskItem
 
     public Priority Priority { get; set; }
 
+    public bool IsArchived { get; set; } = false;
+
     public Status Status { get; set; } = Status.InProgress;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime? Deadline { get; set; }
+    public DateTime? Deadline { get; set; } 
 
     public int TeamId { get; set; }
 
     public Team Team { get; set; } = null!;
 
-    public int CreatedById { get; set; }
+    public int? CreatedById { get; set; }
 
-    public User CreatedBy { get; set; } = null!;
+    public User? CreatedBy { get; set; } = null!;
 
     public ICollection<TaskAssignment> Assignments { get; set; } = new HashSet<TaskAssignment>();
 

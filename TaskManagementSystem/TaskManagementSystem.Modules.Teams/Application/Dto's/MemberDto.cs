@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TaskManagementSystem.Modules.Teams.Application.Dto_s;
+namespace TaskManagementSystem.Modules.Statistics.Application.DTO_s.ManagersDto;
 
 public class MemberDto
 {

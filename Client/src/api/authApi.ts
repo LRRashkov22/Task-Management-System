@@ -13,3 +13,9 @@ export async function loginApi({ username, password }: LoginRequest) {
     body: JSON.stringify({ username, password }),
   })
 }
+
+export async function logoutApi() {
+  return apiFetch('/identity/logout', {
+    method: 'POST',
+  })
+}

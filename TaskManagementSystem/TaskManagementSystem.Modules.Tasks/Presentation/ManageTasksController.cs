@@ -5,6 +5,7 @@ using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Modules.Tasks.Application.Dto;
 using TaskManagementSystem.Modules.Tasks.Application.Interface;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace TaskManagementSystem.Modules.Tasks.Presentation;
 
 [ApiController]
@@ -17,12 +18,87 @@ public class ManageTasksController : ControllerBase
         this.task = task;
     }
 
+
+    [Authorize(Roles = "Manager,Admin")]
+    [HttpPatch("transfer-task")]
+    public async Task<ActionResult> TransferTask(TransferTaskDto request)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var isAdmin = User.IsInRole("Admin");
+        var (status, error) = await task.TransferTaskAsync(request, userid, isAdmin);
+        if (error != null)return BadRequest(error);
+        return Ok(status);
+    }
+
+
     [Authorize(Roles = "Manager")]
-    [HttpPost("Create-team")]
+    [HttpGet("get-tasks-baord")]
+    [HttpGet("get-tasks-board")]
+    public async Task<ActionResult> GetBoardTasks()
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var tasks = await task.GetBoardTasks(userid);
+        return Ok(tasks);
+    }
+
+    [Authorize(Roles = "Manager")]
+    [HttpGet("get-tasks-baord/details/{taskId}")]
+    [HttpGet("get-tasks-board/details/{taskId}")]
+    public async Task<ActionResult<TaskDetailsDto>> GetTaskDetails(int taskId)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var tasks = await task.GetTaskDetails(taskId, userid);
+
+        if (tasks == null)
+            return NotFound();
+
+        return Ok(tasks);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("get-archived-tasks")]
+    public async Task<ActionResult> GetArchivedTasks()
+    {
+        var tasks = await task.GetAdminArchivedTasks();
+        return Ok(tasks);
+    }
+
+    [Authorize(Roles = "Manager")]
+    [HttpPost("Create-task")]
     public async Task<ActionResult<CreateTaskDto>> CreateTask(CreateTaskDto request)
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
         var result = await task.CreateTaskAsync(request, userid);
         return Ok(result);
     }
+
+    [Authorize(Roles = "Manager")]
+    [HttpPatch("Remove-task")]
+    public async Task<ActionResult> RemoveTask(RecoverOrArchiveDto request)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var archivetask = await task.ArchiveTask(request, userid);
+        return Ok(archivetask);
+    }
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("Recover-task")]
+    public async Task<ActionResult> RecoverTask(RecoverOrArchiveDto request)
+    {
+        var (taskRecover,error) = await task.AdminRecoverTask(request);
+        if (error != null)
+            return BadRequest(error);
+        return Ok(taskRecover);
+    }
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("force-delete-task/{taskId}")]
+    public async Task<ActionResult> ForceDeleteTask(int taskId)
+    {
+        var (status, error) = await task.DeleteArchivedTaskAsync(taskId);
+
+        if (error != null)  return BadRequest(error);
+
+        return Ok(status);
+    }
+
+
 }

@@ -63,6 +63,14 @@ export function getToken() {
   return localStorage.getItem('token')
 }
 
+export function getUserId() {
+  return localStorage.getItem('userId')
+}
+
+export function getUsername() {
+  return localStorage.getItem('username')
+}
+
 export function isTokenExpired(token: string) {
   const claims = parseJwt(token)
   if (!claims?.exp) return true

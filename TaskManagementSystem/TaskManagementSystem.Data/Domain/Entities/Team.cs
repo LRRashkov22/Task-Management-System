@@ -6,6 +6,8 @@ public class Team
 {
     public int Id { get; set; }
 
+    public bool IsArchived { get; set; } = false;
+
     public string Name { get; set; } = string.Empty;
 
     public int ManagerId { get; set; }
@@ -14,5 +16,5 @@ public class Team
 
     public ICollection<TeamMembership> Memberships { get; set; } = new HashSet<TeamMembership>();
 
-    public ICollection<TaskItem>? Tasks { get; set; } = new HashSet<TaskItem>();
+    public ICollection<TaskItem> Tasks { get; set; } = new HashSet<TaskItem>();
 }

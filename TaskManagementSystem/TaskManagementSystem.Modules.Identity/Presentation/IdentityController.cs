@@ -75,13 +75,40 @@ public class IdentityController : ControllerBase
         if (result == null) return BadRequest("User not found or invalid input");
         return Ok(result);
     }
+
     [Authorize(Roles = "Admin")]
-    [HttpDelete("delete-user")]
-    public async Task<ActionResult> DeleteUser(DeleteDto request)
+    [HttpDelete("delete-employee/{employeeId}")]
+    public async Task<ActionResult> DeleteEmployee(int employeeId)
     {
-        var result = await manageUsers.DeleteUser(request);
-        if (!result) return BadRequest("User not found");
-        return Ok(result);
+        var (status, error) = await manageUsers.DeleteEmployeeAsync(employeeId);
+
+        if (error != null) return BadRequest(error);
+
+        return Ok(status);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("transfer-ownership")]
+    public async Task<ActionResult> TransferOwnership(TransferManagerOwnershipDto request)
+    {
+        var (status, error) =
+            await manageUsers.TransferOwnershipAsync(request);
+
+        if (error != null) return BadRequest(error);
+
+        return Ok(status);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{managerId}/force-delete")]
+    public async Task<ActionResult> ForceDeleteManager(int managerId)
+    {
+        var (status, error) = await manageUsers.ForceDeleteManagerAsync(managerId);
+
+        if (error != null)
+            return BadRequest(error);
+
+        return Ok(status);
     }
 
     [Authorize(Roles = "Admin")]

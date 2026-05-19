@@ -43,7 +43,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.Property<int>("TaskId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -177,7 +177,7 @@ namespace TaskManagementSystem.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("ChangedById")
+                    b.Property<int?>("ChangedById")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
@@ -218,7 +218,7 @@ namespace TaskManagementSystem.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("CreatedById")
+                    b.Property<int?>("CreatedById")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("Deadline")
@@ -227,6 +227,9 @@ namespace TaskManagementSystem.Data.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Priority")
                         .IsRequired()
@@ -262,6 +265,9 @@ namespace TaskManagementSystem.Data.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("ManagerId")
                         .HasColumnType("integer");
@@ -363,7 +369,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.Property<int>("TaskId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -386,8 +392,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("TaskItem");
 
@@ -405,7 +410,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "MentionedUser")
                         .WithMany("CommentMentions")
                         .HasForeignKey("MentionedUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Comment");
@@ -428,7 +433,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -445,7 +450,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "User")
                         .WithMany("TaskAssignments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("TaskItem");
@@ -458,8 +463,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "ChangedBy")
                         .WithMany("TaskHistories")
                         .HasForeignKey("ChangedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.TaskItem", "TaskItem")
                         .WithMany("History")
@@ -477,8 +481,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "CreatedBy")
                         .WithMany("CreatedTasks")
                         .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.Team", "Team")
                         .WithMany("Tasks")
@@ -542,8 +545,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.User", "User")
                         .WithMany("WorkSessions")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("TaskItem");
 

@@ -16,9 +16,9 @@ public class TaskHistory
 
     public string? NewValue { get; set; }
 
-    public int ChangedById { get; set; }
+    public int? ChangedById { get; set; }
 
-    public User ChangedBy { get; set; } = null!;
+    public User? ChangedBy { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

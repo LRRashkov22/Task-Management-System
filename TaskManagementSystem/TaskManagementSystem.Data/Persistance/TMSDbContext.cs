@@ -137,7 +137,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(task => task.CreatedBy)
                 .WithMany(user => user.CreatedTasks)
                 .HasForeignKey(task => task.CreatedById)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<TaskAssignment>(entity =>
@@ -161,7 +161,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(assignment => assignment.User)
                 .WithMany(user => user.TaskAssignments)
                 .HasForeignKey(assignment => assignment.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Comment>(entity =>
@@ -180,7 +180,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(comment => comment.User)
                 .WithMany(user => user.Comments)
                 .HasForeignKey(comment => comment.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(comment => comment.TaskItem)
                 .WithMany(task => task.Comments)
@@ -208,7 +208,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(mention => mention.MentionedUser)
                 .WithMany(user => user.CommentMentions)
                 .HasForeignKey(mention => mention.MentionedUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -234,7 +234,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(notification => notification.User)
                 .WithMany(user => user.Notifications)
                 .HasForeignKey(notification => notification.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<TaskHistory>(entity =>
@@ -264,7 +264,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(history => history.ChangedBy)
                 .WithMany(user => user.TaskHistories)
                 .HasForeignKey(history => history.ChangedById)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<WorkSession>(entity =>
@@ -284,7 +284,7 @@ public class TaskManagementDbContext : DbContext
             entity.HasOne(session => session.User)
                 .WithMany(user => user.WorkSessions)
                 .HasForeignKey(session => session.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Log>(entity =>

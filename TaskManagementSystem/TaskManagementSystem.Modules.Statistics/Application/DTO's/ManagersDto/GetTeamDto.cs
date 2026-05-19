@@ -18,5 +18,5 @@ public class GetTeamDto
 
     public ICollection<MemberDto> Members { get; set; } = new List<MemberDto>();
 
-    public ICollection<TaskDto> Tasks { get; set; } = new List<TaskDto>();
+    public ICollection<TeamTaskCardDto> Tasks { get; set; } = new List<TeamTaskCardDto>();
 }
