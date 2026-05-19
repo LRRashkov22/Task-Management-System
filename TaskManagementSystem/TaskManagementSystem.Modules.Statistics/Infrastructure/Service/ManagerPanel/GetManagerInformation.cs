@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementSystem.Data.Persistance;
+using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
 using TaskManagementSystem.Modules.Statistics.Application.DTO_s.ManagersDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interface;
 namespace TaskManagementSystem.Modules.Statistics.Infrastructure.Service.NewFolder;
@@ -11,8 +12,8 @@ public class GetManagerInformation : IGetManagerInformation
     {
         this.context = context;
     }
-
-    public async Task<List<ManagerTeamDropdownDto>> GetManagerTeamsAsync(int userid)
+    //shows list of names of teams of the current manager
+    public async Task<List<ManagerTeamDropdownDto>> GetManagerDropdownTeamsAsync(int userid)
     {
         return await context.Teams
             .AsNoTracking()
@@ -27,8 +28,9 @@ public class GetManagerInformation : IGetManagerInformation
             }).ToListAsync();
     }
 
-    //show only when page requested
-    public async Task<List<GetTeamDto>> GetAllTeamsListAsync(int userid)
+    //show only when page requested / show.
+    //shows in dashboad and team page in Mnagaer panel.
+    public async Task<List<GetTeamDto>> GetAllTeamsManagerListAsync(int userid)
     {
         var managerExists = await context.Users.AsNoTracking().AnyAsync(m => m.Id == userid);
         // if (!managerExists) throw new Exception("Error finding teams");
@@ -91,8 +93,7 @@ public class GetManagerInformation : IGetManagerInformation
                 .ThenInclude(task => task.WorkSessions)
             .FirstOrDefaultAsync();
 
-        if (team == null)
-            return null;
+        if (team == null) return null;
 
         return new GetTeamDto
         {
@@ -109,10 +110,8 @@ public class GetManagerInformation : IGetManagerInformation
                 {
                     Id = m.UserId,
                     Username = m.User.Username
-                })
-                .ToList(),
-
-            Tasks = team.Tasks
+                }).ToList(),
+                Tasks = team.Tasks
                 .Select(task => new TeamTaskCardDto
                 {
                     Id = task.Id,
@@ -121,22 +120,29 @@ public class GetManagerInformation : IGetManagerInformation
                     Status = task.Status.ToString(),
                     Priority = task.Priority.ToString(),
                     Deadline = task.Deadline,
-
-                    AssignedEmployeesCount =
-                        task.Assignments.Count,
-
-                    WorkHours =
-                        task.WorkSessions.Sum(w => w.Hours),
-
+                    AssignedEmployeesCount = task.Assignments.Count,
+                    WorkHours = task.WorkSessions.Sum(w => w.Hours),
                     AssignedEmployees = task.Assignments
                         .Select(a => new MemberDto
                         {
                             Id = a.UserId,
                             Username = a.User.Username
-                        })
-                        .ToList()
-                })
-                .ToList()
-        };
+                        }).ToList()
+                }).ToList()};
     }
+
+    public async Task<List<MemberDto>?> GetAllManagerEmployees(int userid) {
+
+        var employees = await context.Users.AsNoTracking()
+                .Where(m => m.ManagerId == userid)
+                .Select(m => new MemberDto
+                {
+                    Id = m.Id,
+                    Username = m.Username
+                }).ToListAsync();
+        if (employees.Count() == 0) return null;
+        return employees; 
+    } 
+
+
 }

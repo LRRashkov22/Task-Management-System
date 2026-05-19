@@ -19,12 +19,13 @@ public class ManagerInformationController : ControllerBase
     }
 
     //request when team page need to load
+    //shows in dashboad and team page in Mnagaer panel.
     [Authorize(Roles = "Manager")]
-    [HttpGet("get-all-teams")]
+    [HttpGet("get-all-teams-dashboard/team-page")]
     public async Task<ActionResult> GetTeam()
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var teams = await managerInfo.GetAllTeamsListAsync(userid);
+        var teams = await managerInfo.GetAllTeamsManagerListAsync(userid);
         return Ok(teams);
     }
 
@@ -33,7 +34,7 @@ public class ManagerInformationController : ControllerBase
     public async Task<ActionResult> GetMyTeams()
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        var teams = await managerInfo.GetManagerTeamsAsync(userid);
+        var teams = await managerInfo.GetManagerDropdownTeamsAsync(userid);
         return Ok(teams);
     }
 
@@ -59,4 +60,15 @@ public class ManagerInformationController : ControllerBase
         if (team == null) return NotFound();
         return Ok(team);
     }
+
+    [Authorize(Roles = "Manager")]
+    [HttpGet("get-manager-employees")]
+    public async Task<ActionResult> GetManagerEmployeesList()
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var employeesList = await managerInfo.GetAllManagerEmployees(userid);
+        if (employeesList == null) return NotFound();
+        return Ok(employeesList);
+    }
+
 }
