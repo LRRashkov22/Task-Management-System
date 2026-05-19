@@ -9,9 +9,9 @@ public class Comment
 
     public string Content { get; set; } = string.Empty;
 
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
 
-    public User User { get; set; } = null!;
+    public User? User { get; set; }
 
     public int TaskId { get; set; }
 

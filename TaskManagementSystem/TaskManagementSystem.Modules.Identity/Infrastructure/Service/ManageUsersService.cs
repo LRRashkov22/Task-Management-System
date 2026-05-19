@@ -22,7 +22,21 @@ public class ManageUsersService : IManageUsers
     {
         var user =  await context.Users.FirstOrDefaultAsync(u => u.Id == request.Id);
         if (user == null) return null;
-        if (request.Username == null) return null;
+        if(request.Username.Length > 19) return null;
+
+        if (!string.IsNullOrWhiteSpace(request.Username))
+        {
+            var usernameExists = await context.Users
+                .AsNoTracking() 
+                .AnyAsync(u =>
+                    u.Username == request.Username &&
+                    u.Id != request.Id);
+
+            if (usernameExists)
+                return null;
+
+            user.Username = request.Username;
+        }
         if (request.ManagerId != null) { 
         var manager = await context.Users.FirstOrDefaultAsync(u => u.Id == request.ManagerId);
             if (manager == null) return null;
@@ -32,13 +46,21 @@ public class ManageUsersService : IManageUsers
         await context.SaveChangesAsync();
         return new EditUserDto { ManagerId = user.ManagerId, Username = user.Username };
     }
-        public async Task<bool> DeleteUser(DeleteDto request)
+    public async Task<(bool status, string? error)> DeleteEmployeeAsync(int employeeId)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.Id);
-        if (user == null) return false;
-        context.Users.Remove(user);
+        var employee = await context.Users
+            .FirstOrDefaultAsync(u =>
+                u.Id == employeeId &&
+                u.Role == Role.Employee);
+
+        if (employee == null)
+            return (false, "Employee not found");
+
+        context.Users.Remove(employee);
+
         await context.SaveChangesAsync();
-        return true;
+
+        return (true, null);
     }
 
     public async Task Logout(int userId)
@@ -50,6 +72,91 @@ public class ManageUsersService : IManageUsers
             user.RefreshTokenExpiryTime = null;
             await context.SaveChangesAsync();
         }
+    }
+
+    public async Task<(bool status, string? error)> TransferOwnershipAsync(TransferManagerOwnershipDto request)
+    {
+        if (request.CurrentManagerId == request.NewManagerId)
+            return (false, "Cannot transfer to same manager");
+
+        var currentManager = await context.Users
+            .FirstOrDefaultAsync(u =>
+                u.Id == request.CurrentManagerId &&
+                u.Role == Role.Manager);
+
+        if (currentManager == null)
+            return (false, "Current manager not found");
+
+        var newManager = await context.Users
+            .FirstOrDefaultAsync(u =>
+                u.Id == request.NewManagerId &&
+                u.Role == Role.Manager);
+
+        if (newManager == null)
+            return (false, "New manager not found");
+
+        await using var transaction =
+            await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // transfer employees
+            var employees = await context.Users
+                .Where(u => u.ManagerId == request.CurrentManagerId)
+                .ToListAsync();
+
+            foreach (var employee in employees)
+            {
+                employee.ManagerId = request.NewManagerId;
+            }
+
+            // transfer teams
+            var teams = await context.Teams
+                .Where(t => t.ManagerId == request.CurrentManagerId)
+                .ToListAsync();
+
+            foreach (var team in teams)
+            {
+                team.ManagerId = request.NewManagerId;
+            }
+
+            // transfer created tasks
+            var tasks = await context.TaskItems
+                .Where(t => t.CreatedById == request.CurrentManagerId)
+                .ToListAsync();
+
+            foreach (var task in tasks)
+            {
+                task.CreatedById = request.NewManagerId;
+            }
+
+            await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return (true, null);
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            return (false, "Transfer failed");
+        }
+    }
+
+    public async Task<(bool status, string? error)> ForceDeleteManagerAsync(int managerId)
+    {
+        var manager = await context.Users
+            .FirstOrDefaultAsync(u =>
+                u.Id == managerId &&
+                u.Role == Role.Manager);
+        if (manager == null)
+            return (false, "Manager not found");
+
+        context.Users.Remove(manager);
+
+        await context.SaveChangesAsync();
+
+        return (true, null);
     }
 
 }

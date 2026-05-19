@@ -2,13 +2,24 @@
   import type { FormEvent } from 'react'
   import {
     createUserApi,
+    deleteArchivedTaskApi,
+    deleteArchivedTeamApi,
     editUserApi,
     getAdminDashboardApi,
+    getArchivedTasksApi,
+    getArchivedTeamsApi,
     getEmployeesApi,
     getManagersApi,
+    recoverArchivedTaskApi,
+    recoverArchivedTeamApi,
     searchEmployeesApi,
   } from '../api/adminApi'
-  import type { AdminDashboardDto, AdminUserDto } from '../api/adminApi'
+  import type {
+    AdminDashboardDto,
+    AdminUserDto,
+    ArchivedTaskDto,
+    ArchivedTeamDto,
+  } from '../api/adminApi'
 
   type IconName =
     | 'dashboard'
@@ -22,6 +33,8 @@
     | 'globe'
     | 'activity'
     | 'search'
+    | 'restore'
+    | 'trash'
 
   type NavItem = {
     id: AdminView
@@ -37,7 +50,14 @@
   }
 
   type Language = 'en' | 'bg'
-  type AdminView = 'dashboard' | 'notifications' | 'users' | 'managers' | 'logs'
+  type AdminView =
+    | 'dashboard'
+    | 'notifications'
+    | 'users'
+    | 'managers'
+    | 'archivedTasks'
+    | 'archivedTeams'
+    | 'logs'
   type CreateModal = 'user' | 'manager' | null
 
   type CreateForm = {
@@ -60,10 +80,20 @@
       notifications: 'Notifications',
       users: 'Users',
       managers: 'Managers',
+      archivedTasks: 'Archived Tasks',
+      archivedTeams: 'Archived Teams',
       logs: 'Logs',
       settings: 'Settings',
       tasks: 'Tasks',
       teams: 'Teams',
+      title: 'Title',
+      team: 'Team',
+      assigned: 'Assigned',
+      members: 'Members',
+      taskCount: 'Tasks',
+      actions: 'Actions',
+      recover: 'Recover',
+      deleteForever: 'Delete permanently',
       closeMenu: 'Close menu',
       openMenu: 'Open menu',
       noNotifications: 'No notifications yet',
@@ -84,10 +114,24 @@
       apiError: 'Could not load data from the server.',
       created: 'Created successfully.',
       updated: 'Updated successfully.',
+      archiveRecovered: 'Recovered successfully.',
+      archiveDeleted: 'Deleted permanently.',
     },
     bg: {
       brand: 'TaskMan',
       systemAdmin: 'System Admin',
+      archivedTasks: 'Archived Tasks',
+      archivedTeams: 'Archived Teams',
+      title: 'Title',
+      team: 'Team',
+      assigned: 'Assigned',
+      members: 'Members',
+      taskCount: 'Tasks',
+      actions: 'Actions',
+      recover: 'Recover',
+      deleteForever: 'Delete permanently',
+      archiveRecovered: 'Recovered successfully.',
+      archiveDeleted: 'Deleted permanently.',
       admin: 'Администратор',
       dashboard: 'Табло',
       notifications: 'Известия',
@@ -239,6 +283,27 @@
       )
     }
 
+    if (name === 'restore') {
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7" />
+          <path d="M3 4v6h6" />
+        </svg>
+      )
+    }
+
+    if (name === 'trash') {
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 6h18" />
+          <path d="M8 6V4h8v2" />
+          <path d="M19 6 18 20H6L5 6" />
+          <path d="M10 11v5" />
+          <path d="M14 11v5" />
+        </svg>
+      )
+    }
+
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 12h4l3-7 4 14 3-7h4" />
@@ -248,7 +313,7 @@
 
   
 
-  function AdminPage() {
+  function AdminPage({ onLogout }: { onLogout: () => void }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
     const [language, setLanguage] = useState<Language>('en')
     const [activeView, setActiveView] = useState<AdminView>('dashboard')
@@ -260,9 +325,15 @@
       useState<AdminDashboardDto>(emptyDashboard)
     const [employees, setEmployees] = useState<AdminUserDto[]>([])
     const [managers, setManagers] = useState<AdminUserDto[]>([])
+    const [archivedTasks, setArchivedTasks] = useState<ArchivedTaskDto[]>([])
+    const [archivedTeams, setArchivedTeams] = useState<ArchivedTeamDto[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     const [isLoading, setIsLoading] = useState(true)
+    const [isArchiveLoading, setIsArchiveLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [pendingArchiveAction, setPendingArchiveAction] = useState<
+      string | null
+    >(null)
     const [message, setMessage] = useState<StatusMessage | null>(null)
     const t = translations[language]
 
@@ -286,13 +357,65 @@
         setIsLoading(false)
       }
     }, [t.apiError])
+
+    const loadArchivedTasks = useCallback(async () => {
+      setIsArchiveLoading(true)
+
+      try {
+        setArchivedTasks(await getArchivedTasksApi())
+      } catch (error) {
+        setMessage({
+          text: error instanceof Error ? error.message : t.apiError,
+          type: 'error',
+        })
+      } finally {
+        setIsArchiveLoading(false)
+      }
+    }, [t.apiError])
+
+    const loadArchivedTeams = useCallback(async () => {
+      setIsArchiveLoading(true)
+
+      try {
+        setArchivedTeams(await getArchivedTeamsApi())
+      } catch (error) {
+        setMessage({
+          text: error instanceof Error ? error.message : t.apiError,
+          type: 'error',
+        })
+      } finally {
+        setIsArchiveLoading(false)
+      }
+    }, [t.apiError])
     
 useEffect(() => {
-  void loadAdminData()
+  const timeoutId = window.setTimeout(() => {
+    void loadAdminData()
+  }, 0)
+
+  return () => window.clearTimeout(timeoutId)
 }, [loadAdminData])
 
 useEffect(() => {
-  setMessage(null)
+  const timeoutId = window.setTimeout(() => {
+    if (activeView === 'archivedTasks') {
+      void loadArchivedTasks()
+    }
+
+    if (activeView === 'archivedTeams') {
+      void loadArchivedTeams()
+    }
+  }, 0)
+
+  return () => window.clearTimeout(timeoutId)
+}, [activeView, loadArchivedTasks, loadArchivedTeams])
+
+useEffect(() => {
+  const timeoutId = window.setTimeout(() => {
+    setMessage(null)
+  }, 0)
+
+  return () => window.clearTimeout(timeoutId)
 }, [activeView])
 
     // useEffect(() => {
@@ -404,6 +527,86 @@ async function handleSearch(value: string) {
   }
 }
 
+async function refreshDashboardSummary() {
+  setDashboard(await getAdminDashboardApi())
+}
+
+async function handleRecoverArchivedTask(id: number) {
+  setPendingArchiveAction(`task-recover-${id}`)
+  setMessage(null)
+
+  try {
+    await recoverArchivedTaskApi(id)
+    await Promise.all([loadArchivedTasks(), refreshDashboardSummary()])
+    setMessage({ text: t.archiveRecovered, type: 'success' })
+  } catch (error) {
+    setMessage({
+      text: error instanceof Error ? error.message : t.apiError,
+      type: 'error',
+    })
+  } finally {
+    setPendingArchiveAction(null)
+  }
+}
+
+async function handleDeleteArchivedTask(id: number) {
+  if (!window.confirm('Delete this archived task permanently?')) return
+
+  setPendingArchiveAction(`task-delete-${id}`)
+  setMessage(null)
+
+  try {
+    await deleteArchivedTaskApi(id)
+    await loadArchivedTasks()
+    setMessage({ text: t.archiveDeleted, type: 'success' })
+  } catch (error) {
+    setMessage({
+      text: error instanceof Error ? error.message : t.apiError,
+      type: 'error',
+    })
+  } finally {
+    setPendingArchiveAction(null)
+  }
+}
+
+async function handleRecoverArchivedTeam(id: number) {
+  setPendingArchiveAction(`team-recover-${id}`)
+  setMessage(null)
+
+  try {
+    await recoverArchivedTeamApi(id)
+    await Promise.all([loadArchivedTeams(), refreshDashboardSummary()])
+    setMessage({ text: t.archiveRecovered, type: 'success' })
+  } catch (error) {
+    setMessage({
+      text: error instanceof Error ? error.message : t.apiError,
+      type: 'error',
+    })
+  } finally {
+    setPendingArchiveAction(null)
+  }
+}
+
+async function handleDeleteArchivedTeam(id: number) {
+  if (!window.confirm('Delete this archived team permanently?')) return
+
+  setPendingArchiveAction(`team-delete-${id}`)
+  setMessage(null)
+
+  try {
+    await deleteArchivedTeamApi(id)
+    await loadArchivedTeams()
+    setMessage({ text: t.archiveDeleted, type: 'success' })
+  } catch (error) {
+    setMessage({
+      text: error instanceof Error ? error.message : t.apiError,
+      type: 'error',
+    })
+  } finally {
+    setPendingArchiveAction(null)
+  }
+}
+
   async function handleCreateSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -503,6 +706,8 @@ try {
       { id: 'notifications', label: t.notifications, icon: 'bell' },
       { id: 'users', label: t.users, icon: 'users' },
       { id: 'managers', label: t.managers, icon: 'manager' },
+      { id: 'archivedTasks', label: t.archivedTasks, icon: 'users' },
+      { id: 'archivedTeams', label: t.archivedTeams, icon: 'users' },
       { id: 'logs', label: t.logs, icon: 'logs' },
     ]
 
@@ -563,6 +768,10 @@ try {
               <button type="button">
                 <Icon name="settings" />
                 <span>{t.settings}</span>
+              </button>
+              <button type="button" onClick={onLogout}>
+                <Icon name="close" />
+                <span>Logout</span>
               </button>
             </div>
         </aside>
@@ -703,6 +912,118 @@ try {
                             onClick={() => openEditModal(manager, 'manager')}
                           >
                             {t.edit}
+                          </button>
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="admin-table-empty">{t.empty}</div>
+                  )}
+                </div>
+              </section>
+            ) : activeView === 'archivedTasks' ? (
+              <section className="admin-table-card" aria-label={t.archivedTasks}>
+                <div className="admin-table admin-table-archived-tasks" role="table">
+                  <div className="admin-table-row admin-table-head" role="row">
+                    <span role="columnheader">{t.title.toUpperCase()}</span>
+                    <span role="columnheader">{t.team.toUpperCase()}</span>
+                    <span role="columnheader">{t.manager.toUpperCase()}</span>
+                    <span role="columnheader">{t.assigned.toUpperCase()}</span>
+                    <span role="columnheader">{t.actions.toUpperCase()}</span>
+                  </div>
+                  {isArchiveLoading ? (
+                    <div className="admin-table-empty">{t.loading}</div>
+                  ) : archivedTasks.length ? (
+                    archivedTasks.map((task) => (
+                      <div
+                        className="admin-table-row admin-table-body-row"
+                        role="row"
+                        key={task.id}
+                      >
+                        <span role="cell">{task.title}</span>
+                        <span role="cell">{task.teamName}</span>
+                        <span role="cell">{task.managerName || '-'}</span>
+                        <span role="cell">{task.assignedEmployeesCount}</span>
+                        <span className="admin-archive-actions" role="cell">
+                          <button
+                            className="admin-icon-action recover"
+                            type="button"
+                            aria-label={`${t.recover}: ${task.title}`}
+                            title={t.recover}
+                            disabled={pendingArchiveAction !== null}
+                            onClick={() => {
+                              void handleRecoverArchivedTask(task.id)
+                            }}
+                          >
+                            <Icon name="restore" />
+                          </button>
+                          <button
+                            className="admin-icon-action delete"
+                            type="button"
+                            aria-label={`${t.deleteForever}: ${task.title}`}
+                            title={t.deleteForever}
+                            disabled={pendingArchiveAction !== null}
+                            onClick={() => {
+                              void handleDeleteArchivedTask(task.id)
+                            }}
+                          >
+                            <Icon name="trash" />
+                          </button>
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="admin-table-empty">{t.empty}</div>
+                  )}
+                </div>
+              </section>
+            ) : activeView === 'archivedTeams' ? (
+              <section className="admin-table-card" aria-label={t.archivedTeams}>
+                <div className="admin-table admin-table-archived-teams" role="table">
+                  <div className="admin-table-row admin-table-head" role="row">
+                    <span role="columnheader">{t.name.toUpperCase()}</span>
+                    <span role="columnheader">{t.manager.toUpperCase()}</span>
+                    <span role="columnheader">{t.members.toUpperCase()}</span>
+                    <span role="columnheader">{t.taskCount.toUpperCase()}</span>
+                    <span role="columnheader">{t.actions.toUpperCase()}</span>
+                  </div>
+                  {isArchiveLoading ? (
+                    <div className="admin-table-empty">{t.loading}</div>
+                  ) : archivedTeams.length ? (
+                    archivedTeams.map((team) => (
+                      <div
+                        className="admin-table-row admin-table-body-row"
+                        role="row"
+                        key={team.id}
+                      >
+                        <span role="cell">{team.name}</span>
+                        <span role="cell">{team.managerName || '-'}</span>
+                        <span role="cell">{team.membersCount}</span>
+                        <span role="cell">{team.taskCount}</span>
+                        <span className="admin-archive-actions" role="cell">
+                          <button
+                            className="admin-icon-action recover"
+                            type="button"
+                            aria-label={`${t.recover}: ${team.name}`}
+                            title={t.recover}
+                            disabled={pendingArchiveAction !== null}
+                            onClick={() => {
+                              void handleRecoverArchivedTeam(team.id)
+                            }}
+                          >
+                            <Icon name="restore" />
+                          </button>
+                          <button
+                            className="admin-icon-action delete"
+                            type="button"
+                            aria-label={`${t.deleteForever}: ${team.name}`}
+                            title={t.deleteForever}
+                            disabled={pendingArchiveAction !== null}
+                            onClick={() => {
+                              void handleDeleteArchivedTeam(team.id)
+                            }}
+                          >
+                            <Icon name="trash" />
                           </button>
                         </span>
                       </div>

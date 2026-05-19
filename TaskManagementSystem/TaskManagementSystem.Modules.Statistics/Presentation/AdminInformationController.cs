@@ -15,8 +15,25 @@ public class AdminInformationController : ControllerBase
         this.adminInfo = adminInfo;
     }
 
-    //Get Managers
     [Authorize(Roles = "Admin")]
+    [HttpGet("get-admin-preview-OnDelete/{managerid}")]
+    public async Task<ActionResult> GetAdminPreviewOnDeletManager(int managerid)
+    {
+        var (result, error) = await adminInfo.GetPreviewOnDeletingManager(managerid);
+        if (error != null) return BadRequest(error);
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("get-archived-teams")]
+    public async Task<ActionResult> GetArchivedTeams()
+    {
+        var teams = await adminInfo.GetAdminArchivedTeams();
+        return Ok(teams);
+    }
+
+    //Get Managers
+    [Authorize(Roles = "Admin,Manager")]
     [HttpGet("get-managers")]
     public async Task<ActionResult<List<UserDto>>> GetAllManagers()
     {
