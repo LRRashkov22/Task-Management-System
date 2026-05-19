@@ -20,6 +20,7 @@
     ArchivedTaskDto,
     ArchivedTeamDto,
   } from '../api/adminApi'
+  import { adminStyles, commonStyles } from '../styles'
 
   type IconName =
     | 'dashboard'
@@ -742,18 +743,18 @@ try {
       navItems.find((item) => item.id === activeView)?.label ?? t.dashboard
 
     return (
-      <main className={`admin-shell ${isSidebarOpen ? '' : 'sidebar-closed'}`}>
-        <aside className="admin-sidebar" aria-label="Admin navigation" aria-hidden={!isSidebarOpen}>
-            <div className="admin-brand">
+      <main className={adminStyles.shell(isSidebarOpen)}>
+        <aside className={adminStyles.sidebar(isSidebarOpen)} aria-label="Admin navigation" aria-hidden={!isSidebarOpen}>
+            <div className={`${adminStyles.sidebarInner(isSidebarOpen)} ${adminStyles.brand}`}>
               <h1>{t.brand}</h1>
               <p>{t.systemAdmin}</p>
               <span>{t.admin}</span>
             </div>
 
-            <nav className="admin-nav">
+            <nav className={adminStyles.nav(isSidebarOpen)}>
               {navItems.map((item) => (
                 <button
-                  className={activeView === item.id ? 'active' : ''}
+                  className={adminStyles.navButton(activeView === item.id)}
                   type="button"
                   key={item.label}
                   onClick={() => setActiveView(item.id)}
@@ -764,22 +765,22 @@ try {
               ))}
             </nav>
 
-            <div className="admin-sidebar-footer">
-              <button type="button">
+            <div className={adminStyles.sidebarFooter(isSidebarOpen)}>
+              <button className={adminStyles.footerButton} type="button">
                 <Icon name="settings" />
                 <span>{t.settings}</span>
               </button>
-              <button type="button" onClick={onLogout}>
+              <button className={adminStyles.footerButton} type="button" onClick={onLogout}>
                 <Icon name="close" />
                 <span>Logout</span>
               </button>
             </div>
         </aside>
 
-        <section className="admin-main" aria-labelledby="admin-page-title">
-          <header className="admin-topbar">
+        <section className={adminStyles.main} aria-labelledby="admin-page-title">
+          <header className={adminStyles.topbar(isSidebarOpen)}>
             <button
-              className="admin-icon-button"
+              className={adminStyles.iconButton}
               type="button"
               aria-label={isSidebarOpen ? t.closeMenu : t.openMenu}
               onClick={() => setIsSidebarOpen((current) => !current)}
@@ -787,7 +788,7 @@ try {
               <Icon name={isSidebarOpen ? 'close' : 'menu'} />
             </button>
             <button
-              className="language-button"
+              className={adminStyles.languageButton}
               type="button"
               onClick={() =>
                 setLanguage((current) => (current === 'en' ? 'bg' : 'en'))
@@ -798,12 +799,12 @@ try {
             </button>
           </header>
 
-          <div className="admin-content">
-            <div className="admin-page-heading">
+          <div className={adminStyles.content(isSidebarOpen)}>
+            <div className={adminStyles.heading}>
               <h2 id="admin-page-title">{pageTitle}</h2>
               {activeView === 'users' ? (
                 <button
-                  className="admin-create-button"
+                  className={adminStyles.createButton}
                   type="button"
                   onClick={() => openCreateModal('user')}
                 >
@@ -813,7 +814,7 @@ try {
               ) : null}
               {activeView === 'managers' ? (
                 <button
-                  className="admin-create-button"
+                  className={adminStyles.createButton}
                   type="button"
                   onClick={() => openCreateModal('manager')}
                 >
@@ -824,21 +825,21 @@ try {
             </div>
 
             {message ? (
-              <p className={`admin-message ${message.type}`} role="status">
+              <p className={`${adminStyles.message} ${commonStyles.message(message.type)}`} role="status">
                 {message.text}
               </p>
             ) : null}
 
             {activeView === 'notifications' ? (
-              <section className="empty-state-card" aria-label={t.notifications}>
-                <div className="empty-state-content">
+              <section className={adminStyles.emptyState} aria-label={t.notifications}>
+                <div className={adminStyles.emptyContent}>
                   <Icon name="bell" />
                   <p>{t.noNotifications}</p>
                 </div>
               </section>
             ) : activeView === 'users' ? (
-              <section className="admin-table-card" aria-label={t.users}>
-                <div className="admin-search">
+              <section className={adminStyles.tableCard} aria-label={t.users}>
+                <div className={adminStyles.search}>
                   <Icon name="search" />
                   <input
                     placeholder={t.search}
@@ -849,19 +850,19 @@ try {
                     }}
                   />
                 </div>
-                <div className="admin-table admin-table-users" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
+                <div className={adminStyles.table('users')} role="table">
+                  <div className={adminStyles.head('users')} role="row">
                     <span role="columnheader">{t.username.toUpperCase()}</span>
                     <span role="columnheader">ID</span>
                     <span role="columnheader">{t.manager.toUpperCase()}</span>
                     <span role="columnheader">{t.edit.toUpperCase()}</span>
                   </div>
                   {isLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : employees.length ? (
                     employees.map((employee) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('users')}
                         role="row"
                         key={employee.id}
                       >
@@ -870,7 +871,7 @@ try {
                         <span role="cell">{employee.managerName || '-'}</span>
                         <span role="cell">
                           <button
-                            className="admin-table-action"
+                            className={adminStyles.tableAction}
                             type="button"
                             onClick={() => openEditModal(employee, 'user')}
                           >
@@ -880,25 +881,25 @@ try {
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'managers' ? (
-              <section className="admin-table-card manager-table-card" aria-label={t.managers}>
-                <div className="admin-table admin-table-managers" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
+              <section className={`${adminStyles.tableCard} mt-1`} aria-label={t.managers}>
+                <div className={adminStyles.table('managers')} role="table">
+                  <div className={`${adminStyles.head('managers')} min-h-[50px]`} role="row">
                     <span role="columnheader">{t.username.toUpperCase()}</span>
                     <span role="columnheader">ID</span>
                     <span role="columnheader">{t.teams.toUpperCase()}</span>
                     <span role="columnheader">{t.edit.toUpperCase()}</span>
                   </div>
                   {isLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : managers.length ? (
                     managers.map((manager) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('managers')}
                         role="row"
                         key={manager.id}
                       >
@@ -907,7 +908,7 @@ try {
                         <span role="cell">{manager.teams ?? 0}</span>
                         <span role="cell">
                           <button
-                            className="admin-table-action"
+                            className={adminStyles.tableAction}
                             type="button"
                             onClick={() => openEditModal(manager, 'manager')}
                           >
@@ -917,14 +918,14 @@ try {
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'archivedTasks' ? (
-              <section className="admin-table-card" aria-label={t.archivedTasks}>
-                <div className="admin-table admin-table-archived-tasks" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
+              <section className={adminStyles.tableCard} aria-label={t.archivedTasks}>
+                <div className={adminStyles.table('archivedTasks')} role="table">
+                  <div className={adminStyles.head('archivedTasks')} role="row">
                     <span role="columnheader">{t.title.toUpperCase()}</span>
                     <span role="columnheader">{t.team.toUpperCase()}</span>
                     <span role="columnheader">{t.manager.toUpperCase()}</span>
@@ -932,11 +933,11 @@ try {
                     <span role="columnheader">{t.actions.toUpperCase()}</span>
                   </div>
                   {isArchiveLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : archivedTasks.length ? (
                     archivedTasks.map((task) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('archivedTasks')}
                         role="row"
                         key={task.id}
                       >
@@ -944,9 +945,9 @@ try {
                         <span role="cell">{task.teamName}</span>
                         <span role="cell">{task.managerName || '-'}</span>
                         <span role="cell">{task.assignedEmployeesCount}</span>
-                        <span className="admin-archive-actions" role="cell">
+                        <span className={adminStyles.archiveActions} role="cell">
                           <button
-                            className="admin-icon-action recover"
+                            className={adminStyles.iconAction('recover')}
                             type="button"
                             aria-label={`${t.recover}: ${task.title}`}
                             title={t.recover}
@@ -958,7 +959,7 @@ try {
                             <Icon name="restore" />
                           </button>
                           <button
-                            className="admin-icon-action delete"
+                            className={adminStyles.iconAction('delete')}
                             type="button"
                             aria-label={`${t.deleteForever}: ${task.title}`}
                             title={t.deleteForever}
@@ -973,14 +974,14 @@ try {
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'archivedTeams' ? (
-              <section className="admin-table-card" aria-label={t.archivedTeams}>
-                <div className="admin-table admin-table-archived-teams" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
+              <section className={adminStyles.tableCard} aria-label={t.archivedTeams}>
+                <div className={adminStyles.table('archivedTeams')} role="table">
+                  <div className={adminStyles.head('archivedTeams')} role="row">
                     <span role="columnheader">{t.name.toUpperCase()}</span>
                     <span role="columnheader">{t.manager.toUpperCase()}</span>
                     <span role="columnheader">{t.members.toUpperCase()}</span>
@@ -988,11 +989,11 @@ try {
                     <span role="columnheader">{t.actions.toUpperCase()}</span>
                   </div>
                   {isArchiveLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : archivedTeams.length ? (
                     archivedTeams.map((team) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('archivedTeams')}
                         role="row"
                         key={team.id}
                       >
@@ -1000,9 +1001,9 @@ try {
                         <span role="cell">{team.managerName || '-'}</span>
                         <span role="cell">{team.membersCount}</span>
                         <span role="cell">{team.taskCount}</span>
-                        <span className="admin-archive-actions" role="cell">
+                        <span className={adminStyles.archiveActions} role="cell">
                           <button
-                            className="admin-icon-action recover"
+                            className={adminStyles.iconAction('recover')}
                             type="button"
                             aria-label={`${t.recover}: ${team.name}`}
                             title={t.recover}
@@ -1014,7 +1015,7 @@ try {
                             <Icon name="restore" />
                           </button>
                           <button
-                            className="admin-icon-action delete"
+                            className={adminStyles.iconAction('delete')}
                             type="button"
                             aria-label={`${t.deleteForever}: ${team.name}`}
                             title={t.deleteForever}
@@ -1029,15 +1030,15 @@ try {
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'logs' ? (
-              <section className="logs-panel" aria-label={t.logs}>
-                <div className="admin-table-card logs-table-card">
-                  <div className="admin-table admin-table-logs" role="table">
-                    <div className="admin-table-row admin-table-head" role="row">
+              <section className={adminStyles.logsPanel} aria-label={t.logs}>
+                <div className={adminStyles.tableCard}>
+                  <div className={adminStyles.table('logs')} role="table">
+                    <div className={`${adminStyles.head('logs')} min-h-[46px]`} role="row">
                       <span role="columnheader">ACTION</span>
                       <span role="columnheader">USER</span>
                       <span role="columnheader">TASK ID</span>
@@ -1047,7 +1048,7 @@ try {
                 </div>
 
                 <select
-                  className="logs-filter"
+                  className={adminStyles.logsFilter}
                   aria-label="Log filter"
                   value={logFilter}
                   onChange={(event) => setLogFilter(event.target.value)}
@@ -1059,14 +1060,14 @@ try {
                 </select>
               </section>
             ) : (
-              <div className="stats-grid">
+              <div className={adminStyles.statsGrid(isSidebarOpen)}>
                 {statCards.map((card) => (
-                  <article className="stat-card" key={card.label}>
+                  <article className={adminStyles.statCard} key={card.label}>
                     <div>
                       <p>{card.label}</p>
                       <strong>{card.value}</strong>
                     </div>
-                    <span className={`stat-icon ${card.tone}`}>
+                    <span className={adminStyles.statIcon(card.tone)}>
                       <Icon name={card.icon} />
                     </span>
                   </article>
@@ -1077,9 +1078,9 @@ try {
         </section>
 
         {createModal ? (
-          <div className="admin-modal-backdrop" role="presentation">
+          <div className={adminStyles.modalBackdrop} role="presentation">
             <form
-              className="admin-modal"
+              className={adminStyles.modal}
               aria-label={createModal === 'user' ? t.createUser : t.createManager}
               onSubmit={handleCreateSubmit}
             >
@@ -1144,9 +1145,9 @@ try {
                 </label>
               ) : null}
 
-              <div className="admin-modal-actions">
+              <div className={adminStyles.modalActions}>
                 <button
-                  className="admin-modal-cancel"
+                  className={adminStyles.modalCancel}
                   type="button"
                   disabled={isSaving}
                   onClick={() => {
@@ -1156,7 +1157,7 @@ try {
                 >
                   {t.cancel}
                 </button>
-                <button className="admin-modal-save" type="submit" disabled={isSaving}>
+                <button className={adminStyles.modalSave} type="submit" disabled={isSaving}>
                   {isSaving ? t.loading : t.save}
                 </button>
               </div>
