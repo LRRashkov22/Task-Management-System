@@ -123,7 +123,9 @@ export type BoardTaskDto = {
 }
 
 export function getManagerTeamsApi() {
-  return apiJson<ManagerTeamDto[]>('/Statistics/Manager/get-all-teams')
+  return apiJson<ManagerTeamDto[]>(
+    '/Statistics/Manager/get-all-teams-dashboard/team-page',
+  )
 }
 
 export function getManagerTeamDropdownApi() {
