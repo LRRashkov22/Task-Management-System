@@ -10,8 +10,16 @@ export type AdminDashboardDto = {
 export type AdminUserDto = {
   id: number
   username: string
+  email?: string | null
   managerName?: string
   teams?: number | null
+}
+
+export type AdminDeleteManagerPreviewDto = {
+  managerName: string
+  teams: number
+  tasks: number
+  employees: number
 }
 
 export type ArchivedTeamDto = {
@@ -41,6 +49,11 @@ export type EditUserRequest = {
   id: number
   username: string
   managerId?: number | null
+}
+
+export type TransferManagerOwnershipRequest = {
+  currentManagerId: number
+  newManagerId: number
 }
 
 export function getAdminDashboardApi() {
@@ -86,6 +99,27 @@ export function editUserApi(request: EditUserRequest) {
   return apiJson<EditUserRequest>('/identity/edit-user', {
     method: 'PATCH',
     body: JSON.stringify(request),
+  })
+}
+
+export function getAdminDeleteManagerPreviewApi(managerId: number) {
+  return apiJson<AdminDeleteManagerPreviewDto>(
+    `/Statistics/Admin/get-admin-preview-OnDelete/${managerId}`,
+  )
+}
+
+export function transferManagerOwnershipApi(
+  request: TransferManagerOwnershipRequest,
+) {
+  return apiJson<boolean>('/identity/transfer-ownership', {
+    method: 'PATCH',
+    body: JSON.stringify(request),
+  })
+}
+
+export function forceDeleteManagerApi(managerId: number) {
+  return apiJson<boolean>(`/identity/${managerId}/force-delete`, {
+    method: 'DELETE',
   })
 }
 
