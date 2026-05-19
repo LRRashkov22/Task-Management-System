@@ -141,7 +141,7 @@ export const adminStyles = {
   rowCols: (kind: string) =>
     cx(
       kind === 'users' && 'grid-cols-[1.05fr_1.05fr_1fr_0.2fr]',
-      kind === 'managers' && 'grid-cols-[1fr_1fr_1fr_0.2fr]',
+      kind === 'managers' && 'grid-cols-[1fr_1fr_0.7fr_0.35fr]',
       kind === 'archivedTasks' && 'grid-cols-[1.35fr_1fr_1fr_0.55fr_0.45fr]',
       kind === 'archivedTeams' && 'grid-cols-[1.35fr_1fr_0.55fr_0.55fr_0.45fr]',
       kind === 'logs' && 'grid-cols-[1fr_1fr_1fr_0.6fr]',
@@ -160,11 +160,13 @@ export const adminStyles = {
   tableAction:
     'min-h-8 cursor-pointer rounded-lg border border-[#cfd6e0] bg-white px-3 text-[13px] leading-none font-extrabold text-[#315af2] hover:bg-[#eef5ff]',
   archiveActions: 'inline-flex items-center justify-end gap-2.5',
-  iconAction: (tone: 'recover' | 'delete') =>
+  iconAction: (tone: 'recover' | 'delete' | 'edit') =>
     cx(
       iconSvg,
       'inline-grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-lg border-0 bg-transparent p-0 hover:not-disabled:bg-[#f3f6fa] disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px]',
-      tone === 'recover' ? 'text-[#16a34a]' : 'text-[#ef1d32]',
+      tone === 'recover' && 'text-[#16a34a]',
+      tone === 'edit' && 'text-[#315af2]',
+      tone === 'delete' && 'text-[#ef1d32]',
     ),
   logsPanel: 'relative',
   logsFilter:
