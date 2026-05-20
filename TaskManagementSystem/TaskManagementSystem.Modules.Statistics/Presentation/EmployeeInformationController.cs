@@ -28,6 +28,7 @@ public class EmployeeInformationController : ControllerBase
     }
     [Authorize(Roles = "Employee")]
     [HttpGet("TaskPreview")]
+    [HttpGet("task-preview")]
     public async Task<IActionResult> GetTaskPreview()
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -37,6 +38,7 @@ public class EmployeeInformationController : ControllerBase
 
     [Authorize(Roles = "Employee")]
     [HttpGet("TaskDetailed/{taskid}")]
+    [HttpGet("task-detailed/{taskid}")]
     public async Task<IActionResult> GetTaskDetailed(int taskid)
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

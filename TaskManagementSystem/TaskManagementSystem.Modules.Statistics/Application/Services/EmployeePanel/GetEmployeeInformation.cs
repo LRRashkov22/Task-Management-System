@@ -81,6 +81,7 @@ public class GetEmployeeInformation : IGetEmployeeInformation
                 Title = t.Title,
                 Status = t.Status.ToString(),
                 Priority = t.Priority.ToString(),
+                CreatedAt = t.CreatedAt,
                 Deadline = t.Deadline,
                 WorkHours = t.WorkSessions.Sum(w => w.Hours)
             })

@@ -14,6 +14,8 @@ namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.EmployeeDto
 
         public string Priority { get; set; } = string.Empty;
 
+        public DateTime CreatedAt { get; set; }
+
         public DateTime Deadline { get; set; }
 
         public int WorkHours { get; set; }
