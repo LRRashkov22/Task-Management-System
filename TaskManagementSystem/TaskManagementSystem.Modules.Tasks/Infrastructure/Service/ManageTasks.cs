@@ -107,7 +107,6 @@ public class ManageTasks : IManageTasks
     }
 
     public async Task<(CreateTaskDto?, string?)> CreateTaskAsync(CreateTaskDto request, int userid) {
-
         if (string.IsNullOrWhiteSpace(request.Title) ||
             string.IsNullOrWhiteSpace(request.Description) ||
             request.Deadline < DateTime.UtcNow)
@@ -256,15 +255,15 @@ public class ManageTasks : IManageTasks
     }
     
 
-    public async Task<(TaskItem?, string? error)> AdminRecoverTask(RecoverOrArchiveDto request)
+    public async Task<(bool status, string? error)> AdminRecoverTask(RecoverOrArchiveDto request)
     {
         var task = await context.TaskItems
             .Include(t => t.Team)
             .Where(t => t.IsArchived).FirstAsync(t => t.Id == request.Id);
-        if (task.Team.IsArchived == true) return (null, "Cannot recover task due it's team is archived") ;
+        if (task.Team.IsArchived == true) return (false, "Cannot recover task due it's team is archived");
         task.IsArchived = false;
         await context.SaveChangesAsync();
-        return (task, null);
+        return (true, null);
     }
 
     public async Task<(bool status, string? error)> DeleteArchivedTaskAsync(int taskId)
@@ -281,6 +280,22 @@ public class ManageTasks : IManageTasks
 
         await context.SaveChangesAsync();
 
+        return (true, null);
+    }
+    public async Task<(bool?, string?)> ChangeStausOnTaskAsync(int userid, int taskid,ChangeStatusOnTaskDto request)
+    {
+        var task = await context.TaskItems
+            .Include(t => t.Team)
+            .FirstOrDefaultAsync(t => t.Team.ManagerId == userid &&
+            t.Id == taskid
+            && !t.IsArchived
+            );
+
+        if (task == null) return (null, "No team was found");
+        
+        task.Status = request.status;
+
+        await context.SaveChangesAsync();
         return (true, null);
     }
 }

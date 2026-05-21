@@ -7,7 +7,7 @@ namespace TaskManagementSystem.Modules.Statistics.Application.Interface
         Task<List<GetTeamDto>> GetAllTeamsManagerListAsync(int userid);
         Task<GetTeamDto?> GetTeamDetailsAsync(int userid, int teamId);
         Task<(TransferTeamPreviewDto? preview, string? error)> GetTransferTeamPreviewAsync(int teamId);
-        Task<List<MemberDto>?> GetAllManagerEmployees(int userid);
+        Task<List<MemberDto>> GetAllManagerEmployees(int userid);
         Task<List<ManagerTeamDropdownDto>> GetManagerDropdownTeamsAsync(int userid);
     }
 }
