@@ -48,7 +48,7 @@ public class GetManagerInformation : IGetManagerInformation
             Name = t.Name,
             ManagerId = t.ManagerId,
             EmployeesCount = t.Memberships.Count,
-            TasksCount = context.TaskItems.Count(x => x.TeamId == t.Id)
+            TasksCount = context.TaskItems.Count(x => x.TeamId == t.Id && !x.IsArchived)
         }).ToList();
     }
     public async Task<(TransferTeamPreviewDto? preview, string? error)> GetTransferTeamPreviewAsync(int teamId)
@@ -57,7 +57,7 @@ public class GetManagerInformation : IGetManagerInformation
             .AsNoTracking()
             .Include(t => t.Manager)
             .Include(t => t.Memberships)
-            .Include(t => t.Tasks)
+            .Include(t => t.Tasks.Where(task => !task.IsArchived))
             .FirstOrDefaultAsync(t => t.Id == teamId);
 
         if (team == null)
@@ -86,10 +86,10 @@ public class GetManagerInformation : IGetManagerInformation
                 t.Id == teamId)
             .Include(t => t.Memberships)
                 .ThenInclude(m => m.User)
-            .Include(t => t.Tasks)
+            .Include(t => t.Tasks.Where(task => !task.IsArchived))
                 .ThenInclude(task => task.Assignments)
                     .ThenInclude(a => a.User)
-            .Include(t => t.Tasks)
+            .Include(t => t.Tasks.Where(task => !task.IsArchived))
                 .ThenInclude(task => task.WorkSessions)
             .FirstOrDefaultAsync();
 
@@ -131,18 +131,15 @@ public class GetManagerInformation : IGetManagerInformation
                 }).ToList()};
     }
 
-    public async Task<List<MemberDto>?> GetAllManagerEmployees(int userid) {
-
-        var employees = await context.Users.AsNoTracking()
-                .Where(m => m.ManagerId == userid)
-                .Select(m => new MemberDto
-                {
-                    Id = m.Id,
-                    Username = m.Username
-                }).ToListAsync();
-        if (employees.Count() == 0) return null;
-        return employees; 
-    } 
+    public async Task<List<MemberDto>> GetAllManagerEmployees(int userid) {
+        return await context.Users.AsNoTracking()
+            .Where(m => m.ManagerId == userid)
+            .Select(m => new MemberDto
+            {
+                Id = m.Id,
+                Username = m.Username
+            }).ToListAsync();
+    }
 
 
 }

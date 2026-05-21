@@ -67,7 +67,6 @@ public class ManagerInformationController : ControllerBase
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var employeesList = await managerInfo.GetAllManagerEmployees(userid);
-        if (employeesList == null) return NotFound();
         return Ok(employeesList);
     }
 
