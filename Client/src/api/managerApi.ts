@@ -85,6 +85,13 @@ export type ManagerCalendarTaskDto = {
   startDate: string
 }
 
+export type EditManagerTaskRequest = {
+  name?: string
+  description?: string
+  deadline?: string
+  members?: number[]
+}
+
 export type TransferTeamPreviewDto = {
   teamId: number
   teamName: string
@@ -212,6 +219,16 @@ export function archiveManagerTaskApi(id: number) {
   })
 }
 
+export function editManagerTaskApi(
+  taskId: number,
+  request: EditManagerTaskRequest,
+) {
+  return apiJson<boolean>(`/Task/Edit-Task/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(request),
+  })
+}
+
 export function createManagerTeamApi(request: CreateManagerTeamRequest) {
   return apiJson<void>('/teams/create-team', {
     method: 'POST',
@@ -246,4 +263,3 @@ export function archiveManagerTeamApi(id: number) {
     body: JSON.stringify({ id }),
   })
 }
-
