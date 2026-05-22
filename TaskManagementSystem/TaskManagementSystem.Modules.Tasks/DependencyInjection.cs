@@ -7,9 +7,9 @@ using System.Text;
 using TaskManagementSystem.Modules.Tasks.Application.Interface;
 using TaskManagementSystem.Modules.Tasks.Presentation;
 
-namespace TaskManagementSystem.Modules.Tasks.Configuration
+namespace TaskManagementSystem.Modules.Tasks
 {
-    public static class TaskModule
+    public static class DependencyInjection
     {
         public static IServiceCollection AddTaskModule(this IServiceCollection services)
         {

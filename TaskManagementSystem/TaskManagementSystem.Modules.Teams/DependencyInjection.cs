@@ -4,9 +4,9 @@ using TaskManagementSystem.Modules.Teams.Application.Interfaces;
 using TaskManagementSystem.Modules.Teams.Infrastructure.Service;
 using TaskManagementSystem.Modules.Teams.Presentation;
 
-namespace TaskManagementSystem.Modules.Teams.Configuration;
+namespace TaskManagementSystem.Modules.Teams;
 
-public static class TeamModule
+public static class DependencyInjection
 {
     public static IServiceCollection AddTeamsModule(this IServiceCollection services)
     {

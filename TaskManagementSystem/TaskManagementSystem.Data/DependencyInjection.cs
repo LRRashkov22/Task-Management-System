@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Persistance;
 using Microsoft.EntityFrameworkCore;
-namespace TaskManagementSystem.Data.Configuration
+namespace TaskManagementSystem.Data
 {
-    public static class DataModule
+    public static class DependencyInjection
     {
         public static IServiceCollection AddData(this IServiceCollection services, IConfiguration config)
         {
