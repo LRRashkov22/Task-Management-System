@@ -16,7 +16,7 @@ namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
 
         public Priority Priority { get; set; }
 
-        public DateTime? Deadline { get; set; }
+        public DateTime Deadline { get; set; }
 
         public int TeamId { get; set; }
 
