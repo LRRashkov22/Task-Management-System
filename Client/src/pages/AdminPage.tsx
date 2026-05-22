@@ -5,7 +5,9 @@
     deleteArchivedTaskApi,
     deleteArchivedTeamApi,
     editUserApi,
+    forceDeleteManagerApi,
     getAdminDashboardApi,
+    getAdminDeleteManagerPreviewApi,
     getArchivedTasksApi,
     getArchivedTeamsApi,
     getEmployeesApi,
@@ -13,13 +15,16 @@
     recoverArchivedTaskApi,
     recoverArchivedTeamApi,
     searchEmployeesApi,
+    transferManagerOwnershipApi,
   } from '../api/adminApi'
   import type {
     AdminDashboardDto,
+    AdminDeleteManagerPreviewDto,
     AdminUserDto,
     ArchivedTaskDto,
     ArchivedTeamDto,
   } from '../api/adminApi'
+  import { adminStyles, commonStyles } from '../styles'
 
   type IconName =
     | 'dashboard'
@@ -35,6 +40,7 @@
     | 'search'
     | 'restore'
     | 'trash'
+    | 'edit'
 
   type NavItem = {
     id: AdminView
@@ -59,6 +65,7 @@
     | 'archivedTeams'
     | 'logs'
   type CreateModal = 'user' | 'manager' | null
+  type DeleteManagerMode = 'transfer' | 'cascade'
 
   type CreateForm = {
     username: string
@@ -304,6 +311,15 @@
       )
     }
 
+    if (name === 'edit') {
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+        </svg>
+      )
+    }
+
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 12h4l3-7 4 14 3-7h4" />
@@ -319,6 +335,13 @@
     const [activeView, setActiveView] = useState<AdminView>('dashboard')
     const [createModal, setCreateModal] = useState<CreateModal>(null)
     const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null)
+    const [deleteManager, setDeleteManager] = useState<AdminUserDto | null>(null)
+    const [deleteManagerPreview, setDeleteManagerPreview] =
+      useState<AdminDeleteManagerPreviewDto | null>(null)
+    const [deleteManagerMode, setDeleteManagerMode] =
+      useState<DeleteManagerMode>('transfer')
+    const [deleteTransferManagerId, setDeleteTransferManagerId] = useState('')
+    const [isDeletePreviewLoading, setIsDeletePreviewLoading] = useState(false)
     const [createForm, setCreateForm] = useState<CreateForm>(emptyCreateForm)
     const [logFilter, setLogFilter] = useState('All')
     const [dashboard, setDashboard] =
@@ -490,6 +513,36 @@ useEffect(() => {
       setCreateModal(modal)
     }
 
+    async function openDeleteManagerModal(manager: AdminUserDto) {
+      setDeleteManager(manager)
+      setDeleteManagerPreview(null)
+      setDeleteManagerMode('transfer')
+      setDeleteTransferManagerId('')
+      setMessage(null)
+      setIsDeletePreviewLoading(true)
+
+      try {
+        setDeleteManagerPreview(await getAdminDeleteManagerPreviewApi(manager.id))
+      } catch (error) {
+        setMessage({
+          text:
+            error instanceof Error
+              ? error.message
+              : 'Could not load manager delete preview.',
+          type: 'error',
+        })
+      } finally {
+        setIsDeletePreviewLoading(false)
+      }
+    }
+
+    function closeDeleteManagerModal() {
+      setDeleteManager(null)
+      setDeleteManagerPreview(null)
+      setDeleteTransferManagerId('')
+      setDeleteManagerMode('transfer')
+    }
+
     
 async function refreshAdminData() {
   const [updatedEmployees, updatedManagers, updatedDashboard] =
@@ -604,6 +657,44 @@ async function handleDeleteArchivedTeam(id: number) {
     })
   } finally {
     setPendingArchiveAction(null)
+  }
+}
+
+async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault()
+
+  if (!deleteManager) return
+
+  if (deleteManagerMode === 'transfer' && !deleteTransferManagerId) {
+    setMessage({
+      text: 'Select manager for transfer.',
+      type: 'error',
+    })
+    return
+  }
+
+  setIsSaving(true)
+  setMessage(null)
+
+  try {
+    if (deleteManagerMode === 'transfer') {
+      await transferManagerOwnershipApi({
+        currentManagerId: deleteManager.id,
+        newManagerId: Number(deleteTransferManagerId),
+      })
+    }
+
+    await forceDeleteManagerApi(deleteManager.id)
+    await refreshAdminData()
+    closeDeleteManagerModal()
+    setMessage({ text: 'Manager deleted successfully.', type: 'success' })
+  } catch (error) {
+    setMessage({
+      text: error instanceof Error ? error.message : t.apiError,
+      type: 'error',
+    })
+  } finally {
+    setIsSaving(false)
   }
 }
 
@@ -740,20 +831,23 @@ try {
 
     const pageTitle =
       navItems.find((item) => item.id === activeView)?.label ?? t.dashboard
+    const availableTransferManagers = deleteManager
+      ? managers.filter((manager) => manager.id !== deleteManager.id)
+      : managers
 
     return (
-      <main className={`admin-shell ${isSidebarOpen ? '' : 'sidebar-closed'}`}>
-        <aside className="admin-sidebar" aria-label="Admin navigation" aria-hidden={!isSidebarOpen}>
-            <div className="admin-brand">
+      <main className={adminStyles.shell(isSidebarOpen)}>
+        <aside className={adminStyles.sidebar(isSidebarOpen)} aria-label="Admin navigation" aria-hidden={!isSidebarOpen}>
+            <div className={`${adminStyles.sidebarInner(isSidebarOpen)} ${adminStyles.brand}`}>
               <h1>{t.brand}</h1>
               <p>{t.systemAdmin}</p>
               <span>{t.admin}</span>
             </div>
 
-            <nav className="admin-nav">
+            <nav className={adminStyles.nav(isSidebarOpen)}>
               {navItems.map((item) => (
                 <button
-                  className={activeView === item.id ? 'active' : ''}
+                  className={adminStyles.navButton(activeView === item.id)}
                   type="button"
                   key={item.label}
                   onClick={() => setActiveView(item.id)}
@@ -764,22 +858,22 @@ try {
               ))}
             </nav>
 
-            <div className="admin-sidebar-footer">
-              <button type="button">
+            <div className={adminStyles.sidebarFooter(isSidebarOpen)}>
+              <button className={adminStyles.footerButton} type="button">
                 <Icon name="settings" />
                 <span>{t.settings}</span>
               </button>
-              <button type="button" onClick={onLogout}>
+              <button className={adminStyles.footerButton} type="button" onClick={onLogout}>
                 <Icon name="close" />
                 <span>Logout</span>
               </button>
             </div>
         </aside>
 
-        <section className="admin-main" aria-labelledby="admin-page-title">
-          <header className="admin-topbar">
+        <section className={adminStyles.main} aria-labelledby="admin-page-title">
+          <header className={adminStyles.topbar(isSidebarOpen)}>
             <button
-              className="admin-icon-button"
+              className={adminStyles.iconButton}
               type="button"
               aria-label={isSidebarOpen ? t.closeMenu : t.openMenu}
               onClick={() => setIsSidebarOpen((current) => !current)}
@@ -787,7 +881,7 @@ try {
               <Icon name={isSidebarOpen ? 'close' : 'menu'} />
             </button>
             <button
-              className="language-button"
+              className={adminStyles.languageButton}
               type="button"
               onClick={() =>
                 setLanguage((current) => (current === 'en' ? 'bg' : 'en'))
@@ -798,12 +892,12 @@ try {
             </button>
           </header>
 
-          <div className="admin-content">
-            <div className="admin-page-heading">
+          <div className={adminStyles.content(isSidebarOpen)}>
+            <div className={adminStyles.heading}>
               <h2 id="admin-page-title">{pageTitle}</h2>
               {activeView === 'users' ? (
                 <button
-                  className="admin-create-button"
+                  className={adminStyles.createButton}
                   type="button"
                   onClick={() => openCreateModal('user')}
                 >
@@ -813,7 +907,7 @@ try {
               ) : null}
               {activeView === 'managers' ? (
                 <button
-                  className="admin-create-button"
+                  className={adminStyles.createButton}
                   type="button"
                   onClick={() => openCreateModal('manager')}
                 >
@@ -824,21 +918,21 @@ try {
             </div>
 
             {message ? (
-              <p className={`admin-message ${message.type}`} role="status">
+              <p className={`${adminStyles.message} ${commonStyles.message(message.type)}`} role="status">
                 {message.text}
               </p>
             ) : null}
 
             {activeView === 'notifications' ? (
-              <section className="empty-state-card" aria-label={t.notifications}>
-                <div className="empty-state-content">
+              <section className={adminStyles.emptyState} aria-label={t.notifications}>
+                <div className={adminStyles.emptyContent}>
                   <Icon name="bell" />
                   <p>{t.noNotifications}</p>
                 </div>
               </section>
             ) : activeView === 'users' ? (
-              <section className="admin-table-card" aria-label={t.users}>
-                <div className="admin-search">
+              <section className={adminStyles.tableCard} aria-label={t.users}>
+                <div className={adminStyles.search}>
                   <Icon name="search" />
                   <input
                     placeholder={t.search}
@@ -849,19 +943,19 @@ try {
                     }}
                   />
                 </div>
-                <div className="admin-table admin-table-users" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
+                <div className={adminStyles.table('users')} role="table">
+                  <div className={adminStyles.head('users')} role="row">
                     <span role="columnheader">{t.username.toUpperCase()}</span>
                     <span role="columnheader">ID</span>
                     <span role="columnheader">{t.manager.toUpperCase()}</span>
                     <span role="columnheader">{t.edit.toUpperCase()}</span>
                   </div>
                   {isLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : employees.length ? (
                     employees.map((employee) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('users')}
                         role="row"
                         key={employee.id}
                       >
@@ -870,7 +964,7 @@ try {
                         <span role="cell">{employee.managerName || '-'}</span>
                         <span role="cell">
                           <button
-                            className="admin-table-action"
+                            className={adminStyles.tableAction}
                             type="button"
                             onClick={() => openEditModal(employee, 'user')}
                           >
@@ -880,51 +974,64 @@ try {
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'managers' ? (
-              <section className="admin-table-card manager-table-card" aria-label={t.managers}>
-                <div className="admin-table admin-table-managers" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
-                    <span role="columnheader">{t.username.toUpperCase()}</span>
-                    <span role="columnheader">ID</span>
+              <section className={`${adminStyles.tableCard} mt-1`} aria-label={t.managers}>
+                <div className={adminStyles.table('managers')} role="table">
+                  <div className={`${adminStyles.head('managers')} min-h-[50px]`} role="row">
+                    <span role="columnheader">NAME</span>
+                    <span role="columnheader">EMAIL</span>
                     <span role="columnheader">{t.teams.toUpperCase()}</span>
                     <span role="columnheader">{t.edit.toUpperCase()}</span>
                   </div>
                   {isLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : managers.length ? (
                     managers.map((manager) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('managers')}
                         role="row"
                         key={manager.id}
                       >
                         <span role="cell">{manager.username}</span>
-                        <span role="cell">{manager.id}</span>
+                        <span role="cell">{manager.email || manager.username}</span>
                         <span role="cell">{manager.teams ?? 0}</span>
-                        <span role="cell">
+                        <span className={adminStyles.archiveActions} role="cell">
                           <button
-                            className="admin-table-action"
+                            className={adminStyles.iconAction('edit')}
                             type="button"
+                            aria-label={`${t.edit}: ${manager.username}`}
+                            title={t.edit}
                             onClick={() => openEditModal(manager, 'manager')}
                           >
-                            {t.edit}
+                            <Icon name="edit" />
+                          </button>
+                          <button
+                            className={adminStyles.iconAction('delete')}
+                            type="button"
+                            aria-label={`Delete manager: ${manager.username}`}
+                            title="Delete manager"
+                            onClick={() => {
+                              void openDeleteManagerModal(manager)
+                            }}
+                          >
+                            <Icon name="trash" />
                           </button>
                         </span>
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'archivedTasks' ? (
-              <section className="admin-table-card" aria-label={t.archivedTasks}>
-                <div className="admin-table admin-table-archived-tasks" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
+              <section className={adminStyles.tableCard} aria-label={t.archivedTasks}>
+                <div className={adminStyles.table('archivedTasks')} role="table">
+                  <div className={adminStyles.head('archivedTasks')} role="row">
                     <span role="columnheader">{t.title.toUpperCase()}</span>
                     <span role="columnheader">{t.team.toUpperCase()}</span>
                     <span role="columnheader">{t.manager.toUpperCase()}</span>
@@ -932,11 +1039,11 @@ try {
                     <span role="columnheader">{t.actions.toUpperCase()}</span>
                   </div>
                   {isArchiveLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : archivedTasks.length ? (
                     archivedTasks.map((task) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('archivedTasks')}
                         role="row"
                         key={task.id}
                       >
@@ -944,9 +1051,9 @@ try {
                         <span role="cell">{task.teamName}</span>
                         <span role="cell">{task.managerName || '-'}</span>
                         <span role="cell">{task.assignedEmployeesCount}</span>
-                        <span className="admin-archive-actions" role="cell">
+                        <span className={adminStyles.archiveActions} role="cell">
                           <button
-                            className="admin-icon-action recover"
+                            className={adminStyles.iconAction('recover')}
                             type="button"
                             aria-label={`${t.recover}: ${task.title}`}
                             title={t.recover}
@@ -958,7 +1065,7 @@ try {
                             <Icon name="restore" />
                           </button>
                           <button
-                            className="admin-icon-action delete"
+                            className={adminStyles.iconAction('delete')}
                             type="button"
                             aria-label={`${t.deleteForever}: ${task.title}`}
                             title={t.deleteForever}
@@ -973,14 +1080,14 @@ try {
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'archivedTeams' ? (
-              <section className="admin-table-card" aria-label={t.archivedTeams}>
-                <div className="admin-table admin-table-archived-teams" role="table">
-                  <div className="admin-table-row admin-table-head" role="row">
+              <section className={adminStyles.tableCard} aria-label={t.archivedTeams}>
+                <div className={adminStyles.table('archivedTeams')} role="table">
+                  <div className={adminStyles.head('archivedTeams')} role="row">
                     <span role="columnheader">{t.name.toUpperCase()}</span>
                     <span role="columnheader">{t.manager.toUpperCase()}</span>
                     <span role="columnheader">{t.members.toUpperCase()}</span>
@@ -988,11 +1095,11 @@ try {
                     <span role="columnheader">{t.actions.toUpperCase()}</span>
                   </div>
                   {isArchiveLoading ? (
-                    <div className="admin-table-empty">{t.loading}</div>
+                    <div className={adminStyles.tableEmpty}>{t.loading}</div>
                   ) : archivedTeams.length ? (
                     archivedTeams.map((team) => (
                       <div
-                        className="admin-table-row admin-table-body-row"
+                        className={adminStyles.bodyRow('archivedTeams')}
                         role="row"
                         key={team.id}
                       >
@@ -1000,9 +1107,9 @@ try {
                         <span role="cell">{team.managerName || '-'}</span>
                         <span role="cell">{team.membersCount}</span>
                         <span role="cell">{team.taskCount}</span>
-                        <span className="admin-archive-actions" role="cell">
+                        <span className={adminStyles.archiveActions} role="cell">
                           <button
-                            className="admin-icon-action recover"
+                            className={adminStyles.iconAction('recover')}
                             type="button"
                             aria-label={`${t.recover}: ${team.name}`}
                             title={t.recover}
@@ -1014,7 +1121,7 @@ try {
                             <Icon name="restore" />
                           </button>
                           <button
-                            className="admin-icon-action delete"
+                            className={adminStyles.iconAction('delete')}
                             type="button"
                             aria-label={`${t.deleteForever}: ${team.name}`}
                             title={t.deleteForever}
@@ -1029,15 +1136,15 @@ try {
                       </div>
                     ))
                   ) : (
-                    <div className="admin-table-empty">{t.empty}</div>
+                    <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
                 </div>
               </section>
             ) : activeView === 'logs' ? (
-              <section className="logs-panel" aria-label={t.logs}>
-                <div className="admin-table-card logs-table-card">
-                  <div className="admin-table admin-table-logs" role="table">
-                    <div className="admin-table-row admin-table-head" role="row">
+              <section className={adminStyles.logsPanel} aria-label={t.logs}>
+                <div className={adminStyles.tableCard}>
+                  <div className={adminStyles.table('logs')} role="table">
+                    <div className={`${adminStyles.head('logs')} min-h-[46px]`} role="row">
                       <span role="columnheader">ACTION</span>
                       <span role="columnheader">USER</span>
                       <span role="columnheader">TASK ID</span>
@@ -1047,7 +1154,7 @@ try {
                 </div>
 
                 <select
-                  className="logs-filter"
+                  className={adminStyles.logsFilter}
                   aria-label="Log filter"
                   value={logFilter}
                   onChange={(event) => setLogFilter(event.target.value)}
@@ -1059,14 +1166,14 @@ try {
                 </select>
               </section>
             ) : (
-              <div className="stats-grid">
+              <div className={adminStyles.statsGrid(isSidebarOpen)}>
                 {statCards.map((card) => (
-                  <article className="stat-card" key={card.label}>
+                  <article className={adminStyles.statCard} key={card.label}>
                     <div>
                       <p>{card.label}</p>
                       <strong>{card.value}</strong>
                     </div>
-                    <span className={`stat-icon ${card.tone}`}>
+                    <span className={adminStyles.statIcon(card.tone)}>
                       <Icon name={card.icon} />
                     </span>
                   </article>
@@ -1077,9 +1184,9 @@ try {
         </section>
 
         {createModal ? (
-          <div className="admin-modal-backdrop" role="presentation">
+          <div className={adminStyles.modalBackdrop} role="presentation">
             <form
-              className="admin-modal"
+              className={adminStyles.modal}
               aria-label={createModal === 'user' ? t.createUser : t.createManager}
               onSubmit={handleCreateSubmit}
             >
@@ -1144,9 +1251,9 @@ try {
                 </label>
               ) : null}
 
-              <div className="admin-modal-actions">
+              <div className={adminStyles.modalActions}>
                 <button
-                  className="admin-modal-cancel"
+                  className={adminStyles.modalCancel}
                   type="button"
                   disabled={isSaving}
                   onClick={() => {
@@ -1156,8 +1263,108 @@ try {
                 >
                   {t.cancel}
                 </button>
-                <button className="admin-modal-save" type="submit" disabled={isSaving}>
+                <button className={adminStyles.modalSave} type="submit" disabled={isSaving}>
                   {isSaving ? t.loading : t.save}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
+
+        {deleteManager ? (
+          <div className={adminStyles.modalBackdrop} role="presentation">
+            <form
+              className="box-border w-[min(100%,720px)] rounded-xl bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.22)] max-[760px]:p-6"
+              aria-label={`Delete manager ${deleteManager.username}`}
+              onSubmit={handleDeleteManagerSubmit}
+            >
+              <h2 className="mb-6 text-[24px] leading-[1.2] font-extrabold text-[#dc2626]">
+                Delete Manager: {deleteManagerPreview?.managerName || deleteManager.username}
+              </h2>
+
+              <section className="mb-6 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-5 py-4 text-[#171717]">
+                <p className="mb-3 text-[16px] font-bold">This manager owns:</p>
+                {isDeletePreviewLoading ? (
+                  <p className="text-[16px] font-semibold">Loading...</p>
+                ) : (
+                  <ul className="grid gap-1.5 text-[16px] font-bold">
+                    <li>• {deleteManagerPreview?.teams ?? 0} teams</li>
+                    <li>• {deleteManagerPreview?.tasks ?? 0} tasks</li>
+                    <li>• {deleteManagerPreview?.employees ?? 0} employees</li>
+                  </ul>
+                )}
+              </section>
+
+              <label className="mb-3 flex cursor-pointer items-center gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4">
+                <input
+                  className="h-5 w-5 accent-[#3b82f6]"
+                  type="radio"
+                  name="delete-manager-mode"
+                  checked={deleteManagerMode === 'transfer'}
+                  onChange={() => setDeleteManagerMode('transfer')}
+                />
+                <span>
+                  <strong className="block text-[18px] leading-[1.2] text-[#111827]">
+                    Transfer to another manager
+                  </strong>
+                  <span className="block text-[14px] font-semibold text-[#4b5563]">
+                    All teams, tasks, and employees will be reassigned
+                  </span>
+                </span>
+              </label>
+
+              <select
+                className="mb-4 h-10 w-full rounded-md border border-[#d1d5db] bg-white px-3 text-[17px] text-[#111827] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label="Select manager"
+                value={deleteTransferManagerId}
+                disabled={deleteManagerMode !== 'transfer'}
+                onChange={(event) => setDeleteTransferManagerId(event.target.value)}
+              >
+                <option value="">Select manager</option>
+                {availableTransferManagers.map((manager) => (
+                  <option value={manager.id} key={manager.id}>
+                    {manager.username}
+                  </option>
+                ))}
+              </select>
+
+              <label className="mb-6 flex cursor-pointer items-center gap-4 rounded-xl border border-[#fca5a5] bg-white p-4">
+                <input
+                  className="h-5 w-5 accent-[#111827]"
+                  type="radio"
+                  name="delete-manager-mode"
+                  checked={deleteManagerMode === 'cascade'}
+                  onChange={() => setDeleteManagerMode('cascade')}
+                />
+                <span>
+                  <strong className="block text-[18px] leading-[1.2] text-[#dc2626]">
+                    Cascade delete everything
+                  </strong>
+                  <span className="block text-[14px] font-bold text-[#ef1d32]">
+                    Permanently delete all data - CANNOT BE UNDONE
+                  </span>
+                </span>
+              </label>
+
+              <div className="grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
+                <button
+                  className="min-h-[52px] cursor-pointer rounded-xl border border-[#e5e7eb] bg-white text-[18px] font-extrabold text-[#111827] disabled:cursor-not-allowed disabled:opacity-70"
+                  type="button"
+                  disabled={isSaving}
+                  onClick={closeDeleteManagerModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="min-h-[52px] cursor-pointer rounded-xl border border-[#dc2626] bg-[#dc2626] text-[18px] font-extrabold text-white hover:not-disabled:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-70"
+                  type="submit"
+                  disabled={
+                    isSaving ||
+                    isDeletePreviewLoading ||
+                    (deleteManagerMode === 'transfer' && !deleteTransferManagerId)
+                  }
+                >
+                  {isSaving ? 'Deleting...' : 'Delete Manager'}
                 </button>
               </div>
             </form>
