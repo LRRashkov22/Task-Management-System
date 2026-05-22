@@ -20,7 +20,7 @@ public class TaskItem
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime? Deadline { get; set; } 
+    public DateTime Deadline { get; set; } 
 
     public int TeamId { get; set; }
 

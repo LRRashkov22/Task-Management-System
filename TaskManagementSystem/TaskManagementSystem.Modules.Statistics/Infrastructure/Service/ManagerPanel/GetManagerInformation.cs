@@ -141,5 +141,20 @@ public class GetManagerInformation : IGetManagerInformation
             }).ToListAsync();
     }
 
+    public async Task<List<CalendarDto>> GetCalendarTaskInformation(int userid)
+    {
+        var tasks = await context.TaskItems.AsNoTracking()
+            .Where(t => t.Team.ManagerId == userid && !t.IsArchived)
+            .Select(t => new CalendarDto
+            {
+                TaskName = t.Title,
+                TeamName = t.Team.Name,
+                Deadline = t.Deadline,
+                Status = t.Status,
+                StartDate = t.CreatedAt
+            }).ToListAsync();
+        return tasks;
+    }
+
 
 }
