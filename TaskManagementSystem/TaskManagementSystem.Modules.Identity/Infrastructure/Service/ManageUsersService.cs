@@ -145,18 +145,56 @@ public class ManageUsersService : IManageUsers
 
     public async Task<(bool status, string? error)> ForceDeleteManagerAsync(int managerId)
     {
-        var manager = await context.Users
-            .FirstOrDefaultAsync(u =>
-                u.Id == managerId &&
-                u.Role == Role.Manager);
-        if (manager == null)
-            return (false, "Manager not found");
+        await using var transaction = await context.Database.BeginTransactionAsync();
 
-        context.Users.Remove(manager);
+        try
+        {
+            var manager = await context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Id == managerId &&
+                    u.Role == Role.Manager);
 
-        await context.SaveChangesAsync();
+            if (manager == null)
+                return (false, "Manager not found");
 
-        return (true, null);
+            
+            var teams = await context.Teams
+                .Where(t => t.ManagerId == managerId)
+                .Include(t => t.Tasks)
+                .ToListAsync();
+
+        
+            var tasks = teams
+                .SelectMany(t => t.Tasks)
+                .ToList();
+
+           
+            var employees = await context.Users
+                .Where(u => u.ManagerId == managerId)
+                .ToListAsync();
+
+           
+            context.TaskItems.RemoveRange(tasks);
+
+           
+            context.Teams.RemoveRange(teams);
+
+        
+            context.Users.RemoveRange(employees);
+            context.Users.Remove(manager);
+
+            await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return (true, null);
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+
+            return (false, "Cascade delete failed");
+        }
     }
 
 }
