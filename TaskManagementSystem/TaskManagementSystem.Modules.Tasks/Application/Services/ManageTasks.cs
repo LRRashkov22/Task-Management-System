@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Persistance;
-using TaskManagementSystem.Modules.Tasks.Application.Dto;
 using TaskManagementSystem.Modules.Tasks.Application.DTOs;
 using TaskManagementSystem.Modules.Tasks.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Tasks.Application.Services;

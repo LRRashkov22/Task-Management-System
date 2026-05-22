@@ -62,8 +62,8 @@ public class ManageTasksController : ControllerBase
     }
 
     [Authorize(Roles = "Manager")]
-    [HttpPost("Change-task-status/{taskid}")]
-    public async Task<ActionResult<CreateTaskDto>> CreateTask(int taskid, ChangeStatusOnTaskDto request)
+    [HttpPatch("Change-task-status/{taskid}")]
+    public async Task<ActionResult<ChangeStatusOnTaskDto>> ChangeStatusTask(int taskid, ChangeStatusOnTaskDto request)
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
         var (result, error) = await task.ChangeStausOnTaskAsync(userid, taskid, request);

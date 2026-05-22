@@ -6,8 +6,6 @@ using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s.ManagersDto;
-using TaskManagementSystem.Modules.Teams.Application.DTO;
 using TaskManagementSystem.Modules.Teams.Application.DTOs;
 using TaskManagementSystem.Modules.Teams.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Teams.Application.Services;
@@ -22,6 +20,8 @@ public class CRUDTeamService : ICRUDTeamService
 
     public async Task<(Team? team, string? error)> CreateTeamAsync(CreateTeamDto request, int userid)
     {
+        var teamName = await context.Teams.AsNoTracking().AnyAsync(t => request.Name == t.Name);
+        if (teamName) return (null, "this name is already taken");
         if (request.Name == string.Empty) return (null, "Name cannot be empty");
         var managerExists = await context.Users.AnyAsync(m => m.Id == userid);
         if (!managerExists) return (null, "Manager not found");

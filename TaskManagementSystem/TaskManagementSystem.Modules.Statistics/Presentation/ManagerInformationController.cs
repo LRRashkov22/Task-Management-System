@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 
 namespace TaskManagementSystem.Modules.Statistics.Presentation;
@@ -35,6 +36,16 @@ public class ManagerInformationController : ControllerBase
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var teams = await managerInfo.GetManagerDropdownTeamsAsync(userid);
+        return Ok(teams);
+    }
+
+
+    [Authorize(Roles = "Manager")]
+    [HttpGet("get-calendar-information")]
+    public async Task<ActionResult<List<CalendarDto>>> GetCalendarTasksInformation()
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var teams = await managerInfo.GetCalendarTaskInformation(userid);
         return Ok(teams);
     }
 

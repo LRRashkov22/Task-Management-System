@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementSystem.Data.Persistance;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Statistics.Application.Services.ManagerPanel;
@@ -139,6 +139,21 @@ public class GetManagerInformation : IGetManagerInformation
                 Id = m.Id,
                 Username = m.Username
             }).ToListAsync();
+    }
+
+    public async Task<List<CalendarDto>> GetCalendarTaskInformation(int userid)
+    {
+        var tasks = await context.TaskItems.AsNoTracking()
+            .Where(t => t.Team.ManagerId == userid && !t.IsArchived)
+            .Select(t => new CalendarDto
+            {
+                TaskName = t.Title,
+                TeamName = t.Team.Name,
+                Deadline = t.Deadline,
+                Status = t.Status,
+                StartDate = t.CreatedAt
+            }).ToListAsync();
+        return tasks;
     }
 
 
