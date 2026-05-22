@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManagementSystem.Modules.Teams.Application.Interfaces;
-using TaskManagementSystem.Modules.Teams.Infrastructure.Service;
+using TaskManagementSystem.Modules.Teams.Application.Services;
 using TaskManagementSystem.Modules.Teams.Presentation;
 
 namespace TaskManagementSystem.Modules.Teams;

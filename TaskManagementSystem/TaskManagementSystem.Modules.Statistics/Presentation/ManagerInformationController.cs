@@ -4,7 +4,7 @@ using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
-using TaskManagementSystem.Modules.Statistics.Application.Interface;
+using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 
 namespace TaskManagementSystem.Modules.Statistics.Presentation;
 [ApiController]

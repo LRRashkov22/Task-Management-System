@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManagementSystem.Modules.Identity.Application.Interfaces;
-using TaskManagementSystem.Modules.Identity.Infrastructure.Service;
+using TaskManagementSystem.Modules.Identity.Application.Services;
 using TaskManagementSystem.Modules.Identity.Presentation;
 
 namespace TaskManagementSystem.Modules.Identity;

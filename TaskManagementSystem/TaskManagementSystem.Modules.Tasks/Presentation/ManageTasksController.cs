@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
-using TaskManagementSystem.Modules.Tasks.Application.Dto;
-using TaskManagementSystem.Modules.Tasks.Application.Interface;
+using TaskManagementSystem.Modules.Tasks.Application.DTOs;
+using TaskManagementSystem.Modules.Tasks.Application.Interfaces;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace TaskManagementSystem.Modules.Tasks.Presentation;
 
