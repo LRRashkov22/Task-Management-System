@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementSystem.Data.Persistance;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Statistics.Application.Services.ManagerPanel;

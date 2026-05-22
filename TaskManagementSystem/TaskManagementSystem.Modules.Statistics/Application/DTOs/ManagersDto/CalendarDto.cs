@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Enums;
 
-namespace TaskManagementSystem.Modules.Statistics.Application.DTO_s.ManagersDto
+namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto
 {
     public class CalendarDto
     {
