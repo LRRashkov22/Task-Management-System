@@ -6,12 +6,15 @@ import {
   createManagerTaskApi,
   createManagerTeamApi,
   editManagerTeamApi,
+  getManagerEmployeesApi,
   getManagerTaskDetailsApi,
   getManagerTeamDetailsApi,
   getManagerTeamsApi,
   getManagersForTransferApi,
   getTransferTeamPreviewApi,
+  transferManagerTaskApi,
   transferManagerTeamApi,
+  changeManagerTaskStatusApi,
 } from '../api/managerApi'
 import type {
   ManagerMemberDto,
@@ -293,7 +296,13 @@ function statusColumn(status: string): BoardColumnId {
       : 'todo'
   }
 
-  if (normalized === 'doing' || normalized === 'active') return 'inprogress'
+  if (
+    normalized === 'inprogress' ||
+    normalized === 'doing' ||
+    normalized === 'active'
+  ) {
+    return 'inprogress'
+  }
 
   return 'todo'
 }
@@ -307,6 +316,16 @@ function statusLabelFromColumn(column: BoardColumnId) {
 
 function statusLabel(status: string) {
   return statusLabelFromColumn(statusColumn(status))
+}
+
+function getEnumStatusForColumn(column: BoardColumnId) {
+  if (column === 'done') return 2
+  if (column === 'review') return 3
+  return 1
+}
+
+function isDropTargetColumn(column: BoardColumnId) {
+  return column !== 'done'
 }
 
 function priorityLabel(priority: string) {
@@ -427,6 +446,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [transferManagerId, setTransferManagerId] = useState('')
   const [transferManagers, setTransferManagers] = useState<ManagerUserDto[]>([])
   const [transferManagersError, setTransferManagersError] = useState('')
+  const [isTransferTaskModalOpen, setIsTransferTaskModalOpen] = useState(false)
+  const [transferTaskTeamId, setTransferTaskTeamId] = useState('')
+  const [transferTaskAssignments, setTransferTaskAssignments] = useState<string[]>([])
+  const [transferTaskError, setTransferTaskError] = useState('')
   const [selectedTask, setSelectedTask] = useState<BoardTask | null>(null)
   const [selectedTaskDetails, setSelectedTaskDetails] =
     useState<ManagerTaskDetailsDto | null>(null)
@@ -439,6 +462,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null)
   const [taskForm, setTaskForm] = useState<TaskForm>(emptyTaskForm)
   const [teamForm, setTeamForm] = useState<TeamForm>(emptyTeamForm)
+  const [managerEmployees, setManagerEmployees] = useState<ManagerMemberDto[]>([])
 
   const managerName = getUsername() || 'Manager'
   const managerId = Number(getUserId() ?? 0)
@@ -494,6 +518,34 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   }, [loadManagerData])
 
   useEffect(() => {
+    let cancelled = false
+
+    const loadEmployees = async () => {
+      try {
+        const employees = await getManagerEmployeesApi()
+        if (!cancelled) setManagerEmployees(employees)
+      } catch (error) {
+        if (!cancelled) {
+          setManagerEmployees([])
+          setMessage({
+            text:
+              error instanceof Error
+                ? error.message
+                : 'Could not load manager employees.',
+            type: 'error',
+          })
+        }
+      }
+    }
+
+    void loadEmployees()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setMessage(null)
     }, 0)
@@ -517,7 +569,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     [teamDetails, teams],
   )
 
-  const allMembers = useMemo(() => uniqMembers(teamsWithDetails), [teamsWithDetails])
+  const allMembers = useMemo(
+    () => (managerEmployees.length ? managerEmployees : uniqMembers(teamsWithDetails)),
+    [managerEmployees, teamsWithDetails],
+  )
 
   const calendarTasksByDay = useMemo(() => {
     const map = new Map<string, BoardTask[]>()
@@ -600,8 +655,16 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     navItems.find((item) => item.id === activeView)?.label ?? 'Dashboard'
 
   const selectedTaskTeam = taskForm.teamId
-    ? teamsWithDetails.find((team) => team.id === Number(taskForm.teamId))
+    ? teamDetails[Number(taskForm.teamId)] ??
+      teamsWithDetails.find((team) => team.id === Number(taskForm.teamId))
     : null
+
+  const transferTaskTargetTeams = selectedTask
+    ? teamsWithDetails.filter((team) => team.id !== selectedTask.teamId)
+    : []
+  const selectedTransferTaskTeam = transferTaskTargetTeams.find(
+    (team) => team.id === Number(transferTaskTeamId),
+  )
 
   function openCreateTaskModal() {
     setTaskForm(emptyTaskForm)
@@ -614,6 +677,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     setTeamForm(emptyTeamForm)
     setMessage(null)
     setIsTeamModalOpen(true)
+  }
+
+  function openTransferTaskModal() {
+    if (!selectedTask) return
+    setIsTransferTaskModalOpen(true)
+    setTransferTaskTeamId('')
+    setTransferTaskAssignments([])
+    setTransferTaskError('')
+    setMessage(null)
   }
 
   function openEditTeamModal(team: ManagerTeamDto) {
@@ -663,6 +735,60 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     }
   }
 
+  function handleTransferTaskTeamChange(teamId: string) {
+    setTransferTaskTeamId(teamId)
+    setTransferTaskAssignments([])
+    setTransferTaskError('')
+  }
+
+  function toggleTransferTaskAssignment(memberId: number, checked: boolean) {
+    setTransferTaskAssignments((current) =>
+      checked
+        ? [...current, String(memberId)]
+        : current.filter((id) => id !== String(memberId)),
+    )
+  }
+
+  async function handleTransferTask() {
+    if (!selectedTask) return
+    if (!transferTaskTeamId) {
+      setTransferTaskError('Select a destination team.')
+      return
+    }
+
+    if (transferTaskAssignments.length === 0) {
+      setTransferTaskError('Select at least one user from the destination team.')
+      return
+    }
+
+    setIsSaving(true)
+    setMessage(null)
+    setTransferTaskError('')
+
+    try {
+      await transferManagerTaskApi({
+        taskId: selectedTask.id,
+        newTeamId: Number(transferTaskTeamId),
+        assignments: transferTaskAssignments.map(Number),
+      })
+
+      await loadManagerData()
+      setSelectedTask(null)
+      setSelectedTaskDetails(null)
+      setIsTransferTaskModalOpen(false)
+      setTransferTaskTeamId('')
+      setTransferTaskAssignments([])
+      setMessage({ text: 'Task transferred successfully.', type: 'success' })
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : 'Could not transfer task.',
+        type: 'error',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   function handleDragStart(event: DragEvent<HTMLElement>, taskId: number) {
     event.dataTransfer.setData('text/plain', String(taskId))
     event.dataTransfer.effectAllowed = 'move'
@@ -672,24 +798,39 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     event.preventDefault()
   }
 
-  function handleDropOnColumn(
+  async function handleDropOnColumn(
     event: DragEvent<HTMLElement>,
     newStatus: BoardColumnId,
   ) {
     event.preventDefault()
+    if (!isDropTargetColumn(newStatus)) return
+
     const taskId = Number(event.dataTransfer.getData('text/plain'))
     if (!taskId) return
 
-    setBoardTasks((current) =>
-      current.map((task) =>
-        task.id === taskId ? { ...task, status: `local:${newStatus}` } : task,
-      ),
+    const previousTasks = boardTasks
+    const updatedTasks = boardTasks.map((task) =>
+      task.id === taskId ? { ...task, status: newStatus } : task,
     )
-    setMessage({
-      text:
-        'Status changed only in the frontend. Backend endpoint for status update is missing.',
-      type: 'error',
-    })
+
+    setBoardTasks(updatedTasks)
+    setMessage(null)
+
+    try {
+      await changeManagerTaskStatusApi(taskId, {
+        status: getEnumStatusForColumn(newStatus),
+      })
+      setMessage({ text: 'Task status updated.', type: 'success' })
+    } catch (error) {
+      setBoardTasks(previousTasks)
+      setMessage({
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Could not update task status.',
+        type: 'error',
+      })
+    }
   }
 
   async function openTaskDetails(task: BoardTask) {
@@ -763,14 +904,36 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     setMessage(null)
 
     try {
-      await createManagerTaskApi({
+      // Client-side deadline validation (compare dates only)
+      const deadlineInput = taskForm.deadline
+      const parsedDeadline = deadlineInput ? new Date(`${deadlineInput}T00:00:00`) : null
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      if (!parsedDeadline || Number.isNaN(parsedDeadline.getTime())) {
+        setMessage({ text: 'Invalid deadline.', type: 'error' })
+        return
+      }
+
+      parsedDeadline.setHours(0, 0, 0, 0)
+
+      if (parsedDeadline.getTime() < today.getTime()) {
+        setMessage({ text: 'Deadline cannot be in the past.', type: 'error' })
+        return
+      }
+
+
+      const payload = {
         title: taskForm.title.trim(),
         description: taskForm.description.trim(),
         priority: Number(taskForm.priority),
-        deadline: taskForm.deadline,
+        // set to midnight UTC for the provided date
+        deadline: new Date(`${deadlineInput}T00:00:00Z`).toISOString(),
         teamId: Number(taskForm.teamId),
         assignments: taskForm.assignments.map(Number),
-      })
+      }
+
+      await createManagerTaskApi(payload)
       await loadManagerData()
       setTaskForm(emptyTaskForm)
       setIsTaskModalOpen(false)
@@ -1123,25 +1286,21 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 </select>
               </div>
 
-              <p className={managerStyles.backendWarning}>
-                <Icon name="warning" />
-                Missing backend endpoint: task status update. Drag/drop works
-                locally until that endpoint is added.
-              </p>
-
               <div className={managerStyles.kanban}>
                 {boardColumns.map((column) => {
                   const columnTasks = filteredTasks.filter(
                     (task) => statusColumn(task.status) === column.id,
                   )
+                  const isDropTarget = isDropTargetColumn(column.id)
 
                   return (
                     <section
                       className={managerStyles.kanbanColumn(column.id)}
                       aria-label={column.label}
+                      aria-disabled={!isDropTarget}
                       key={column.id}
-                      onDragOver={handleDragOver}
-                      onDrop={(event) => handleDropOnColumn(event, column.id)}
+                      onDragOver={isDropTarget ? handleDragOver : undefined}
+                      onDrop={isDropTarget ? (event) => handleDropOnColumn(event, column.id) : undefined}
                     >
                       <header className={managerStyles.kanbanHeader}>
                         <h3>{column.label}</h3>
@@ -1699,15 +1858,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               >
                 Archive
               </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setMessage({
-                    text: 'Task transfer endpoint exists, but transfer modal is not built yet.',
-                    type: 'error',
-                  })
-                }
-              >
+              <button type="button" onClick={openTransferTaskModal}>
                 Transfer Task
               </button>
             </footer>
@@ -1806,18 +1957,23 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               <fieldset className={managerStyles.checkboxPanel}>
                 <legend>Assign To</legend>
                 {(selectedTaskTeam.members ?? []).length ? (
-                  selectedTaskTeam.members?.map((member) => (
-                    <label key={member.id}>
-                      <input
-                        type="checkbox"
-                        checked={taskForm.assignments.includes(String(member.id))}
-                        onChange={(event) =>
-                          toggleAssignment(member.id, event.target.checked)
-                        }
-                      />
-                      <span>{member.username}</span>
-                    </label>
-                  ))
+                  <div className={managerStyles.checkboxGrid}>
+                    {selectedTaskTeam.members?.map((member) => (
+                      <label
+                        key={member.id}
+                        className={`${managerStyles.checkboxOption} ${taskForm.assignments.includes(String(member.id)) ? managerStyles.checkboxOptionSelected : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={taskForm.assignments.includes(String(member.id))}
+                          onChange={(event) =>
+                            toggleAssignment(member.id, event.target.checked)
+                          }
+                        />
+                        <span>{member.username}</span>
+                      </label>
+                    ))}
+                  </div>
                 ) : (
                   <p>No members in this team</p>
                 )}
@@ -1872,31 +2028,32 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             <fieldset className={`${managerStyles.checkboxPanel} ${managerStyles.checkboxPanelTall}`}>
               <legend>Members</legend>
               {allMembers.length ? (
-                allMembers.map((member) => (
-                  <label
-                    className={editingTeam ? 'min-h-12 gap-2.5 [&_input]:mr-1' : ''}
-                    key={member.id}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={teamForm.memberIds.includes(String(member.id))}
-                      onChange={(event) =>
-                        toggleTeamMember(member.id, event.target.checked)
-                      }
-                    />
-                    {editingTeam ? (
-                      <span className={commonStyles.avatar}>
-                        {initials(member.username)}
-                      </span>
-                    ) : null}
-                    <span>{member.username}</span>
-                  </label>
-                ))
+                <div className={managerStyles.checkboxGrid}>
+                  {allMembers.map((member) => (
+                    <label
+                      key={member.id}
+                      className={`${managerStyles.checkboxOption} ${teamForm.memberIds.includes(String(member.id)) ? managerStyles.checkboxOptionSelected : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={teamForm.memberIds.includes(String(member.id))}
+                        onChange={(event) =>
+                          toggleTeamMember(member.id, event.target.checked)
+                        }
+                      />
+                      <div className="flex items-center gap-3">
+                        {editingTeam ? (
+                          <span className={commonStyles.avatar}>
+                            {initials(member.username)}
+                          </span>
+                        ) : null}
+                        <span>{member.username}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               ) : (
-                <p>
-                  No manager employee-list endpoint exists yet. The backend only
-                  exposes members through existing team details.
-                </p>
+                <p>No employees are assigned to this manager yet.</p>
               )}
             </fieldset>
 
@@ -1917,6 +2074,103 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               </button>
             </div>
           </form>
+        </div>
+      ) : null}
+
+      {isTransferTaskModalOpen ? (
+        <div className={managerStyles.modalBackdrop} role="presentation">
+          <div
+            className={`${managerStyles.modal} w-[min(100%,560px)] self-center`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transfer-task-title"
+          >
+            <h2 id="transfer-task-title">Transfer Task</h2>
+            <p className="mb-4 text-[15px] leading-[1.6] text-[#374151]">
+              Transfer "{selectedTask?.title}" from {selectedTask?.teamName} to a
+              different active team.
+            </p>
+
+            <label>
+              <span>Destination team</span>
+              <select
+                value={transferTaskTeamId}
+                onChange={(event) =>
+                  handleTransferTaskTeamChange(event.target.value)
+                }
+              >
+                <option value="">Select team</option>
+                {transferTaskTargetTeams.map((team) => (
+                  <option value={team.id} key={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedTransferTaskTeam ? (
+              <fieldset className={managerStyles.checkboxPanel}>
+                <legend>Assign To</legend>
+                {selectedTransferTaskTeam.members?.length ? (
+                  <div className={managerStyles.checkboxGrid}>
+                    {selectedTransferTaskTeam.members.map((member) => (
+                      <label
+                        key={member.id}
+                        className={`${managerStyles.checkboxOption} ${transferTaskAssignments.includes(
+                          String(member.id),
+                        )
+                          ? managerStyles.checkboxOptionSelected
+                          : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={transferTaskAssignments.includes(String(member.id))}
+                          onChange={(event) =>
+                            toggleTransferTaskAssignment(member.id, event.target.checked)
+                          }
+                        />
+                        <span>{member.username}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No members available in the selected team.</p>
+                )}
+              </fieldset>
+            ) : null}
+
+            {transferTaskError ? (
+              <p className="mb-4 text-[14px] font-bold text-[#b91c1c]">
+                {transferTaskError}
+              </p>
+            ) : null}
+
+            <div className={managerStyles.modalActions}>
+              <button
+                className={managerStyles.modalCancel}
+                type="button"
+                disabled={isSaving}
+                onClick={() => {
+                  setIsTransferTaskModalOpen(false)
+                  setTransferTaskTeamId('')
+                  setTransferTaskAssignments([])
+                  setTransferTaskError('')
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className={managerStyles.modalSave}
+                type="button"
+                disabled={isSaving || !transferTaskTeamId || transferTaskAssignments.length === 0}
+                onClick={() => {
+                  void handleTransferTask()
+                }}
+              >
+                {isSaving ? 'Transferring...' : 'Transfer Task'}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 

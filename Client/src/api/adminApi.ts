@@ -137,7 +137,7 @@ export function deleteArchivedTeamApi(id: number) {
 }
 
 export function recoverArchivedTaskApi(id: number) {
-  return apiJson<unknown>('/Task/Recover-task', {
+  return apiJson<boolean>('/Task/Recover-task', {
     method: 'PATCH',
     body: JSON.stringify({ id }),
   })

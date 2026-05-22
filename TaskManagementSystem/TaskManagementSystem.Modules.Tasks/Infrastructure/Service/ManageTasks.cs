@@ -138,6 +138,7 @@ public class ManageTasks : IManageTasks
             Title = request.Title,
             Description = request.Description,
             Priority = request.Priority,
+            Status = Data.Domain.Enums.Status.ToDo,
             CreatedAt = DateTime.UtcNow,
             Deadline = request.Deadline,
             TeamId = request.TeamId,
