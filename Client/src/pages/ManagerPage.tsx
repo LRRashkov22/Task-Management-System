@@ -6,12 +6,15 @@ import {
   createManagerTaskApi,
   createManagerTeamApi,
   editManagerTeamApi,
+  getManagerEmployeesApi,
   getManagerTaskDetailsApi,
   getManagerTeamDetailsApi,
   getManagerTeamsApi,
   getManagersForTransferApi,
   getTransferTeamPreviewApi,
+  transferManagerTaskApi,
   transferManagerTeamApi,
+  changeManagerTaskStatusApi,
 } from '../api/managerApi'
 import type {
   ManagerMemberDto,
@@ -21,6 +24,7 @@ import type {
   ManagerUserDto,
   TransferTeamPreviewDto,
 } from '../api/managerApi'
+import { commonStyles, managerStyles } from '../styles'
 import { getUserId, getUsername } from '../utils/auth'
 
 type ManagerView =
@@ -292,7 +296,13 @@ function statusColumn(status: string): BoardColumnId {
       : 'todo'
   }
 
-  if (normalized === 'doing' || normalized === 'active') return 'inprogress'
+  if (
+    normalized === 'inprogress' ||
+    normalized === 'doing' ||
+    normalized === 'active'
+  ) {
+    return 'inprogress'
+  }
 
   return 'todo'
 }
@@ -306,6 +316,16 @@ function statusLabelFromColumn(column: BoardColumnId) {
 
 function statusLabel(status: string) {
   return statusLabelFromColumn(statusColumn(status))
+}
+
+function getEnumStatusForColumn(column: BoardColumnId) {
+  if (column === 'done') return 2
+  if (column === 'review') return 3
+  return 1
+}
+
+function isDropTargetColumn(column: BoardColumnId) {
+  return column !== 'done'
 }
 
 function priorityLabel(priority: string) {
@@ -426,6 +446,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [transferManagerId, setTransferManagerId] = useState('')
   const [transferManagers, setTransferManagers] = useState<ManagerUserDto[]>([])
   const [transferManagersError, setTransferManagersError] = useState('')
+  const [isTransferTaskModalOpen, setIsTransferTaskModalOpen] = useState(false)
+  const [transferTaskTeamId, setTransferTaskTeamId] = useState('')
+  const [transferTaskAssignments, setTransferTaskAssignments] = useState<string[]>([])
+  const [transferTaskError, setTransferTaskError] = useState('')
   const [selectedTask, setSelectedTask] = useState<BoardTask | null>(null)
   const [selectedTaskDetails, setSelectedTaskDetails] =
     useState<ManagerTaskDetailsDto | null>(null)
@@ -438,6 +462,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null)
   const [taskForm, setTaskForm] = useState<TaskForm>(emptyTaskForm)
   const [teamForm, setTeamForm] = useState<TeamForm>(emptyTeamForm)
+  const [managerEmployees, setManagerEmployees] = useState<ManagerMemberDto[]>([])
 
   const managerName = getUsername() || 'Manager'
   const managerId = Number(getUserId() ?? 0)
@@ -493,6 +518,34 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   }, [loadManagerData])
 
   useEffect(() => {
+    let cancelled = false
+
+    const loadEmployees = async () => {
+      try {
+        const employees = await getManagerEmployeesApi()
+        if (!cancelled) setManagerEmployees(employees)
+      } catch (error) {
+        if (!cancelled) {
+          setManagerEmployees([])
+          setMessage({
+            text:
+              error instanceof Error
+                ? error.message
+                : 'Could not load manager employees.',
+            type: 'error',
+          })
+        }
+      }
+    }
+
+    void loadEmployees()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setMessage(null)
     }, 0)
@@ -516,7 +569,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     [teamDetails, teams],
   )
 
-  const allMembers = useMemo(() => uniqMembers(teamsWithDetails), [teamsWithDetails])
+  const allMembers = useMemo(
+    () => (managerEmployees.length ? managerEmployees : uniqMembers(teamsWithDetails)),
+    [managerEmployees, teamsWithDetails],
+  )
 
   const calendarTasksByDay = useMemo(() => {
     const map = new Map<string, BoardTask[]>()
@@ -539,7 +595,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const calendarDays = useMemo(() => {
     const focalDate = new Date(calendarDate)
 
-    let start = calendarView === 'monthly'
+    const start = calendarView === 'monthly'
       ? startOfWeek(startOfMonth(focalDate))
       : startOfWeek(focalDate)
 
@@ -599,8 +655,16 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     navItems.find((item) => item.id === activeView)?.label ?? 'Dashboard'
 
   const selectedTaskTeam = taskForm.teamId
-    ? teamsWithDetails.find((team) => team.id === Number(taskForm.teamId))
+    ? teamDetails[Number(taskForm.teamId)] ??
+      teamsWithDetails.find((team) => team.id === Number(taskForm.teamId))
     : null
+
+  const transferTaskTargetTeams = selectedTask
+    ? teamsWithDetails.filter((team) => team.id !== selectedTask.teamId)
+    : []
+  const selectedTransferTaskTeam = transferTaskTargetTeams.find(
+    (team) => team.id === Number(transferTaskTeamId),
+  )
 
   function openCreateTaskModal() {
     setTaskForm(emptyTaskForm)
@@ -613,6 +677,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     setTeamForm(emptyTeamForm)
     setMessage(null)
     setIsTeamModalOpen(true)
+  }
+
+  function openTransferTaskModal() {
+    if (!selectedTask) return
+    setIsTransferTaskModalOpen(true)
+    setTransferTaskTeamId('')
+    setTransferTaskAssignments([])
+    setTransferTaskError('')
+    setMessage(null)
   }
 
   function openEditTeamModal(team: ManagerTeamDto) {
@@ -662,6 +735,60 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     }
   }
 
+  function handleTransferTaskTeamChange(teamId: string) {
+    setTransferTaskTeamId(teamId)
+    setTransferTaskAssignments([])
+    setTransferTaskError('')
+  }
+
+  function toggleTransferTaskAssignment(memberId: number, checked: boolean) {
+    setTransferTaskAssignments((current) =>
+      checked
+        ? [...current, String(memberId)]
+        : current.filter((id) => id !== String(memberId)),
+    )
+  }
+
+  async function handleTransferTask() {
+    if (!selectedTask) return
+    if (!transferTaskTeamId) {
+      setTransferTaskError('Select a destination team.')
+      return
+    }
+
+    if (transferTaskAssignments.length === 0) {
+      setTransferTaskError('Select at least one user from the destination team.')
+      return
+    }
+
+    setIsSaving(true)
+    setMessage(null)
+    setTransferTaskError('')
+
+    try {
+      await transferManagerTaskApi({
+        taskId: selectedTask.id,
+        newTeamId: Number(transferTaskTeamId),
+        assignments: transferTaskAssignments.map(Number),
+      })
+
+      await loadManagerData()
+      setSelectedTask(null)
+      setSelectedTaskDetails(null)
+      setIsTransferTaskModalOpen(false)
+      setTransferTaskTeamId('')
+      setTransferTaskAssignments([])
+      setMessage({ text: 'Task transferred successfully.', type: 'success' })
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : 'Could not transfer task.',
+        type: 'error',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   function handleDragStart(event: DragEvent<HTMLElement>, taskId: number) {
     event.dataTransfer.setData('text/plain', String(taskId))
     event.dataTransfer.effectAllowed = 'move'
@@ -671,24 +798,39 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     event.preventDefault()
   }
 
-  function handleDropOnColumn(
+  async function handleDropOnColumn(
     event: DragEvent<HTMLElement>,
     newStatus: BoardColumnId,
   ) {
     event.preventDefault()
+    if (!isDropTargetColumn(newStatus)) return
+
     const taskId = Number(event.dataTransfer.getData('text/plain'))
     if (!taskId) return
 
-    setBoardTasks((current) =>
-      current.map((task) =>
-        task.id === taskId ? { ...task, status: `local:${newStatus}` } : task,
-      ),
+    const previousTasks = boardTasks
+    const updatedTasks = boardTasks.map((task) =>
+      task.id === taskId ? { ...task, status: newStatus } : task,
     )
-    setMessage({
-      text:
-        'Status changed only in the frontend. Backend endpoint for status update is missing.',
-      type: 'error',
-    })
+
+    setBoardTasks(updatedTasks)
+    setMessage(null)
+
+    try {
+      await changeManagerTaskStatusApi(taskId, {
+        status: getEnumStatusForColumn(newStatus),
+      })
+      setMessage({ text: 'Task status updated.', type: 'success' })
+    } catch (error) {
+      setBoardTasks(previousTasks)
+      setMessage({
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Could not update task status.',
+        type: 'error',
+      })
+    }
   }
 
   async function openTaskDetails(task: BoardTask) {
@@ -762,14 +904,36 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     setMessage(null)
 
     try {
-      await createManagerTaskApi({
+      // Client-side deadline validation (compare dates only)
+      const deadlineInput = taskForm.deadline
+      const parsedDeadline = deadlineInput ? new Date(`${deadlineInput}T00:00:00`) : null
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      if (!parsedDeadline || Number.isNaN(parsedDeadline.getTime())) {
+        setMessage({ text: 'Invalid deadline.', type: 'error' })
+        return
+      }
+
+      parsedDeadline.setHours(0, 0, 0, 0)
+
+      if (parsedDeadline.getTime() < today.getTime()) {
+        setMessage({ text: 'Deadline cannot be in the past.', type: 'error' })
+        return
+      }
+
+
+      const payload = {
         title: taskForm.title.trim(),
         description: taskForm.description.trim(),
         priority: Number(taskForm.priority),
-        deadline: taskForm.deadline,
+        // set to midnight UTC for the provided date
+        deadline: new Date(`${deadlineInput}T00:00:00Z`).toISOString(),
         teamId: Number(taskForm.teamId),
         assignments: taskForm.assignments.map(Number),
-      })
+      }
+
+      await createManagerTaskApi(payload)
       await loadManagerData()
       setTaskForm(emptyTaskForm)
       setIsTaskModalOpen(false)
@@ -939,22 +1103,22 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const selectedTaskHistory = selectedTaskDetails?.history ?? []
 
   return (
-    <main className={`manager-shell ${isSidebarOpen ? '' : 'sidebar-closed'}`}>
+    <main className={managerStyles.shell(isSidebarOpen)}>
       <aside
-        className="manager-sidebar"
+        className={managerStyles.sidebar(isSidebarOpen)}
         aria-label="Manager navigation"
         aria-hidden={!isSidebarOpen}
       >
-        <div className="manager-brand">
+        <div className={`${managerStyles.sidebarInner(isSidebarOpen)} ${managerStyles.brand}`}>
           <h1>TaskMan</h1>
           <p>{managerName}</p>
           <span>Manager</span>
         </div>
 
-        <nav className="manager-nav">
+        <nav className={managerStyles.nav(isSidebarOpen)}>
           {navItems.map((item) => (
             <button
-              className={activeView === item.id ? 'active' : ''}
+              className={managerStyles.navButton(activeView === item.id)}
               type="button"
               key={item.id}
               onClick={() => setActiveView(item.id)}
@@ -965,22 +1129,22 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
           ))}
         </nav>
 
-        <div className="manager-sidebar-footer">
-          <button type="button">
+        <div className={managerStyles.sidebarFooter(isSidebarOpen)}>
+          <button className={managerStyles.footerButton} type="button">
             <Icon name="settings" />
             <span>Settings</span>
           </button>
-          <button className="manager-logout-button" type="button" onClick={onLogout}>
+          <button className={`${managerStyles.footerButton} text-[#ef1d32]`} type="button" onClick={onLogout}>
             <Icon name="logout" />
             <span>Logout</span>
           </button>
         </div>
       </aside>
 
-      <section className="manager-main" aria-labelledby="manager-page-title">
-        <header className="manager-topbar">
+      <section className={managerStyles.main} aria-labelledby="manager-page-title">
+        <header className={managerStyles.topbar(isSidebarOpen)}>
           <button
-            className="manager-icon-button"
+            className={managerStyles.iconButton}
             type="button"
             aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
             onClick={() => setIsSidebarOpen((current) => !current)}
@@ -988,7 +1152,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             <Icon name={isSidebarOpen ? 'close' : 'menu'} />
           </button>
           <button
-            className="manager-language-button"
+            className={managerStyles.languageButton}
             type="button"
             onClick={() =>
               setLanguage((current) => (current === 'en' ? 'bg' : 'en'))
@@ -999,12 +1163,12 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
           </button>
         </header>
 
-        <div className="manager-content">
-          <div className="manager-page-heading">
+        <div className={managerStyles.content}>
+          <div className={managerStyles.heading}>
             <h2 id="manager-page-title">{pageTitle}</h2>
             {activeView === 'teamTasks' ? (
               <button
-                className="manager-create-button"
+                className={managerStyles.createButton}
                 type="button"
                 onClick={openCreateTaskModal}
               >
@@ -1014,7 +1178,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             ) : null}
             {activeView === 'teams' ? (
               <button
-                className="manager-create-button"
+                className={managerStyles.createButton}
                 type="button"
                 onClick={openCreateTeamModal}
               >
@@ -1025,38 +1189,38 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
           </div>
 
           {message ? (
-            <p className={`manager-message ${message.type}`} role="status">
+            <p className={`${managerStyles.message} ${commonStyles.message(message.type)}`} role="status">
               {message.text}
             </p>
           ) : null}
 
           {activeView === 'dashboard' ? (
             <>
-              <section className="manager-stats-grid" aria-label="Dashboard stats">
-                <article className="manager-stat-card">
+              <section className={managerStyles.statsGrid} aria-label="Dashboard stats">
+                <article className={managerStyles.statCard}>
                   <p>Tasks</p>
                   <strong>{isLoading ? '' : totalTasks}</strong>
                 </article>
-                <article className="manager-stat-card">
+                <article className={managerStyles.statCard}>
                   <p>Done</p>
                   <strong>{hasLoadedDetails ? doneTasks.length : ''}</strong>
                 </article>
-                <article className="manager-stat-card">
+                <article className={managerStyles.statCard}>
                   <p>In Progress</p>
                   <strong>{hasLoadedDetails ? inProgressTasks.length : ''}</strong>
                 </article>
-                <article className="manager-stat-card">
+                <article className={managerStyles.statCard}>
                   <p>Members</p>
                   <strong>{isLoading ? '' : totalMembers}</strong>
                 </article>
               </section>
 
-              <section className="manager-dashboard-panel" aria-label="Teams">
+              <section className={managerStyles.dashboardPanel} aria-label="Teams">
                 <h3>Teams</h3>
                 {isLoading ? (
-                  <p className="manager-empty-text">Loading...</p>
+                  <p className={managerStyles.emptyText}>Loading...</p>
                 ) : teamsWithDetails.length ? (
-                  <div className="manager-dashboard-team-list">
+                  <div className={managerStyles.teamList}>
                     {teamsWithDetails.map((team) => {
                       const tasks = team.tasks ?? []
                       const completed = tasks.filter(
@@ -1065,7 +1229,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                       const taskCount = tasks.length || team.tasksCount || 0
 
                       return (
-                        <article className="manager-dashboard-team" key={team.id}>
+                        <article className={managerStyles.dashboardTeam} key={team.id}>
                           <div>
                             <h4>{team.name}</h4>
                             <p>
@@ -1080,13 +1244,13 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     })}
                   </div>
                 ) : (
-                  <p className="manager-empty-text">No teams yet</p>
+                  <p className={managerStyles.emptyText}>No teams yet</p>
                 )}
               </section>
             </>
           ) : activeView === 'teamTasks' ? (
-            <section className="manager-board-panel" aria-label="Team tasks">
-              <div className="manager-filters">
+            <section aria-label="Team tasks">
+              <div className={managerStyles.filters}>
                 <select
                   aria-label="Team filter"
                   value={selectedTeamFilter}
@@ -1122,36 +1286,30 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 </select>
               </div>
 
-              <p className="manager-backend-warning">
-                <Icon name="warning" />
-                Missing backend endpoint: task status update. Drag/drop works
-                locally until that endpoint is added.
-              </p>
-
-              <div className="manager-kanban">
+              <div className={managerStyles.kanban}>
                 {boardColumns.map((column) => {
                   const columnTasks = filteredTasks.filter(
                     (task) => statusColumn(task.status) === column.id,
                   )
+                  const isDropTarget = isDropTargetColumn(column.id)
 
                   return (
                     <section
-                      className={`manager-kanban-column ${column.id}`}
+                      className={managerStyles.kanbanColumn(column.id)}
                       aria-label={column.label}
+                      aria-disabled={!isDropTarget}
                       key={column.id}
-                      onDragOver={handleDragOver}
-                      onDrop={(event) => handleDropOnColumn(event, column.id)}
+                      onDragOver={isDropTarget ? handleDragOver : undefined}
+                      onDrop={isDropTarget ? (event) => handleDropOnColumn(event, column.id) : undefined}
                     >
-                      <header>
+                      <header className={managerStyles.kanbanHeader}>
                         <h3>{column.label}</h3>
                         <span>{columnTasks.length} tasks</span>
                       </header>
-                      <div className="manager-kanban-list">
+                      <div className={managerStyles.kanbanList}>
                         {columnTasks.map((task) => (
                           <article
-                            className={`manager-task-card ${
-                              selectedTask?.id === task.id ? 'selected' : ''
-                            }`}
+                            className={managerStyles.taskCard(selectedTask?.id === task.id)}
                             key={task.id}
                             draggable
                             onDragStart={(event) => handleDragStart(event, task.id)}
@@ -1159,31 +1317,31 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                               void openTaskDetails(task)
                             }}
                           >
-                            <div className="manager-task-card-title">
+                            <div className={managerStyles.taskCardTitle}>
                               <h4>{task.title}</h4>
-                              <span className="manager-card-badges">
+                              <span className={managerStyles.cardBadges}>
                                 {isTaskMissingVisibleData(task) ? (
                                   <span
-                                    className="manager-card-warning"
+                                    className={managerStyles.cardWarning}
                                     title="Missing backend data for this card"
                                   >
                                     <Icon name="warning" />
                                   </span>
                                 ) : null}
                                 <span
-                                  className={`priority-pill ${priorityTone(task.priority)}`}
+                                  className={commonStyles.priority(priorityTone(task.priority))}
                                 >
                                   {priorityLabel(task.priority)}
                                 </span>
                               </span>
                             </div>
-                            <p>{task.description || 'Missing description'}</p>
-                            <div className="manager-task-meta">
+                            <p className={managerStyles.taskDescription}>{task.description || 'Missing description'}</p>
+                            <div className={managerStyles.taskMeta}>
                               <span>
                                 <Icon name="user" />
                                 {task.assignedEmployeesCount}
                               </span>
-                              <span className={!task.deadline ? 'missing' : ''}>
+                              <span className={!task.deadline ? managerStyles.missing : ''}>
                                 {!task.deadline ? (
                                   <Icon name="warning" />
                                 ) : null}
@@ -1202,14 +1360,14 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 })}
               </div>
               {selectedTask ? (
-                <section className="manager-task-details-panel" aria-label="Selected task details">
-                  <div className="manager-task-details-header">
+                <section className={managerStyles.taskDetailsPanel} aria-label="Selected task details">
+                  <div className="mb-[18px] flex items-start justify-between gap-4 [&_h3]:text-[22px] [&_p]:mt-1.5 [&_p]:text-[14px] [&_p]:text-[#6b7280]">
                     <div>
                       <h3>{selectedTask.title}</h3>
                       <p>{selectedTask.teamName}</p>
                     </div>
                     <button
-                      className="manager-task-details-close"
+                      className="cursor-pointer border-0 bg-transparent text-[14px] leading-none font-bold text-[#315af2]"
                       type="button"
                       onClick={() => setSelectedTask(null)}
                     >
@@ -1217,11 +1375,11 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     </button>
                   </div>
 
-                  <div className="manager-task-details-meta">
-                    <span className={`priority-pill ${priorityTone(selectedTask.priority)}`}>
+                  <div className="mb-[18px] flex flex-wrap gap-2.5 text-[#4f5b72] [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1.5 [&>span]:rounded-full [&>span]:bg-[#f3f6ff] [&>span]:px-3.5 [&>span]:py-2.5 [&>span]:text-[13px] [&>span]:font-semibold">
+                    <span className={commonStyles.priority(priorityTone(selectedTask.priority))}>
                       {priorityLabel(selectedTask.priority)}
                     </span>
-                    <span className={`status-pill ${statusColumn(selectedTask.status)}`}>
+                    <span className={commonStyles.status(statusColumn(selectedTask.status))}>
                       {statusLabel(selectedTask.status)}
                     </span>
                     <span>{formatDate(selectedTask.deadline)}</span>
@@ -1230,11 +1388,11 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     </span>
                   </div>
 
-                  <p className="manager-task-details-description">
+                  <p className="mb-[18px] text-[15px] leading-[1.7] text-[#25324a]">
                     {selectedTask.description || 'No description provided.'}
                   </p>
 
-                  <div className="manager-task-details-footer">
+                  <div className="flex flex-wrap justify-between gap-4 text-[14px] text-[#4f5b72]">
                     <span>
                       <Icon name="user" /> Assigned employees: {selectedTask.assignedEmployeesCount}
                     </span>
@@ -1242,68 +1400,60 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                       Drag task cards into a different column to update status locally.
                     </span>
                   </div>
-                  <p className="manager-endpoint-note">
+                  <p className={managerStyles.endpointNote}>
                     ! Status movement is currently local because the backend status edit endpoint is not implemented yet.
                   </p>
                 </section>
               ) : null}
             </section>
           ) : activeView === 'calendar' ? (
-            <section className="manager-calendar-panel" aria-label="Calendar">
-              <div className="manager-calendar-header">
+            <section className={managerStyles.calendarPanel} aria-label="Calendar">
+              <div className={managerStyles.calendarHeader}>
                 <div>
-                  <p className="manager-calendar-label">Calendar</p>
+                  <p className={managerStyles.calendarLabel}>Calendar</p>
                   <h3>{formatCalendarMonth(calendarDate)}</h3>
                 </div>
-                <div className="manager-calendar-header-actions">
+                <div className={managerStyles.calendarActions}>
                   <button
                     type="button"
-                    className="manager-calendar-nav"
+                    className={managerStyles.calendarNav}
                     onClick={() => setCalendarDate(addMonths(calendarDate, -1))}
                   >
                     ‹
                   </button>
                   <button
                     type="button"
-                    className="manager-calendar-nav"
+                    className={managerStyles.calendarNav}
                     onClick={() => setCalendarDate(new Date())}
                   >
                     Today
                   </button>
                   <button
                     type="button"
-                    className="manager-calendar-nav"
+                    className={managerStyles.calendarNav}
                     onClick={() => setCalendarDate(addMonths(calendarDate, 1))}
                   >
                     ›
                   </button>
                   <button
                     type="button"
-                    className={
-                      calendarView === 'weekly'
-                        ? 'manager-calendar-toggle active'
-                        : 'manager-calendar-toggle'
-                    }
+                    className={managerStyles.calendarToggle(calendarView === 'weekly')}
                     onClick={() => setCalendarView('weekly')}
                   >
                     Weekly
                   </button>
                   <button
                     type="button"
-                    className={
-                      calendarView === 'monthly'
-                        ? 'manager-calendar-toggle active'
-                        : 'manager-calendar-toggle'
-                    }
+                    className={managerStyles.calendarToggle(calendarView === 'monthly')}
                     onClick={() => setCalendarView('monthly')}
                   >
                     Monthly
                   </button>
                 </div>
               </div>
-              <div className="manager-calendar-grid">
+              <div className={managerStyles.calendarGrid}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="manager-calendar-weekday">
+                  <div key={day} className={managerStyles.calendarWeekday}>
                     {day}
                   </div>
                 ))}
@@ -1314,21 +1464,22 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                   return (
                     <article
                       key={dayKey}
-                      className={`manager-calendar-day ${
-                        day.getMonth() !== calendarDate.getMonth() ? 'outside' : ''
-                      } ${isSameDay(day, new Date()) ? 'today' : ''}`}
+                      className={managerStyles.calendarDay(
+                        day.getMonth() !== calendarDate.getMonth(),
+                        isSameDay(day, new Date()),
+                      )}
                     >
-                      <div className="manager-calendar-day-number">
+                      <div className={managerStyles.calendarDayNumber}>
                         {day.getDate()}
                       </div>
-                      <div className="manager-calendar-day-tasks">
+                      <div className={managerStyles.calendarDayTasks}>
                         {dayTasks.slice(0, 2).map((task) => (
-                          <span key={task.id} className="calendar-task-pill">
+                          <span key={task.id} className={managerStyles.calendarTaskPill()}>
                             {task.title}
                           </span>
                         ))}
                         {dayTasks.length > 2 ? (
-                          <span className="calendar-task-pill more">
+                          <span className={managerStyles.calendarTaskPill(true)}>
                             +{dayTasks.length - 2} more
                           </span>
                         ) : null}
@@ -1339,24 +1490,24 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               </div>
             </section>
           ) : activeView === 'teams' ? (
-            <section className="manager-teams-panel" aria-label="Teams">
+            <section className={managerStyles.teamsPanel} aria-label="Teams">
               {isLoading ? (
-                <p className="manager-empty-text">Loading...</p>
+                <p className={managerStyles.emptyText}>Loading...</p>
               ) : teamsWithDetails.length ? (
                 teamsWithDetails.map((team) => {
                   const detail = teamDetails[team.id] ?? team
                   const tasksCount = detail.tasks?.length ?? team.tasksCount ?? 0
 
                   return (
-                    <article className="manager-team-card" key={team.id}>
-                      <div className="manager-team-card-main">
+                    <article className={managerStyles.teamCard} key={team.id}>
+                      <div className={managerStyles.teamCardMain}>
                         <div>
                           <h3>{team.name}</h3>
                           <p>
                             {team.employeesCount} Members - {tasksCount} Tasks
                           </p>
                         </div>
-                        <div className="manager-team-actions">
+                        <div className={managerStyles.teamActions}>
                           <button
                             type="button"
                             onClick={() => openEditTeamModal(team)}
@@ -1373,7 +1524,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                             Transfer
                           </button>
                           <button
-                            className="danger"
+                            className="text-[#ef1d32]"
                             type="button"
                             onClick={() => setArchiveCandidate(team)}
                           >
@@ -1393,17 +1544,17 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                       </div>
 
                       {expandedTeamId === team.id ? (
-                        <div className="manager-team-details">
-                          <section className="manager-detail-section">
+                        <div className={managerStyles.teamDetails}>
+                          <section className={managerStyles.detailSection}>
                             <h4>
                               <Icon name="teams" />
                               Members
                             </h4>
                             {(detail.members ?? []).length ? (
-                              <div className="manager-member-grid">
+                              <div className={managerStyles.memberGrid}>
                                 {detail.members?.map((member) => (
-                                  <span className="manager-member-chip" key={member.id}>
-                                    <span className="manager-avatar">
+                                  <span className={managerStyles.memberChip} key={member.id}>
+                                    <span className={commonStyles.avatar}>
                                       {initials(member.username)}
                                     </span>
                                     {member.username}
@@ -1415,36 +1566,32 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                             )}
                           </section>
 
-                          <section className="manager-detail-section">
+                          <section className={managerStyles.detailSection}>
                             <h4>
                               <Icon name="analytics" />
                               Tasks
                             </h4>
                             {(detail.tasks ?? []).length ? (
-                              <div className="manager-detail-task-list">
+                              <div className={managerStyles.detailTaskList}>
                                 {detail.tasks?.map((task) => (
-                                  <article className="manager-detail-task" key={task.id}>
-                                    <div className="manager-detail-task-header">
+                                  <article className={managerStyles.detailTask} key={task.id}>
+                                    <div className={managerStyles.detailTaskHeader}>
                                       <h5>{task.title}</h5>
                                       <span>
                                         <span
-                                          className={`priority-pill ${priorityTone(
-                                            task.priority,
-                                          )}`}
+                                          className={commonStyles.priority(priorityTone(task.priority))}
                                         >
                                           {priorityLabel(task.priority)}
                                         </span>
                                         <span
-                                          className={`status-pill ${statusColumn(
-                                            task.status,
-                                          )}`}
+                                          className={commonStyles.status(statusColumn(task.status))}
                                         >
                                           {statusLabel(task.status)}
                                         </span>
                                       </span>
                                     </div>
                                     <p>{task.description || 'No description'}</p>
-                                    <div className="manager-detail-task-meta">
+                                    <div className={managerStyles.detailTaskMeta}>
                                       <span>
                                         <Icon name="user" />
                                         {task.assignedEmployeesCount} assigned
@@ -1456,7 +1603,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                                       </span>
                                     </div>
                                     {(task.assignedEmployees ?? []).length ? (
-                                      <div className="manager-assignee-list">
+                                      <div className={managerStyles.assigneeList}>
                                         {task.assignedEmployees?.map((member) => (
                                           <span key={member.id}>
                                             {member.username}
@@ -1477,11 +1624,11 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                   )
                 })
               ) : (
-                <p className="manager-empty-text">No teams yet</p>
+                <p className={managerStyles.emptyText}>No teams yet</p>
               )}
             </section>
           ) : (
-            <section className="manager-empty-panel" aria-label={pageTitle}>
+            <section className={managerStyles.dashboardPanel} aria-label={pageTitle}>
               <p>No data yet</p>
             </section>
           )}
@@ -1489,28 +1636,24 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       </section>
 
       {selectedTask ? (
-        <div className="manager-modal-backdrop" role="presentation">
+        <div className={managerStyles.modalBackdrop} role="presentation">
           <section
-            className="manager-modal manager-task-detail-modal"
+            className={`${managerStyles.modal} ${managerStyles.taskDetailModal}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="manager-task-detail-title"
           >
-            <header className="manager-task-detail-head">
+            <header className={managerStyles.taskDetailHead}>
               <div>
-                <div className="manager-task-detail-title-row">
+                <div className={managerStyles.taskDetailTitleRow}>
                   <h2 id="manager-task-detail-title">{selectedTask.title}</h2>
                   <span
-                    className={`priority-pill ${priorityTone(
-                      selectedTask.priority,
-                    )}`}
+                    className={commonStyles.priority(priorityTone(selectedTask.priority))}
                   >
                     {priorityLabel(selectedTask.priority)}
                   </span>
                   <span
-                    className={`status-pill ${statusColumn(
-                      selectedTask.status,
-                    )}`}
+                    className={commonStyles.status(statusColumn(selectedTask.status))}
                   >
                     {statusLabel(selectedTask.status)}
                   </span>
@@ -1518,7 +1661,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 <p>{selectedTask.teamName}</p>
               </div>
               <button
-                className="manager-task-detail-close"
+                className={managerStyles.taskDetailClose}
                 type="button"
                 aria-label="Close task details"
                 onClick={() => {
@@ -1531,23 +1674,23 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               </button>
             </header>
 
-            <div className="manager-task-detail-body">
+            <div className={managerStyles.taskDetailBody}>
               {taskDetailsWarning ? (
-                <p className="manager-backend-warning">
+                <p className={managerStyles.backendWarning}>
                   <Icon name="warning" />
                   {taskDetailsWarning}
                 </p>
               ) : null}
 
-              <section className="manager-task-detail-summary">
+              <section className={managerStyles.taskSummary}>
                 <h3>Description</h3>
                 <p>
                   {selectedTaskDetails?.description ??
                     selectedTask.description ??
                     'Missing description'}
                 </p>
-                <div className="manager-task-detail-facts">
-                  <span className={!selectedTask.deadline ? 'missing' : ''}>
+                <div className={managerStyles.taskFacts}>
+                  <span className={!selectedTask.deadline ? managerStyles.missing : ''}>
                     <Icon name={selectedTask.deadline ? 'calendar' : 'warning'} />
                     Deadline: {formatDate(selectedTask.deadline)}
                   </span>
@@ -1559,7 +1702,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 </div>
               </section>
 
-              <section className="manager-task-detail-assignees">
+              <section className={managerStyles.taskAssignees}>
                 <div>
                   <h3>Assign To</h3>
                   <button
@@ -1576,10 +1719,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                   </button>
                 </div>
                 {selectedTaskAssignedUsers.length ? (
-                  <div className="manager-task-assignee-chips">
+                  <div className={managerStyles.taskAssigneeChips}>
                     {selectedTaskAssignedUsers.map((member) => (
                       <span key={member.id}>
-                        <span className="manager-avatar">
+                        <span className={commonStyles.avatar}>
                           {initials(member.username)}
                         </span>
                         {member.username}
@@ -1587,30 +1730,30 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="manager-backend-warning compact">
+                  <p className={`${managerStyles.backendWarning} m-0`}>
                     <Icon name="warning" />
                     Assigned users are not available from the loaded task data.
                   </p>
                 )}
               </section>
 
-              <div className="manager-task-tabs">
+              <div className={managerStyles.taskTabs}>
                 <button
-                  className={activeTaskTab === 'comments' ? 'active' : ''}
+                  className={managerStyles.taskTab(activeTaskTab === 'comments')}
                   type="button"
                   onClick={() => setActiveTaskTab('comments')}
                 >
                   Comments
                 </button>
                 <button
-                  className={activeTaskTab === 'time' ? 'active' : ''}
+                  className={managerStyles.taskTab(activeTaskTab === 'time')}
                   type="button"
                   onClick={() => setActiveTaskTab('time')}
                 >
                   Time Tracking
                 </button>
                 <button
-                  className={activeTaskTab === 'history' ? 'active' : ''}
+                  className={managerStyles.taskTab(activeTaskTab === 'history')}
                   type="button"
                   onClick={() => setActiveTaskTab('history')}
                 >
@@ -1619,11 +1762,11 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               </div>
 
               {activeTaskTab === 'comments' ? (
-                <section className="manager-task-tab-panel">
+                <section className={managerStyles.taskTabPanel}>
                   <textarea
                     placeholder="Add Comment... Use @username to mention someone"
                   />
-                  <div className="manager-comment-actions">
+                  <div className={managerStyles.commentActions}>
                     <span>
                       Available:{' '}
                       {selectedTaskAssignedUsers.length
@@ -1645,10 +1788,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     </button>
                   </div>
                   {selectedTaskComments.length ? (
-                    <div className="manager-comment-list">
+                    <div className={managerStyles.commentList}>
                       {selectedTaskComments.map((comment) => (
                         <article key={comment.id}>
-                          <span className="manager-avatar">
+                          <span className={commonStyles.avatar}>
                             {initials(comment.username)}
                           </span>
                           <div>
@@ -1660,7 +1803,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                       ))}
                     </div>
                   ) : (
-                    <p className="manager-empty-text">
+                    <p className={managerStyles.emptyText}>
                       No comments loaded from backend.
                     </p>
                   )}
@@ -1668,17 +1811,17 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               ) : null}
 
               {activeTaskTab === 'time' ? (
-                <section className="manager-task-tab-panel">
+                <section className={managerStyles.taskTabPanel}>
                   {selectedTaskWorkSessions.length ? (
                     selectedTaskWorkSessions.map((session) => (
-                      <article className="manager-task-record" key={session.id}>
+                      <article className={managerStyles.taskRecord} key={session.id}>
                         <strong>{session.username}</strong>
                         <span>{session.hours}h</span>
                         <time>{formatDate(session.date)}</time>
                       </article>
                     ))
                   ) : (
-                    <p className="manager-empty-text">
+                    <p className={managerStyles.emptyText}>
                       No time sessions loaded from backend.
                     </p>
                   )}
@@ -1686,17 +1829,17 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               ) : null}
 
               {activeTaskTab === 'history' ? (
-                <section className="manager-task-tab-panel">
+                <section className={managerStyles.taskTabPanel}>
                   {selectedTaskHistory.length ? (
                     selectedTaskHistory.map((item) => (
-                      <article className="manager-task-record" key={item.id}>
+                      <article className={managerStyles.taskRecord} key={item.id}>
                         <strong>{item.action}</strong>
                         <span>{item.changedByUsername}</span>
                         <time>{new Date(item.createdAt).toLocaleString()}</time>
                       </article>
                     ))
                   ) : (
-                    <p className="manager-empty-text">
+                    <p className={managerStyles.emptyText}>
                       No history loaded from backend.
                     </p>
                   )}
@@ -1704,9 +1847,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               ) : null}
             </div>
 
-            <footer className="manager-task-detail-footer">
+            <footer className={managerStyles.taskDetailFooter}>
               <button
-                className="danger"
+                className="text-[#ef1d32]"
                 type="button"
                 disabled={isSaving}
                 onClick={() => {
@@ -1715,15 +1858,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               >
                 Archive
               </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setMessage({
-                    text: 'Task transfer endpoint exists, but transfer modal is not built yet.',
-                    type: 'error',
-                  })
-                }
-              >
+              <button type="button" onClick={openTransferTaskModal}>
                 Transfer Task
               </button>
             </footer>
@@ -1732,9 +1867,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       ) : null}
 
       {isTaskModalOpen ? (
-        <div className="manager-modal-backdrop" role="presentation">
+        <div className={managerStyles.modalBackdrop} role="presentation">
           <form
-            className="manager-modal manager-task-modal"
+            className={`${managerStyles.modal} w-[min(100%,648px)]`}
             aria-label="Create Task"
             onSubmit={handleCreateTask}
           >
@@ -1766,7 +1901,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               />
             </label>
 
-            <div className="manager-modal-grid">
+            <div className={managerStyles.modalGrid}>
               <label>
                 <span>Priority</span>
                 <select
@@ -1819,37 +1954,42 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             </label>
 
             {selectedTaskTeam ? (
-              <fieldset className="manager-checkbox-panel">
+              <fieldset className={managerStyles.checkboxPanel}>
                 <legend>Assign To</legend>
                 {(selectedTaskTeam.members ?? []).length ? (
-                  selectedTaskTeam.members?.map((member) => (
-                    <label key={member.id}>
-                      <input
-                        type="checkbox"
-                        checked={taskForm.assignments.includes(String(member.id))}
-                        onChange={(event) =>
-                          toggleAssignment(member.id, event.target.checked)
-                        }
-                      />
-                      <span>{member.username}</span>
-                    </label>
-                  ))
+                  <div className={managerStyles.checkboxGrid}>
+                    {selectedTaskTeam.members?.map((member) => (
+                      <label
+                        key={member.id}
+                        className={`${managerStyles.checkboxOption} ${taskForm.assignments.includes(String(member.id)) ? managerStyles.checkboxOptionSelected : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={taskForm.assignments.includes(String(member.id))}
+                          onChange={(event) =>
+                            toggleAssignment(member.id, event.target.checked)
+                          }
+                        />
+                        <span>{member.username}</span>
+                      </label>
+                    ))}
+                  </div>
                 ) : (
                   <p>No members in this team</p>
                 )}
               </fieldset>
             ) : null}
 
-            <div className="manager-modal-actions">
+            <div className={managerStyles.modalActions}>
               <button
-                className="manager-modal-cancel"
+                className={managerStyles.modalCancel}
                 type="button"
                 disabled={isSaving}
                 onClick={() => setIsTaskModalOpen(false)}
               >
                 Cancel
               </button>
-              <button className="manager-modal-save" type="submit" disabled={isSaving}>
+              <button className={managerStyles.modalSave} type="submit" disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Create Task'}
               </button>
             </div>
@@ -1858,11 +1998,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       ) : null}
 
       {isTeamModalOpen ? (
-        <div className="manager-modal-backdrop" role="presentation">
+        <div className={managerStyles.modalBackdrop} role="presentation">
           <form
-            className={`manager-modal ${
-              editingTeam ? 'manager-edit-team-modal' : 'manager-create-team-modal'
-            }`}
+            className={`${managerStyles.modal} w-[min(100%,448px)] self-center`}
             aria-label={editingTeam ? 'Edit Team' : 'Create Team'}
             onSubmit={handleSaveTeam}
           >
@@ -1887,42 +2025,41 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               </label>
             )}
 
-            <fieldset className="manager-checkbox-panel">
+            <fieldset className={`${managerStyles.checkboxPanel} ${managerStyles.checkboxPanelTall}`}>
               <legend>Members</legend>
               {allMembers.length ? (
-                allMembers.map((member) => (
-                  <label
-                    className={`manager-member-option ${
-                      editingTeam ? 'with-avatar' : ''
-                    }`}
-                    key={member.id}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={teamForm.memberIds.includes(String(member.id))}
-                      onChange={(event) =>
-                        toggleTeamMember(member.id, event.target.checked)
-                      }
-                    />
-                    {editingTeam ? (
-                      <span className="manager-avatar">
-                        {initials(member.username)}
-                      </span>
-                    ) : null}
-                    <span>{member.username}</span>
-                  </label>
-                ))
+                <div className={managerStyles.checkboxGrid}>
+                  {allMembers.map((member) => (
+                    <label
+                      key={member.id}
+                      className={`${managerStyles.checkboxOption} ${teamForm.memberIds.includes(String(member.id)) ? managerStyles.checkboxOptionSelected : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={teamForm.memberIds.includes(String(member.id))}
+                        onChange={(event) =>
+                          toggleTeamMember(member.id, event.target.checked)
+                        }
+                      />
+                      <div className="flex items-center gap-3">
+                        {editingTeam ? (
+                          <span className={commonStyles.avatar}>
+                            {initials(member.username)}
+                          </span>
+                        ) : null}
+                        <span>{member.username}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               ) : (
-                <p>
-                  No manager employee-list endpoint exists yet. The backend only
-                  exposes members through existing team details.
-                </p>
+                <p>No employees are assigned to this manager yet.</p>
               )}
             </fieldset>
 
-            <div className="manager-modal-actions">
+            <div className={managerStyles.modalActions}>
               <button
-                className="manager-modal-cancel"
+                className={managerStyles.modalCancel}
                 type="button"
                 disabled={isSaving}
                 onClick={() => {
@@ -1932,7 +2069,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               >
                 Cancel
               </button>
-              <button className="manager-modal-save" type="submit" disabled={isSaving}>
+              <button className={managerStyles.modalSave} type="submit" disabled={isSaving}>
                 {isSaving ? 'Saving...' : editingTeam ? 'Save Team' : 'Create Team'}
               </button>
             </div>
@@ -1940,10 +2077,107 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
         </div>
       ) : null}
 
-      {transferCandidate ? (
-        <div className="manager-modal-backdrop" role="presentation">
+      {isTransferTaskModalOpen ? (
+        <div className={managerStyles.modalBackdrop} role="presentation">
           <div
-            className="manager-modal manager-transfer-modal"
+            className={`${managerStyles.modal} w-[min(100%,560px)] self-center`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transfer-task-title"
+          >
+            <h2 id="transfer-task-title">Transfer Task</h2>
+            <p className="mb-4 text-[15px] leading-[1.6] text-[#374151]">
+              Transfer "{selectedTask?.title}" from {selectedTask?.teamName} to a
+              different active team.
+            </p>
+
+            <label>
+              <span>Destination team</span>
+              <select
+                value={transferTaskTeamId}
+                onChange={(event) =>
+                  handleTransferTaskTeamChange(event.target.value)
+                }
+              >
+                <option value="">Select team</option>
+                {transferTaskTargetTeams.map((team) => (
+                  <option value={team.id} key={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedTransferTaskTeam ? (
+              <fieldset className={managerStyles.checkboxPanel}>
+                <legend>Assign To</legend>
+                {selectedTransferTaskTeam.members?.length ? (
+                  <div className={managerStyles.checkboxGrid}>
+                    {selectedTransferTaskTeam.members.map((member) => (
+                      <label
+                        key={member.id}
+                        className={`${managerStyles.checkboxOption} ${transferTaskAssignments.includes(
+                          String(member.id),
+                        )
+                          ? managerStyles.checkboxOptionSelected
+                          : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={transferTaskAssignments.includes(String(member.id))}
+                          onChange={(event) =>
+                            toggleTransferTaskAssignment(member.id, event.target.checked)
+                          }
+                        />
+                        <span>{member.username}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No members available in the selected team.</p>
+                )}
+              </fieldset>
+            ) : null}
+
+            {transferTaskError ? (
+              <p className="mb-4 text-[14px] font-bold text-[#b91c1c]">
+                {transferTaskError}
+              </p>
+            ) : null}
+
+            <div className={managerStyles.modalActions}>
+              <button
+                className={managerStyles.modalCancel}
+                type="button"
+                disabled={isSaving}
+                onClick={() => {
+                  setIsTransferTaskModalOpen(false)
+                  setTransferTaskTeamId('')
+                  setTransferTaskAssignments([])
+                  setTransferTaskError('')
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className={managerStyles.modalSave}
+                type="button"
+                disabled={isSaving || !transferTaskTeamId || transferTaskAssignments.length === 0}
+                onClick={() => {
+                  void handleTransferTask()
+                }}
+              >
+                {isSaving ? 'Transferring...' : 'Transfer Task'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {transferCandidate ? (
+        <div className={managerStyles.modalBackdrop} role="presentation">
+          <div
+            className={`${managerStyles.modal} w-[min(100%,448px)] self-center [&>p]:mb-3.5 [&>p]:text-[14px] [&>p]:leading-[1.45] [&>p]:font-medium [&>p]:text-[#25324a] [&_ul]:mb-[18px] [&_ul]:grid [&_ul]:list-none [&_ul]:gap-2 [&_ul]:p-0 [&_ul]:text-[14px] [&_ul]:font-semibold [&_ul]:text-[#050505]`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="transfer-team-title"
@@ -1982,19 +2216,19 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               </select>
             </label>
             {transferManagersError ? (
-              <p className="manager-endpoint-note error">
+              <p className={`${managerStyles.endpointNote} text-[#b91c1c]`}>
                 ! {transferManagersError}
               </p>
             ) : null}
             {!transferManagersError && transferManagers.length === 0 ? (
-              <p className="manager-endpoint-note">
+              <p className={managerStyles.endpointNote}>
                 Loading managers or no managers available for transfer.
               </p>
             ) : null}
 
-            <div className="manager-modal-actions">
+            <div className={managerStyles.modalActions}>
               <button
-                className="manager-modal-cancel"
+                className={managerStyles.modalCancel}
                 type="button"
                 disabled={isSaving}
                 onClick={() => {
@@ -2008,7 +2242,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 Cancel
               </button>
               <button
-                className="manager-modal-save"
+                className={managerStyles.modalSave}
                 type="button"
                 disabled={isSaving || !transferManagerId}
                 onClick={() => {
@@ -2023,9 +2257,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       ) : null}
 
       {archiveCandidate ? (
-        <div className="manager-modal-backdrop" role="presentation">
+        <div className={managerStyles.modalBackdrop} role="presentation">
           <div
-            className="manager-modal manager-confirm-modal"
+            className={`${managerStyles.modal} w-[min(100%,448px)] self-center [&_h2]:mb-3.5 [&>p]:mb-6 [&>p]:text-[16px] [&>p]:leading-[1.45] [&>p]:font-medium [&>p]:text-[#25324a]`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="archive-confirm-title"
@@ -2035,9 +2269,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               Archive "{archiveCandidate.name}"? This will also archive the
               team's tasks.
             </p>
-            <div className="manager-modal-actions">
+            <div className={managerStyles.modalActions}>
               <button
-                className="manager-modal-cancel"
+                className={managerStyles.modalCancel}
                 type="button"
                 disabled={isSaving}
                 onClick={() => setArchiveCandidate(null)}
@@ -2045,7 +2279,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 No
               </button>
               <button
-                className="manager-modal-danger"
+                className={managerStyles.modalDanger}
                 type="button"
                 disabled={isSaving}
                 onClick={() => {

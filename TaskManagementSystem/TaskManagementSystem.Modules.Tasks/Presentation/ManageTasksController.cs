@@ -32,7 +32,6 @@ public class ManageTasksController : ControllerBase
 
 
     [Authorize(Roles = "Manager")]
-    [HttpGet("get-tasks-baord")]
     [HttpGet("get-tasks-board")]
     public async Task<ActionResult> GetBoardTasks()
     {
@@ -42,7 +41,6 @@ public class ManageTasksController : ControllerBase
     }
 
     [Authorize(Roles = "Manager")]
-    [HttpGet("get-tasks-baord/details/{taskId}")]
     [HttpGet("get-tasks-board/details/{taskId}")]
     public async Task<ActionResult<TaskDetailsDto>> GetTaskDetails(int taskId)
     {
@@ -61,6 +59,16 @@ public class ManageTasksController : ControllerBase
     {
         var tasks = await task.GetAdminArchivedTasks();
         return Ok(tasks);
+    }
+
+    [Authorize(Roles = "Manager")]
+    [HttpPost("Change-task-status/{taskid}")]
+    public async Task<ActionResult<CreateTaskDto>> CreateTask(int taskid, ChangeStatusOnTaskDto request)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (result, error) = await task.ChangeStausOnTaskAsync(userid, taskid, request);
+        if (error != null) return BadRequest(error);
+        return Ok(result);
     }
 
     [Authorize(Roles = "Manager")]
@@ -84,10 +92,10 @@ public class ManageTasksController : ControllerBase
     [HttpPatch("Recover-task")]
     public async Task<ActionResult> RecoverTask(RecoverOrArchiveDto request)
     {
-        var (taskRecover,error) = await task.AdminRecoverTask(request);
+        var (status, error) = await task.AdminRecoverTask(request);
         if (error != null)
             return BadRequest(error);
-        return Ok(taskRecover);
+        return Ok(status);
     }
     [Authorize(Roles = "Admin")]
     [HttpDelete("force-delete-task/{taskId}")]

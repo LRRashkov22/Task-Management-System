@@ -94,21 +94,14 @@ public class CRUDTeamService : ICRUDTeamService
     public async Task<(EditTeamResponseDto? team, string? error)> UpdateTeamAsync(EditTeamDto request, int userid)
     {
         var team = await context.Teams
-            .Where(t =>
-                !t.IsArchived &&
-                t.ManagerId == userid)
+            .Where(t => !t.IsArchived && t.ManagerId == userid)
             .Include(t => t.Memberships)
                 .ThenInclude(m => m.User)
             .FirstOrDefaultAsync(t => t.Id == request.Id);
 
-        if (team == null)
-            return (null, "Team not found");
+        if (team == null) return (null, "Team not found");
 
-        if (!string.IsNullOrWhiteSpace(request.Name))
-        {
-            team.Name = request.Name;
-        }
-
+        if (!string.IsNullOrWhiteSpace(request.Name)) team.Name = request.Name;      
         if (request.Members != null)
         {
             var validUsersCount = await context.Users
@@ -118,8 +111,7 @@ public class CRUDTeamService : ICRUDTeamService
 
             if (validUsersCount != request.Members.Count)
             {
-                return (null,
-                    "Some users do not belong to this manager");
+                return (null, "Some users do not belong to this manager");
             }
 
             var currentMemberIds = team.Memberships
@@ -205,11 +197,17 @@ public class CRUDTeamService : ICRUDTeamService
     public async Task<(bool status, string? error)> DeleteArchivedTeamAsync(int teamId)
     {
         var team = await context.Teams
+            .Include(t => t.Tasks)
             .FirstOrDefaultAsync(t => t.Id == teamId && t.IsArchived);
 
-        if (team == null)
-            return (false, "Archived team not found");
+        if (team == null) return (false, "Archived team not found");
+        if (team.Tasks.Any(t => !t.IsArchived))
+        {
+            return (false,
+                "Cannot delete team with active tasks");
+        }
 
+        context.TaskItems.RemoveRange(team.Tasks);
         context.Teams.Remove(team);
 
         await context.SaveChangesAsync();
