@@ -4,9 +4,9 @@ using TaskManagementSystem.Modules.Identity.Application.Interfaces;
 using TaskManagementSystem.Modules.Identity.Infrastructure.Service;
 using TaskManagementSystem.Modules.Identity.Presentation;
 
-namespace TaskManagementSystem.Modules.Identity.Configuration;
+namespace TaskManagementSystem.Modules.Identity;
 
-public static class IdentityModule
+public static class DependencyInjection
 {
     //Controllers and DI containers
     public static IServiceCollection AddIdentityModule(this IServiceCollection services)

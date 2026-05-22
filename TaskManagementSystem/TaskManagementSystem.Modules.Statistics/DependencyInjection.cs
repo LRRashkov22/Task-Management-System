@@ -4,9 +4,9 @@ using TaskManagementSystem.Modules.Statistics.Application.Interface;
 using TaskManagementSystem.Modules.Statistics.Infrastructure.Service.AdminPanel;
 using TaskManagementSystem.Modules.Statistics.Presentation;
 using TaskManagementSystem.Modules.Statistics.Infrastructure.Service.NewFolder;
-namespace TaskManagementSystem.Modules.Statistics.Configuration;
+namespace TaskManagementSystem.Modules.Statistics;
 
-public static class StatisticsModule
+public static class DependencyInjection
 {
     public static IServiceCollection AddStasticsModule(this IServiceCollection services)
     {
