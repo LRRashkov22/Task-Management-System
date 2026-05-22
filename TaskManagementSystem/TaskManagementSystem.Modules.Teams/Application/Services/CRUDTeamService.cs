@@ -6,8 +6,6 @@ using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s.ManagersDto;
-using TaskManagementSystem.Modules.Teams.Application.DTO;
 using TaskManagementSystem.Modules.Teams.Application.DTOs;
 using TaskManagementSystem.Modules.Teams.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Teams.Application.Services;
