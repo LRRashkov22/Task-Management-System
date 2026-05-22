@@ -982,13 +982,8 @@ try {
               <section className={`${adminStyles.tableCard} mt-1`} aria-label={t.managers}>
                 <div className={adminStyles.table('managers')} role="table">
                   <div className={`${adminStyles.head('managers')} min-h-[50px]`} role="row">
-<<<<<<< HEAD
-                    <span role="columnheader">{t.username.toUpperCase()}</span>
-                    <span role="columnheader">ID</span>
-=======
                     <span role="columnheader">NAME</span>
                     <span role="columnheader">EMAIL</span>
->>>>>>> 10521186f908ef3f3095530bdadbb964ee0f304b
                     <span role="columnheader">{t.teams.toUpperCase()}</span>
                     <span role="columnheader">{t.edit.toUpperCase()}</span>
                   </div>
@@ -1006,11 +1001,7 @@ try {
                         <span role="cell">{manager.teams ?? 0}</span>
                         <span className={adminStyles.archiveActions} role="cell">
                           <button
-<<<<<<< HEAD
-                            className={adminStyles.tableAction}
-=======
                             className={adminStyles.iconAction('edit')}
->>>>>>> 10521186f908ef3f3095530bdadbb964ee0f304b
                             type="button"
                             aria-label={`${t.edit}: ${manager.username}`}
                             title={t.edit}

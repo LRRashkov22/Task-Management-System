@@ -1286,15 +1286,6 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 </select>
               </div>
 
-<<<<<<< HEAD
-              <p className={managerStyles.backendWarning}>
-                <Icon name="warning" />
-                Missing backend endpoint: task status update. Drag/drop works
-                locally until that endpoint is added.
-              </p>
-
-=======
->>>>>>> 10521186f908ef3f3095530bdadbb964ee0f304b
               <div className={managerStyles.kanban}>
                 {boardColumns.map((column) => {
                   const columnTasks = filteredTasks.filter(
@@ -2037,28 +2028,6 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             <fieldset className={`${managerStyles.checkboxPanel} ${managerStyles.checkboxPanelTall}`}>
               <legend>Members</legend>
               {allMembers.length ? (
-<<<<<<< HEAD
-                allMembers.map((member) => (
-                  <label
-                    className={editingTeam ? 'min-h-12 gap-2.5 [&_input]:mr-1' : ''}
-                    key={member.id}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={teamForm.memberIds.includes(String(member.id))}
-                      onChange={(event) =>
-                        toggleTeamMember(member.id, event.target.checked)
-                      }
-                    />
-                    {editingTeam ? (
-                      <span className={commonStyles.avatar}>
-                        {initials(member.username)}
-                      </span>
-                    ) : null}
-                    <span>{member.username}</span>
-                  </label>
-                ))
-=======
                 <div className={managerStyles.checkboxGrid}>
                   {allMembers.map((member) => (
                     <label
@@ -2083,7 +2052,6 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     </label>
                   ))}
                 </div>
->>>>>>> 10521186f908ef3f3095530bdadbb964ee0f304b
               ) : (
                 <p>No employees are assigned to this manager yet.</p>
               )}
@@ -2109,11 +2077,6 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
         </div>
       ) : null}
 
-<<<<<<< HEAD
-      {transferCandidate ? (
-        <div className={managerStyles.modalBackdrop} role="presentation">
-          <div
-=======
       {isTransferTaskModalOpen ? (
         <div className={managerStyles.modalBackdrop} role="presentation">
           <div
@@ -2214,7 +2177,6 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       {transferCandidate ? (
         <div className={managerStyles.modalBackdrop} role="presentation">
           <div
->>>>>>> 10521186f908ef3f3095530bdadbb964ee0f304b
             className={`${managerStyles.modal} w-[min(100%,448px)] self-center [&>p]:mb-3.5 [&>p]:text-[14px] [&>p]:leading-[1.45] [&>p]:font-medium [&>p]:text-[#25324a] [&_ul]:mb-[18px] [&_ul]:grid [&_ul]:list-none [&_ul]:gap-2 [&_ul]:p-0 [&_ul]:text-[14px] [&_ul]:font-semibold [&_ul]:text-[#050505]`}
             role="dialog"
             aria-modal="true"
