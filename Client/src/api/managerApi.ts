@@ -173,7 +173,7 @@ export function changeManagerTaskStatusApi(
   request: ChangeManagerTaskStatusRequest,
 ) {
   return apiJson<void>(`/Task/Change-task-status/${taskId}`, {
-    method: 'POST',
+    method: 'PATCH',
     body: JSON.stringify(request),
   })
 }
