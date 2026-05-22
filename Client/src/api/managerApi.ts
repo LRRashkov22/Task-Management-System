@@ -111,6 +111,16 @@ export type TransferManagerTeamRequest = {
   newManagerId: number
 }
 
+export type TransferManagerTaskRequest = {
+  taskId: number
+  newTeamId: number
+  assignments: number[]
+}
+
+export type ChangeManagerTaskStatusRequest = {
+  status: number
+}
+
 export type BoardTaskDto = {
   id: number
   title: string
@@ -136,6 +146,10 @@ export function getManagerTeamDetailsApi(id: number) {
   return apiJson<ManagerTeamDto>(`/Statistics/Manager/get-team-details/${id}`)
 }
 
+export function getManagerEmployeesApi() {
+  return apiJson<ManagerMemberDto[]>('/Statistics/Manager/get-manager-employees')
+}
+
 export function getManagersForTransferApi() {
   return apiJson<ManagerUserDto[]>('/Statistics/Admin/get-managers')
 }
@@ -154,8 +168,18 @@ export function getManagerBoardTasksApi() {
   return apiJson<BoardTaskDto[]>('/Task/get-tasks-board')
 }
 
+export function changeManagerTaskStatusApi(
+  taskId: number,
+  request: ChangeManagerTaskStatusRequest,
+) {
+  return apiJson<void>(`/Task/Change-task-status/${taskId}`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+}
+
 export function createManagerTaskApi(request: CreateManagerTaskRequest) {
-  return apiJson<CreateManagerTaskRequest>('/Task/Create-task', {
+  return apiJson<void>('/Task/Create-task', {
     method: 'POST',
     body: JSON.stringify(request),
   })
@@ -184,6 +208,13 @@ export function editManagerTeamApi(request: EditManagerTeamRequest) {
 
 export function transferManagerTeamApi(request: TransferManagerTeamRequest) {
   return apiJson<boolean>('/teams/transfer-team-ownership', {
+    method: 'PATCH',
+    body: JSON.stringify(request),
+  })
+}
+
+export function transferManagerTaskApi(request: TransferManagerTaskRequest) {
+  return apiJson<boolean>('/Task/transfer-task', {
     method: 'PATCH',
     body: JSON.stringify(request),
   })

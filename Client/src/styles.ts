@@ -299,7 +299,7 @@ export const managerStyles = {
   detailTaskMeta: iconSvg + ' mt-3 grid grid-cols-3 gap-3 border-b border-[#edf0f4] pb-2.5 text-[13px] text-[#6b7280] [&_span]:inline-flex [&_span]:items-center [&_span]:gap-[5px] [&_span:nth-child(2)]:justify-center [&_span:last-child]:justify-end [&_svg]:h-3.5 [&_svg]:w-3.5',
   assigneeList: 'mt-2.5 flex flex-wrap gap-1.5 [&_span]:rounded [&_span]:bg-[#eef5ff] [&_span]:px-2 [&_span]:py-1 [&_span]:text-[12px] [&_span]:font-semibold [&_span]:text-[#315af2]',
   modalBackdrop:
-    'fixed inset-0 z-30 grid overflow-y-auto bg-black/96 p-[22px_28px] max-[760px]:p-5 [place-items:start_center]',
+    'fixed inset-0 z-30 grid place-items-center overflow-y-auto bg-black/96 p-[22px_28px] max-[760px]:p-5',
   modal:
     'box-border w-[min(100%,672px)] rounded-lg bg-white p-[28px_24px_24px] max-[760px]:p-[26px_22px] [&_h2]:mb-[22px] [&_h2]:text-[21px] [&_h2]:leading-[1.2] [&_h2]:font-extrabold [&_h2]:text-[#050505] [&_label]:mb-[18px] [&_label]:grid [&_label]:gap-2 [&_label_span]:text-[14px] [&_label_span]:leading-[1.2] [&_label_span]:font-extrabold [&_label_span]:text-[#050505] [&_input]:box-border [&_input]:min-h-[42px] [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border [&_input]:border-[#cfd6e0] [&_input]:bg-white [&_input]:px-4 [&_input]:text-[16px] [&_input]:leading-[1.2] [&_input]:text-[#111827] [&_input:focus]:border-[#aeb8ce] [&_input:focus]:outline-[3px] [&_input:focus]:outline-[rgba(49,90,242,0.14)] [&_select]:box-border [&_select]:min-h-[42px] [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border [&_select]:border-[#cfd6e0] [&_select]:bg-white [&_select]:px-4 [&_select]:text-[16px] [&_select]:leading-[1.2] [&_select]:text-[#111827] [&_select:focus]:border-[#aeb8ce] [&_select:focus]:outline-[3px] [&_select:focus]:outline-[rgba(49,90,242,0.14)] [&_textarea]:w-full [&_textarea]:box-border [&_textarea]:min-h-[114px] [&_textarea]:resize-y [&_textarea]:rounded-[10px] [&_textarea]:border [&_textarea]:border-[#cfd6e0] [&_textarea]:bg-white [&_textarea]:px-4 [&_textarea]:py-3 [&_textarea]:text-[16px] [&_textarea]:leading-[1.2] [&_textarea]:text-[#111827] [&_textarea:focus]:border-[#aeb8ce] [&_textarea:focus]:outline-[3px] [&_textarea:focus]:outline-[rgba(49,90,242,0.14)]',
   modalActions:
@@ -309,7 +309,11 @@ export const managerStyles = {
   modalDanger: 'border border-[#ef1d32] bg-[#ef1d32] text-white hover:not-disabled:bg-[#dc1025]',
   modalGrid: 'grid grid-cols-2 gap-4 max-[760px]:grid-cols-1',
   checkboxPanel:
-    'mb-4 grid max-h-40 gap-2 overflow-y-auto rounded-[10px] border border-[#dfe4ec] p-[14px_16px] [&_legend]:text-[14px] [&_legend]:leading-[1.2] [&_legend]:font-extrabold [&_legend]:text-[#050505] [&_label]:m-0 [&_label]:flex [&_label]:min-h-7 [&_label]:items-center [&_label]:gap-2 [&_label]:text-[14px] [&_label]:font-bold [&_label]:text-[#25324a] [&_input]:h-3.5 [&_input]:min-h-3.5 [&_input]:w-3.5 [&_input]:shrink-0 [&_input]:p-0 [&_p]:text-[14px] [&_p]:font-semibold [&_p]:text-[#6b7280]',
+    'mb-4 rounded-[14px] border border-[#dfe4ec] bg-[#f8fafc] p-4',
+  checkboxGrid: 'grid grid-cols-2 gap-3 max-[760px]:grid-cols-1',
+  checkboxOption:
+    'grid gap-3 rounded-[14px] border border-[#dfe4ec] bg-white p-4 transition duration-200 hover:border-[#315af2] focus-within:border-[#315af2] [&_input]:mt-1 [&_span]:text-[15px] [&_span]:font-semibold [&_span]:text-[#111827]',
+  checkboxOptionSelected: 'border-[#315af2] bg-[#eef5ff]',
   checkboxPanelTall: 'max-h-60',
   taskDetailModal:
     'grid max-h-[74svh] w-[min(100%,896px)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 max-[760px]:max-h-[90svh]',
