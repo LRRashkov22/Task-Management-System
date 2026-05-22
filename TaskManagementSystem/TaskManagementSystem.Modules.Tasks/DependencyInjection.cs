@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
-using TaskManagementSystem.Modules.Tasks.Infrastructure.Service;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TaskManagementSystem.Modules.Tasks.Application.Interface;
 using TaskManagementSystem.Modules.Tasks.Presentation;
+using TaskManagementSystem.Modules.Tasks.Application.Interfaces;
+using TaskManagementSystem.Modules.Tasks.Application.Services;
 
 namespace TaskManagementSystem.Modules.Tasks
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TaskManagementSystem.Modules.Teams.Application.Dto_s;
+using TaskManagementSystem.Modules.Teams.Application.DTOs;
 using TaskManagementSystem.Modules.Teams.Application.Interfaces;
 
 namespace TaskManagementSystem.Modules.Teams.Presentation;

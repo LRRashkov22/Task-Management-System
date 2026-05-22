@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
-using TaskManagementSystem.Modules.Statistics.Application.Interface;
-using TaskManagementSystem.Modules.Statistics.Infrastructure.Service.AdminPanel;
 using TaskManagementSystem.Modules.Statistics.Presentation;
-using TaskManagementSystem.Modules.Statistics.Infrastructure.Service.NewFolder;
+using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
+using TaskManagementSystem.Modules.Statistics.Application.Services.ManagerPanel;
+using TaskManagementSystem.Modules.Statistics.Application.Services.AdminPanel;
 namespace TaskManagementSystem.Modules.Statistics;
 
 public static class DependencyInjection
