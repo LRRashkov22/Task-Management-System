@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s.ManagersDto;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 
 namespace TaskManagementSystem.Modules.Statistics.Presentation;

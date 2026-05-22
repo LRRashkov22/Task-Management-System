@@ -7,7 +7,6 @@ using System.Text;
 using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Modules.Identity.Application.Interfaces;
-using TaskManagementSystem.Modules.Identity.Infrastructure.Service;
 using TaskManagementSystem.Modules.Identity.Application.DTOs;
 
 namespace TaskManagementSystem.Modules.Identity.Presentation;
