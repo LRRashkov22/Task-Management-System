@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TaskManagementSystem.Modules.Identity.Configuration;
-using TaskManagementSystem.Modules.Statistics.Configuration;
-using TaskManagementSystem.Modules.Tasks.Configuration;
-using TaskManagementSystem.Modules.Teams.Configuration;
-using TaskManagementSystem.Data.Configuration;
+using TaskManagementSystem.Data;
+using TaskManagementSystem.Modules.Identity;
+using TaskManagementSystem.Modules.Statistics;
+using TaskManagementSystem.Modules.Tasks;
+using TaskManagementSystem.Modules.Teams;
 
 namespace TaskManagementSystem.Api.Extensions
 {

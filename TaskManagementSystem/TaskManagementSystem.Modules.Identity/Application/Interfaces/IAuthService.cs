@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using TaskManagementSystem.Modules.Identity.Application.UserDto_s;
+using TaskManagementSystem.Modules.Identity.Application.DTOs;
 
 namespace TaskManagementSystem.Modules.Identity.Application.Interfaces;
 
