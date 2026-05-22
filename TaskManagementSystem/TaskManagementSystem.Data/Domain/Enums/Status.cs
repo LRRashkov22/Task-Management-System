@@ -6,7 +6,8 @@ namespace TaskManagementSystem.Data.Domain.Enums;
 
 public enum Status
 {
-    InProgress = 1,
-    Done = 2,
-    RequestedCompletion = 3
+    ToDo = 1,
+    InProgress = 2,
+    Done = 3,
+    Review = 4
 }

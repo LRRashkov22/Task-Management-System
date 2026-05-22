@@ -5,7 +5,9 @@
     deleteArchivedTaskApi,
     deleteArchivedTeamApi,
     editUserApi,
+    forceDeleteManagerApi,
     getAdminDashboardApi,
+    getAdminDeleteManagerPreviewApi,
     getArchivedTasksApi,
     getArchivedTeamsApi,
     getEmployeesApi,
@@ -13,9 +15,11 @@
     recoverArchivedTaskApi,
     recoverArchivedTeamApi,
     searchEmployeesApi,
+    transferManagerOwnershipApi,
   } from '../api/adminApi'
   import type {
     AdminDashboardDto,
+    AdminDeleteManagerPreviewDto,
     AdminUserDto,
     ArchivedTaskDto,
     ArchivedTeamDto,
@@ -36,6 +40,7 @@
     | 'search'
     | 'restore'
     | 'trash'
+    | 'edit'
 
   type NavItem = {
     id: AdminView
@@ -60,6 +65,7 @@
     | 'archivedTeams'
     | 'logs'
   type CreateModal = 'user' | 'manager' | null
+  type DeleteManagerMode = 'transfer' | 'cascade'
 
   type CreateForm = {
     username: string
@@ -305,6 +311,15 @@
       )
     }
 
+    if (name === 'edit') {
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+        </svg>
+      )
+    }
+
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 12h4l3-7 4 14 3-7h4" />
@@ -320,6 +335,13 @@
     const [activeView, setActiveView] = useState<AdminView>('dashboard')
     const [createModal, setCreateModal] = useState<CreateModal>(null)
     const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null)
+    const [deleteManager, setDeleteManager] = useState<AdminUserDto | null>(null)
+    const [deleteManagerPreview, setDeleteManagerPreview] =
+      useState<AdminDeleteManagerPreviewDto | null>(null)
+    const [deleteManagerMode, setDeleteManagerMode] =
+      useState<DeleteManagerMode>('transfer')
+    const [deleteTransferManagerId, setDeleteTransferManagerId] = useState('')
+    const [isDeletePreviewLoading, setIsDeletePreviewLoading] = useState(false)
     const [createForm, setCreateForm] = useState<CreateForm>(emptyCreateForm)
     const [logFilter, setLogFilter] = useState('All')
     const [dashboard, setDashboard] =
@@ -491,6 +513,36 @@ useEffect(() => {
       setCreateModal(modal)
     }
 
+    async function openDeleteManagerModal(manager: AdminUserDto) {
+      setDeleteManager(manager)
+      setDeleteManagerPreview(null)
+      setDeleteManagerMode('transfer')
+      setDeleteTransferManagerId('')
+      setMessage(null)
+      setIsDeletePreviewLoading(true)
+
+      try {
+        setDeleteManagerPreview(await getAdminDeleteManagerPreviewApi(manager.id))
+      } catch (error) {
+        setMessage({
+          text:
+            error instanceof Error
+              ? error.message
+              : 'Could not load manager delete preview.',
+          type: 'error',
+        })
+      } finally {
+        setIsDeletePreviewLoading(false)
+      }
+    }
+
+    function closeDeleteManagerModal() {
+      setDeleteManager(null)
+      setDeleteManagerPreview(null)
+      setDeleteTransferManagerId('')
+      setDeleteManagerMode('transfer')
+    }
+
     
 async function refreshAdminData() {
   const [updatedEmployees, updatedManagers, updatedDashboard] =
@@ -605,6 +657,44 @@ async function handleDeleteArchivedTeam(id: number) {
     })
   } finally {
     setPendingArchiveAction(null)
+  }
+}
+
+async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault()
+
+  if (!deleteManager) return
+
+  if (deleteManagerMode === 'transfer' && !deleteTransferManagerId) {
+    setMessage({
+      text: 'Select manager for transfer.',
+      type: 'error',
+    })
+    return
+  }
+
+  setIsSaving(true)
+  setMessage(null)
+
+  try {
+    if (deleteManagerMode === 'transfer') {
+      await transferManagerOwnershipApi({
+        currentManagerId: deleteManager.id,
+        newManagerId: Number(deleteTransferManagerId),
+      })
+    }
+
+    await forceDeleteManagerApi(deleteManager.id)
+    await refreshAdminData()
+    closeDeleteManagerModal()
+    setMessage({ text: 'Manager deleted successfully.', type: 'success' })
+  } catch (error) {
+    setMessage({
+      text: error instanceof Error ? error.message : t.apiError,
+      type: 'error',
+    })
+  } finally {
+    setIsSaving(false)
   }
 }
 
@@ -741,6 +831,9 @@ try {
 
     const pageTitle =
       navItems.find((item) => item.id === activeView)?.label ?? t.dashboard
+    const availableTransferManagers = deleteManager
+      ? managers.filter((manager) => manager.id !== deleteManager.id)
+      : managers
 
     return (
       <main className={adminStyles.shell(isSidebarOpen)}>
@@ -889,8 +982,8 @@ try {
               <section className={`${adminStyles.tableCard} mt-1`} aria-label={t.managers}>
                 <div className={adminStyles.table('managers')} role="table">
                   <div className={`${adminStyles.head('managers')} min-h-[50px]`} role="row">
-                    <span role="columnheader">{t.username.toUpperCase()}</span>
-                    <span role="columnheader">ID</span>
+                    <span role="columnheader">NAME</span>
+                    <span role="columnheader">EMAIL</span>
                     <span role="columnheader">{t.teams.toUpperCase()}</span>
                     <span role="columnheader">{t.edit.toUpperCase()}</span>
                   </div>
@@ -904,15 +997,28 @@ try {
                         key={manager.id}
                       >
                         <span role="cell">{manager.username}</span>
-                        <span role="cell">{manager.id}</span>
+                        <span role="cell">{manager.email || manager.username}</span>
                         <span role="cell">{manager.teams ?? 0}</span>
-                        <span role="cell">
+                        <span className={adminStyles.archiveActions} role="cell">
                           <button
-                            className={adminStyles.tableAction}
+                            className={adminStyles.iconAction('edit')}
                             type="button"
+                            aria-label={`${t.edit}: ${manager.username}`}
+                            title={t.edit}
                             onClick={() => openEditModal(manager, 'manager')}
                           >
-                            {t.edit}
+                            <Icon name="edit" />
+                          </button>
+                          <button
+                            className={adminStyles.iconAction('delete')}
+                            type="button"
+                            aria-label={`Delete manager: ${manager.username}`}
+                            title="Delete manager"
+                            onClick={() => {
+                              void openDeleteManagerModal(manager)
+                            }}
+                          >
+                            <Icon name="trash" />
                           </button>
                         </span>
                       </div>
@@ -1159,6 +1265,106 @@ try {
                 </button>
                 <button className={adminStyles.modalSave} type="submit" disabled={isSaving}>
                   {isSaving ? t.loading : t.save}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
+
+        {deleteManager ? (
+          <div className={adminStyles.modalBackdrop} role="presentation">
+            <form
+              className="box-border w-[min(100%,720px)] rounded-xl bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.22)] max-[760px]:p-6"
+              aria-label={`Delete manager ${deleteManager.username}`}
+              onSubmit={handleDeleteManagerSubmit}
+            >
+              <h2 className="mb-6 text-[24px] leading-[1.2] font-extrabold text-[#dc2626]">
+                Delete Manager: {deleteManagerPreview?.managerName || deleteManager.username}
+              </h2>
+
+              <section className="mb-6 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-5 py-4 text-[#171717]">
+                <p className="mb-3 text-[16px] font-bold">This manager owns:</p>
+                {isDeletePreviewLoading ? (
+                  <p className="text-[16px] font-semibold">Loading...</p>
+                ) : (
+                  <ul className="grid gap-1.5 text-[16px] font-bold">
+                    <li>• {deleteManagerPreview?.teams ?? 0} teams</li>
+                    <li>• {deleteManagerPreview?.tasks ?? 0} tasks</li>
+                    <li>• {deleteManagerPreview?.employees ?? 0} employees</li>
+                  </ul>
+                )}
+              </section>
+
+              <label className="mb-3 flex cursor-pointer items-center gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4">
+                <input
+                  className="h-5 w-5 accent-[#3b82f6]"
+                  type="radio"
+                  name="delete-manager-mode"
+                  checked={deleteManagerMode === 'transfer'}
+                  onChange={() => setDeleteManagerMode('transfer')}
+                />
+                <span>
+                  <strong className="block text-[18px] leading-[1.2] text-[#111827]">
+                    Transfer to another manager
+                  </strong>
+                  <span className="block text-[14px] font-semibold text-[#4b5563]">
+                    All teams, tasks, and employees will be reassigned
+                  </span>
+                </span>
+              </label>
+
+              <select
+                className="mb-4 h-10 w-full rounded-md border border-[#d1d5db] bg-white px-3 text-[17px] text-[#111827] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label="Select manager"
+                value={deleteTransferManagerId}
+                disabled={deleteManagerMode !== 'transfer'}
+                onChange={(event) => setDeleteTransferManagerId(event.target.value)}
+              >
+                <option value="">Select manager</option>
+                {availableTransferManagers.map((manager) => (
+                  <option value={manager.id} key={manager.id}>
+                    {manager.username}
+                  </option>
+                ))}
+              </select>
+
+              <label className="mb-6 flex cursor-pointer items-center gap-4 rounded-xl border border-[#fca5a5] bg-white p-4">
+                <input
+                  className="h-5 w-5 accent-[#111827]"
+                  type="radio"
+                  name="delete-manager-mode"
+                  checked={deleteManagerMode === 'cascade'}
+                  onChange={() => setDeleteManagerMode('cascade')}
+                />
+                <span>
+                  <strong className="block text-[18px] leading-[1.2] text-[#dc2626]">
+                    Cascade delete everything
+                  </strong>
+                  <span className="block text-[14px] font-bold text-[#ef1d32]">
+                    Permanently delete all data - CANNOT BE UNDONE
+                  </span>
+                </span>
+              </label>
+
+              <div className="grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
+                <button
+                  className="min-h-[52px] cursor-pointer rounded-xl border border-[#e5e7eb] bg-white text-[18px] font-extrabold text-[#111827] disabled:cursor-not-allowed disabled:opacity-70"
+                  type="button"
+                  disabled={isSaving}
+                  onClick={closeDeleteManagerModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="min-h-[52px] cursor-pointer rounded-xl border border-[#dc2626] bg-[#dc2626] text-[18px] font-extrabold text-white hover:not-disabled:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-70"
+                  type="submit"
+                  disabled={
+                    isSaving ||
+                    isDeletePreviewLoading ||
+                    (deleteManagerMode === 'transfer' && !deleteTransferManagerId)
+                  }
+                >
+                  {isSaving ? 'Deleting...' : 'Delete Manager'}
                 </button>
               </div>
             </form>

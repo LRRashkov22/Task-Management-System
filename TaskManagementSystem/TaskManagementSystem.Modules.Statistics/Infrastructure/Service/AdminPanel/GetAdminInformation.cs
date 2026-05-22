@@ -85,6 +85,7 @@ public class GetAdminInformation : IGetAdminInformation {
 
     //Get Information For Admin Dashboard Page
     public async Task<DashboardDto> GetAdminDashboardInformation() {
+
         var usersCount = await context.Users.AsNoTracking().Where(u => u.Role == Role.Employee).CountAsync();
         var managersCount = await context.Users.AsNoTracking().Where(m => m.Role == Role.Manager).CountAsync();
         var tasks = await context.TaskItems.AsNoTracking().Where(t => !t.IsArchived).CountAsync();
