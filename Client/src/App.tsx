@@ -5,6 +5,8 @@ import AdminPage from './pages/AdminPage'
 import ManagerPage from './pages/ManagerPage'
 import { commonStyles, loginStyles } from './styles'
 import { getRole, logout, saveAuth } from './utils/auth'
+import EmployeePage from './pages/EmployeePage'
+
 
   type Message = {
     text: string
@@ -75,6 +77,11 @@ import { getRole, logout, saveAuth } from './utils/auth'
           return
         }
 
+        if (role === 'Employee') {
+          navigate('/employee')
+          return
+        }
+
         setMessage({
           text: 'Login successful.',
           type: 'success',
@@ -107,6 +114,17 @@ import { getRole, logout, saveAuth } from './utils/auth'
     if (path === '/manager' && getRole() === 'Manager') {
       return (
         <ManagerPage
+          onLogout={() => {
+            logout()
+            navigate('/')
+          }}
+        />
+      )
+    }
+
+    if (path === '/employee' && getRole() === 'Employee') {
+      return (
+        <EmployeePage
           onLogout={() => {
             logout()
             navigate('/')
