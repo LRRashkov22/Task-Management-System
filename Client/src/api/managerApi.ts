@@ -77,6 +77,14 @@ export type ManagerTeamDropdownDto = {
   name: string
 }
 
+export type ManagerCalendarTaskDto = {
+  taskName: string
+  teamName: string
+  status: string | number
+  deadline: string
+  startDate: string
+}
+
 export type TransferTeamPreviewDto = {
   teamId: number
   teamName: string
@@ -150,6 +158,12 @@ export function getManagerEmployeesApi() {
   return apiJson<ManagerMemberDto[]>('/Statistics/Manager/get-manager-employees')
 }
 
+export function getManagerCalendarInformationApi() {
+  return apiJson<ManagerCalendarTaskDto[]>(
+    '/Statistics/Manager/get-calendar-information',
+  )
+}
+
 export function getManagersForTransferApi() {
   return apiJson<ManagerUserDto[]>('/Statistics/Admin/get-managers')
 }
@@ -173,7 +187,7 @@ export function changeManagerTaskStatusApi(
   request: ChangeManagerTaskStatusRequest,
 ) {
   return apiJson<void>(`/Task/Change-task-status/${taskId}`, {
-    method: 'POST',
+    method: 'PATCH',
     body: JSON.stringify(request),
   })
 }
@@ -226,3 +240,4 @@ export function archiveManagerTeamApi(id: number) {
     body: JSON.stringify({ id }),
   })
 }
+

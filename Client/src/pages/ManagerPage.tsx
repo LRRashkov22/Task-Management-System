@@ -1954,14 +1954,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             </label>
 
             {selectedTaskTeam ? (
-              <fieldset className={managerStyles.checkboxPanel}>
-                <legend>Assign To</legend>
+              <>
+                <div className={managerStyles.taskAssignLabel}>Assign To</div>
+                <fieldset className={managerStyles.taskAssignPanel}>
                 {(selectedTaskTeam.members ?? []).length ? (
-                  <div className={managerStyles.checkboxGrid}>
+                  <div className={managerStyles.memberList}>
                     {selectedTaskTeam.members?.map((member) => (
                       <label
                         key={member.id}
-                        className={`${managerStyles.checkboxOption} ${taskForm.assignments.includes(String(member.id)) ? managerStyles.checkboxOptionSelected : ''}`}
+                        className={managerStyles.memberListOption}
                       >
                         <input
                           type="checkbox"
@@ -1977,7 +1978,8 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 ) : (
                   <p>No members in this team</p>
                 )}
-              </fieldset>
+                </fieldset>
+              </>
             ) : null}
 
             <div className={managerStyles.modalActions}>
@@ -2000,7 +2002,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       {isTeamModalOpen ? (
         <div className={managerStyles.modalBackdrop} role="presentation">
           <form
-            className={`${managerStyles.modal} w-[min(100%,448px)] self-center`}
+            className={`${managerStyles.modal} self-center`}
             aria-label={editingTeam ? 'Edit Team' : 'Create Team'}
             onSubmit={handleSaveTeam}
           >
@@ -2025,14 +2027,14 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               </label>
             )}
 
-            <fieldset className={`${managerStyles.checkboxPanel} ${managerStyles.checkboxPanelTall}`}>
-              <legend>Members</legend>
+            <div className={managerStyles.memberListLabel}>Members</div>
+            <fieldset className={managerStyles.memberListPanel}>
               {allMembers.length ? (
-                <div className={managerStyles.checkboxGrid}>
+                <div className={managerStyles.memberList}>
                   {allMembers.map((member) => (
                     <label
                       key={member.id}
-                      className={`${managerStyles.checkboxOption} ${teamForm.memberIds.includes(String(member.id)) ? managerStyles.checkboxOptionSelected : ''}`}
+                      className={managerStyles.memberListOption}
                     >
                       <input
                         type="checkbox"
@@ -2041,14 +2043,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                           toggleTeamMember(member.id, event.target.checked)
                         }
                       />
-                      <div className="flex items-center gap-3">
-                        {editingTeam ? (
-                          <span className={commonStyles.avatar}>
-                            {initials(member.username)}
-                          </span>
-                        ) : null}
-                        <span>{member.username}</span>
-                      </div>
+                      <span>{member.username}</span>
                     </label>
                   ))}
                 </div>
@@ -2109,18 +2104,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             </label>
 
             {selectedTransferTaskTeam ? (
-              <fieldset className={managerStyles.checkboxPanel}>
-                <legend>Assign To</legend>
+              <>
+                <div className={managerStyles.taskAssignLabel}>Assign To</div>
+                <fieldset className={managerStyles.taskAssignPanel}>
                 {selectedTransferTaskTeam.members?.length ? (
-                  <div className={managerStyles.checkboxGrid}>
+                  <div className={managerStyles.memberList}>
                     {selectedTransferTaskTeam.members.map((member) => (
                       <label
                         key={member.id}
-                        className={`${managerStyles.checkboxOption} ${transferTaskAssignments.includes(
-                          String(member.id),
-                        )
-                          ? managerStyles.checkboxOptionSelected
-                          : ''}`}
+                        className={managerStyles.memberListOption}
                       >
                         <input
                           type="checkbox"
@@ -2136,7 +2128,8 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 ) : (
                   <p>No members available in the selected team.</p>
                 )}
-              </fieldset>
+                </fieldset>
+              </>
             ) : null}
 
             {transferTaskError ? (
