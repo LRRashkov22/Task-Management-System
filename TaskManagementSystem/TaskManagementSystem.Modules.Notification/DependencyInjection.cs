@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TaskManagementSystem.Modules.Notification.Application.Interfaces;
 using TaskManagementSystem.Modules.Notification.Application.Services;
 using TaskManagementSystem.Modules.Notification.Infrastructure.Hubs;
+using TaskManagementSystem.Modules.Notification.Presentation;
 
 namespace TaskManagementSystem.Modules.Notification;
 
@@ -17,6 +18,9 @@ public static class DependencyInjection
             .ApplicationParts
             .Add(new AssemblyPart(typeof(NotificationHub).Assembly));
 
+        services.AddControllers()
+               .PartManager.ApplicationParts.Add(
+                   new AssemblyPart(typeof(NotificationController).Assembly));
 
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ITaskNotificationService, TaskNotificationService>();

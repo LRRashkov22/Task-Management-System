@@ -9,7 +9,7 @@ using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.AdminDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
-using TaskManagementSystem.Modules.Statistics.Application.DTOs;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
 namespace TaskManagementSystem.Modules.Statistics.Application.Services.AdminPanel;
 
 public class GetAdminInformation : IGetAdminInformation {

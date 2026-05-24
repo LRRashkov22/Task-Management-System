@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
-{
+namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
+
     public class TaskHistoryDto
     {
         public int Id { get; set; }
@@ -18,4 +18,4 @@ namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
 
         public DateTime CreatedAt { get; set; }
     }
-}
+

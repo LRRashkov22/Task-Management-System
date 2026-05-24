@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
+namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
 {
     public class CommentDto
     {

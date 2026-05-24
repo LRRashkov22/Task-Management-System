@@ -120,5 +120,24 @@ public class ManageTasksController : ControllerBase
         return Ok(status);
     }
 
+    [Authorize(Roles = "Manager")]
+    [HttpPatch("Mark-AsDone/{taskId}")]
+    public async Task<ActionResult> MarkAsDoneTask(int taskId)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.MarkAsDone(userid, taskId);
+        if (error != null) return BadRequest(error);
+        return Ok(status);
+    }
+
+    [Authorize(Roles = "Employee")]
+    [HttpPatch("Request-Review/{taskId}")]
+    public async Task<ActionResult> RequestForReview(int taskId)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.RequestReviewTaskAsync(userid, taskId);
+        if (error != null) return BadRequest(error);
+        return Ok(status);
+    }
 
 }
