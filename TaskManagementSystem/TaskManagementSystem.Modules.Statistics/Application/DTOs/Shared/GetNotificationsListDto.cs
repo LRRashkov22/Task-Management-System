@@ -4,7 +4,7 @@ using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 
-namespace TaskManagementSystem.Modules.Statistics.Application.DTOs
+namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared
 {
     public class GetNotificationsListDto
     {

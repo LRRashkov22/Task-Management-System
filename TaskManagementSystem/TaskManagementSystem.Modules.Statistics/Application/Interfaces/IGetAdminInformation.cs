@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
-using TaskManagementSystem.Modules.Statistics.Application.DTOs;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.AdminDto;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
 
 namespace TaskManagementSystem.Modules.Statistics.Application.Interfaces
 {

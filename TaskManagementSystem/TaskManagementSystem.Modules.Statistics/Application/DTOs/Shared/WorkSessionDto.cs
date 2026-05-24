@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
-{
-    public class WorkSessionDto
+namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
+
+public class WorkSessionDto
     {
         public int Id { get; set; }
 
@@ -14,4 +14,3 @@ namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
 
         public DateTime Date { get; set; }
     }
-}

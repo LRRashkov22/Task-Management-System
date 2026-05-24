@@ -407,9 +407,7 @@ public class ManageTasks : IManageTasks
         await context.SaveChangesAsync();
         return (true, null);
     }
-
-
-    public async Task<(bool?, string?)> RequestCompletedTaskAsync(int userid, int taskid)
+    public async Task<(bool?, string?)> RequestReviewTaskAsync(int userid, int taskid)
     {
         var task = await context.TaskItems
             .Include(t => t.Assignments)
