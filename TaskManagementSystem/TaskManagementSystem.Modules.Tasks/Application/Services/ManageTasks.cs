@@ -13,12 +13,13 @@ namespace TaskManagementSystem.Modules.Tasks.Application.Services;
 public class ManageTasks : IManageTasks
 {
     private readonly TaskManagementDbContext context;
-    private readonly INotificationService notificationService;
-    public ManageTasks(TaskManagementDbContext context, INotificationService notificationService)
+    private readonly ITaskNotificationService taskMotificationService;
+    public ManageTasks(TaskManagementDbContext context, ITaskNotificationService taskMotificationService)
     {
         this.context = context;
-        this.notificationService = notificationService;
+        this.taskMotificationService = taskMotificationService;
     }
+    //get preview information for all task in kanban the section
     public async Task<List<TaskCardDto>> GetBoardTasks(int userid)
     {
         return await context.TaskItems
@@ -37,6 +38,7 @@ public class ManageTasks : IManageTasks
             }).ToListAsync();  
     }
 
+    //get detailed info for one (the clicked one) task
     public async Task<TaskDetailsDto?> GetTaskDetails(int taskId, int userid)
     {
         return await context.TaskItems
@@ -91,6 +93,7 @@ public class ManageTasks : IManageTasks
                     .ToList()
             }).FirstOrDefaultAsync();
     }
+    //Show archived task in admin panel
     public async Task<List<GetArchivedTaskDto>> GetAdminArchivedTasks()
     {
         var tasks = await context.TaskItems
@@ -110,7 +113,9 @@ public class ManageTasks : IManageTasks
         }).ToList();
     }
 
+    //Create a task
     public async Task<(CreateTaskDto?, string?)> CreateTaskAsync(CreateTaskDto request, int userid) {
+
         if (string.IsNullOrWhiteSpace(request.Title) ||
             string.IsNullOrWhiteSpace(request.Description) ||
             request.Deadline < DateTime.UtcNow)
@@ -158,12 +163,13 @@ public class ManageTasks : IManageTasks
         context.TaskItems.Add(task);
         await context.SaveChangesAsync();
 
+        var managerName = await context.Users
+        .AsNoTracking()
+        .Where(u => u.Id == userid)
+        .Select(u => u.Username)
+        .FirstAsync();
         //SignalR
-        foreach (var memberId in request.Assignments)
-        {
-            await notificationService.SendNotificationAsync(memberId,
-                $"You were assigned to task: {task.Title}");
-        }
+        await taskMotificationService.NotifyTaskAssignedAsync(task, request.Assignments, managerName);
         return (request, null);
     }
     public async Task<(bool isDeleted, string? error)> ArchiveTask(RecoverOrArchiveDto request,int userid)
@@ -185,13 +191,8 @@ public class ManageTasks : IManageTasks
         await context.SaveChangesAsync();
 
         //SignalR
-        foreach (var memberId in task.Assignments)
-        {
-            await notificationService.SendNotificationAsync(memberId.UserId,
-                $"Task: {task.Title} were deleted");
-        }
-        await notificationService.SendNotificationAsync(userid,
-                 $"Task: {task.Title} were deleted");
+        await taskMotificationService.NotifyTaskArchivedAsync(task, userid);
+
         return (true, null);
     }
 
@@ -243,7 +244,6 @@ public class ManageTasks : IManageTasks
             var oldTeamId = task.TeamId;
 
             task.TeamId = request.NewTeamId;
-            var oldManagerName = task.Team.Manager.Username;
             context.TaskAssignments.RemoveRange(task.Assignments);
             task.Assignments.Clear();
 
@@ -269,17 +269,7 @@ public class ManageTasks : IManageTasks
             await transaction.CommitAsync();
 
             //SignalR
-
-                await notificationService.SendNotificationAsync(
-                    newTeam.ManagerId,
-                    $"Task: {task.Title} was transfered to you by {oldManagerName}");
-
-            foreach (var userId in oldAssignedUsers)
-            {
-                await notificationService.SendNotificationAsync(
-                    userId,
-                    $"You were unassigned from task: {task.Title}");
-            }
+            await taskMotificationService.NotifyTaskTransferedAsync(task, oldAssignedUsers);
 
             return (true, null);
 
@@ -296,16 +286,13 @@ public class ManageTasks : IManageTasks
     {
         var task = await context.TaskItems
             .Include(t => t.Team)
-                .ThenInclude(t => t.ManagerId)
             .Where(t => t.IsArchived).FirstAsync(t => t.Id == request.Id);
         if (task.Team.IsArchived == true) return (false, "Cannot recover task due it's team is archived");
         task.IsArchived = false;
         
         await context.SaveChangesAsync();
-            //SignalR 
-            await notificationService.SendNotificationAsync(
-                task.Team.ManagerId,
-                $"Your task: {task.Title} was recovered");
+        //SignalR 
+        await taskMotificationService.NotifyTaskRecoverAsync(task);
         return (true, null);
     }
 
@@ -391,19 +378,7 @@ public class ManageTasks : IManageTasks
 
             await context.SaveChangesAsync();
             //SignalR
-            foreach (var userId in removedUsers)
-            {
-                await notificationService.SendNotificationAsync(
-                    userId,
-                    $"You were unassigned from task: {task.Title}");
-            }
-            //SignalR
-            foreach (var userId in addedUsers)
-            {
-                await notificationService.SendNotificationAsync(
-                    userId,
-                    $"You were assigned to task: {task.Title}");
-            }
+            await taskMotificationService.NotifyTaskEditAsync(task, removedUsers, addedUsers);
         }
         else
         {

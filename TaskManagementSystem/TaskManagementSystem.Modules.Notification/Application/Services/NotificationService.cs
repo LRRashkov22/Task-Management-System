@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Notification.Application.Interfaces;
@@ -16,6 +18,13 @@ public class NotificationService : INotificationService
     {
         this.context = context;
         this.hubContext = hubContext;
+    }
+    //Helper
+    public async Task<int> GetAdminIdAsync() {
+        return await context.Users.AsNoTracking()
+            .Where(m => m.Role == TaskManagementSystem.Data.Domain.Enums.Role.Admin)
+            .Select(m => m.Id)
+            .FirstOrDefaultAsync();
     }
     //SignalR
     public async Task SendNotificationAsync(int userId, string message)
@@ -42,12 +51,6 @@ public class NotificationService : INotificationService
                 });
     }
 
-    public async Task NotifyTaskAssignedAsync(TaskItem task, IEnumerable<int> assignedUserIdss)
-    {
-        foreach (var memberId in assignedUserIdss)
-        {
-            await SendNotificationAsync(memberId,
-                $"You were assigned to task: {task.Title}");
-        }
-    }
+
+
 }
