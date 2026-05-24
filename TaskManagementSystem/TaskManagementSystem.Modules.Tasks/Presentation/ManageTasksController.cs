@@ -108,5 +108,17 @@ public class ManageTasksController : ControllerBase
         return Ok(status);
     }
 
+    [Authorize(Roles = "Manager")]
+    [HttpPatch("Edit-Task/{taskId}")]
+    public async Task<ActionResult> EditTask(int taskId, EditTaskDto request)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.EditTaskAsync(userid, taskId, request);
+
+        if (error != null) return BadRequest(error);
+
+        return Ok(status);
+    }
+
 
 }

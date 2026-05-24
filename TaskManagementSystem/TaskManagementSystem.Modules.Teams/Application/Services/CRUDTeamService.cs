@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
+using TaskManagementSystem.Modules.Notification.Application.Interfaces;
 using TaskManagementSystem.Modules.Teams.Application.DTOs;
 using TaskManagementSystem.Modules.Teams.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Teams.Application.Services;
@@ -13,9 +15,11 @@ namespace TaskManagementSystem.Modules.Teams.Application.Services;
 public class CRUDTeamService : ICRUDTeamService
 {
     private readonly TaskManagementDbContext context;
-    public CRUDTeamService(TaskManagementDbContext context)
+    private readonly INotificationService notificationService;
+    public CRUDTeamService(TaskManagementDbContext context, INotificationService notificationService)
     {
         this.context = context;
+        this.notificationService = notificationService;
     }
 
     public async Task<(Team? team, string? error)> CreateTeamAsync(CreateTeamDto request, int userid)
@@ -48,6 +52,11 @@ public class CRUDTeamService : ICRUDTeamService
         }
         context.Teams.Add(team);
         await context.SaveChangesAsync();
+        foreach (var memberId in request.MemberIds)
+        {
+            await notificationService.SendNotificationAsync(memberId,
+                $"You were assigned to team: {team.Name}");
+        }
         return (team, null);
     }
 
@@ -59,6 +68,8 @@ public class CRUDTeamService : ICRUDTeamService
         {
             var team = await context.Teams
                 .Include(t => t.Memberships)
+                .Include(t => t.Tasks)
+                    .ThenInclude(t => t.Assignments)
                 .FirstOrDefaultAsync(t => t.Id == request.TeamId);
 
             if (team == null) return (false, "Team not found");
@@ -77,7 +88,10 @@ public class CRUDTeamService : ICRUDTeamService
 
             context.TeamMemberships.RemoveRange(team.Memberships);
 
-
+            foreach (var task in team.Tasks)
+            {
+                context.TaskAssignments.RemoveRange(task.Assignments);
+            }
             await context.SaveChangesAsync();
 
             await transaction.CommitAsync();
@@ -131,6 +145,13 @@ public class CRUDTeamService : ICRUDTeamService
 
             context.TeamMemberships.RemoveRange(membersToRemove);
 
+            foreach (var memberId in membersToRemove)
+            {
+
+                await notificationService.SendNotificationAsync(memberId.UserId,
+                    $"You were unassigned to team: {team.Name}");
+            }
+
             foreach (var memberId in membersToAdd)
             {
                 team.Memberships.Add(new TeamMembership
@@ -138,10 +159,20 @@ public class CRUDTeamService : ICRUDTeamService
                     TeamId = team.Id,
                     UserId = memberId
                 });
+
+                await notificationService.SendNotificationAsync(memberId,
+             $"You were assigned to team: {team.Name}");
             }
         }
 
         await context.SaveChangesAsync();
+
+
+        await context.Entry(team)
+    .Collection(t => t.Memberships)
+    .Query()
+    .Include(m => m.User)
+    .LoadAsync();
 
         var response = new EditTeamResponseDto
         {

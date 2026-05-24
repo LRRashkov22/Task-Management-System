@@ -1,4 +1,5 @@
 ﻿using Scalar.AspNetCore;
+using TaskManagementSystem.Modules.Notification.Infrastructure.Hubs;
 
 namespace TaskManagementSystem.Api.Extensions
 {
@@ -19,6 +20,8 @@ namespace TaskManagementSystem.Api.Extensions
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapHub<NotificationHub>("/hubs/notifications");
         }
     
     }
