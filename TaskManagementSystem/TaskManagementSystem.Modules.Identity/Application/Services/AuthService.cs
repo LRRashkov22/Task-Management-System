@@ -12,17 +12,19 @@ using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Identity.Application.Interfaces;
 using TaskManagementSystem.Modules.Identity.Application.DTOs;
+using TaskManagementSystem.Data.Options;
+using Microsoft.Extensions.Options;
 
 namespace TaskManagementSystem.Modules.Identity.Application.Services;
 
 public class AuthService : IAuthService
 {
     private readonly TaskManagementDbContext context;
-    private readonly IConfiguration configuration;
-    public AuthService(TaskManagementDbContext context, IConfiguration configuration)
+    private readonly JwtOptions configuration;
+    public AuthService(TaskManagementDbContext context, IOptions<JwtOptions> configuration)
     {
         this.context = context;
-        this.configuration = configuration;
+        this.configuration = configuration.Value;
     }
     //Login---------------------------------------------------------------------------------
     public async Task<(TokenResponseDto? tokenRespone, string? error)> LoginAsync(UserDto request)
@@ -78,11 +80,11 @@ public class AuthService : IAuthService
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Role, user.Role.ToString()),
       };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
         var tokenDescriptor = new JwtSecurityToken(
-            issuer: configuration.GetValue<string>("AppSettings:Issuer"),
-            audience: configuration.GetValue<string>("AppSettings:Audience"),
+            issuer: configuration.Issuer,
+            audience: configuration.Audience,
             claims: claims,
             expires: DateTime.Now.AddDays(1),
             signingCredentials: creds
