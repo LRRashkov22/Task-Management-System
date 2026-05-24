@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
-import { commonStyles, cx, managerStyles } from '../styles'
+import { fetchNotifications, type NotificationDto } from '../api/notificationsApi'
+import { cx, managerStyles } from '../styles'
 import { getToken, getUsername } from '../utils/auth'
-
-type NotificationDto = {
-  id: number
-  message: string
-  createdAt: string
-}
 
 type EmployeeView =
   | 'dashboard'
@@ -19,6 +14,8 @@ type EmployeeView =
 type IconName =
   | 'bell'
   | 'calendar'
+  | 'check'
+  | 'checkDouble'
   | 'checkCircle'
   | 'chevron'
   | 'chevronLeft'
@@ -106,6 +103,23 @@ function Icon({ name }: { name: IconName }) {
         <path d="M17 3v4" />
         <rect x="4" y="5" width="16" height="16" rx="2" />
         <path d="M4 10h16" />
+      </svg>
+    )
+  }
+
+  if (name === 'check') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m5 13 4.5 4.5L19 7" />
+      </svg>
+    )
+  }
+
+  if (name === 'checkDouble') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m4 12 3.5 3.5L14 8" />
+        <path d="m9 12 3.5 3.5L19 7" />
       </svg>
     )
   }
@@ -558,30 +572,110 @@ function CalendarView() {
   )
 }
 
+function normalizeNotification(
+  payload: Partial<NotificationDto> & Record<string, unknown>,
+): NotificationDto {
+  return {
+    id: Number(payload.id ?? payload.Id),
+    message: String(payload.message ?? payload.Message ?? ''),
+    createdAt: String(payload.createdAt ?? payload.CreatedAt ?? ''),
+    isRead: Boolean(payload.isRead ?? payload.IsRead ?? false),
+  }
+}
+
+function getNotificationIcon(message: string): IconName {
+  if (/mentioned/i.test(message) && /comment/i.test(message)) {
+    return 'comment'
+  }
+
+  if (/assigned/i.test(message)) {
+    return 'team'
+  }
+
+  return 'bell'
+}
+
+function NotificationCard({
+  notification,
+  onMarkAsRead,
+}: {
+  notification: NotificationDto
+  onMarkAsRead?: (id: number) => void
+}) {
+  const iconName = getNotificationIcon(notification.message)
+
+  return (
+    <article
+      className={cx(
+        'flex min-h-[76px] items-center gap-4 rounded-xl border bg-white px-5 py-4 shadow-[0_2px_5px_rgba(17,24,39,0.04)]',
+        notification.isRead
+          ? 'border-[#e5e7eb]'
+          : 'border-[#93c5fd]',
+      )}
+    >
+      <span
+        className={cx(
+          'grid h-10 w-10 shrink-0 place-items-center rounded-lg [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]',
+          notification.isRead
+            ? 'bg-[#f2f4f7] text-[#98a2b3]'
+            : 'bg-[#eff6ff] text-[#315af2]',
+        )}
+      >
+        <Icon name={iconName} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="mb-2 text-[15px] leading-snug font-bold text-[#111827]">
+          {notification.message}
+        </p>
+        <time className="text-[13px] leading-none font-bold text-[#667085]">
+          {new Date(notification.createdAt).toLocaleString()}
+        </time>
+      </div>
+      {!notification.isRead && onMarkAsRead ? (
+        <button
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[#315af2] hover:bg-[#eff6ff] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.5] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]"
+          type="button"
+          aria-label="Mark as read"
+          onClick={() => onMarkAsRead(notification.id)}
+        >
+          <Icon name="check" />
+        </button>
+      ) : null}
+    </article>
+  )
+}
+
 function NotificationsView({
   notifications,
-  connectionStatus,
+  onMarkAsRead,
+  onMarkAllAsRead,
 }: {
   notifications: NotificationDto[]
-  connectionStatus: string
+  onMarkAsRead: (id: number) => void
+  onMarkAllAsRead: () => void
 }) {
+  const unread = notifications.filter((notification) => !notification.isRead)
+  const read = notifications.filter((notification) => notification.isRead)
+
   return (
     <section aria-labelledby="employee-page-title">
-      <h2
-        className="mb-6 text-[25px] leading-none font-extrabold text-[#050505]"
-        id="employee-page-title"
-      >
-        Notifications
-      </h2>
-
-      <div className="mb-6">
-        <div
-          className={commonStyles.message(
-            connectionStatus === 'Connected' ? 'success' : 'error',
-          )}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h2
+          className="text-[25px] leading-none font-extrabold text-[#050505]"
+          id="employee-page-title"
         >
-          SignalR: {connectionStatus}
-        </div>
+          Notifications
+        </h2>
+        {unread.length > 0 ? (
+          <button
+            className="inline-flex items-center gap-2 text-[15px] font-bold text-[#315af2] hover:underline [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.5] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]"
+            type="button"
+            onClick={onMarkAllAsRead}
+          >
+            <Icon name="checkDouble" />
+            <span>Mark as Read all</span>
+          </button>
+        ) : null}
       </div>
 
       {notifications.length === 0 ? (
@@ -589,25 +683,36 @@ function NotificationsView({
           No notifications yet.
         </div>
       ) : (
-        <div className="grid gap-4">
-          {notifications.map((notification) => (
-            <article
-              key={notification.id}
-              className="flex min-h-[76px] items-center gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 shadow-[0_2px_5px_rgba(17,24,39,0.04)]"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#eff6ff] text-[#315af2] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
-                <Icon name="bell" />
-              </span>
-              <div>
-                <p className="mb-2 text-[15px] leading-snug font-bold text-[#111827]">
-                  {notification.message}
-                </p>
-                <time className="text-[13px] leading-none font-bold text-[#667085]">
-                  {new Date(notification.createdAt).toLocaleString()}
-                </time>
+        <div className="grid gap-8">
+          {unread.length > 0 ? (
+            <section>
+              <h3 className="mb-4 text-[13px] font-extrabold tracking-[0.08em] text-[#98a2b3] uppercase">
+                Unread ({unread.length})
+              </h3>
+              <div className="grid gap-4">
+                {unread.map((notification) => (
+                  <NotificationCard
+                    key={notification.id}
+                    notification={notification}
+                    onMarkAsRead={onMarkAsRead}
+                  />
+                ))}
               </div>
-            </article>
-          ))}
+            </section>
+          ) : null}
+
+          {read.length > 0 ? (
+            <section>
+              <h3 className="mb-4 text-[13px] font-extrabold tracking-[0.08em] text-[#98a2b3] uppercase">
+                Read ({read.length})
+              </h3>
+              <div className="grid gap-4">
+                {read.map((notification) => (
+                  <NotificationCard key={notification.id} notification={notification} />
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       )}
     </section>
@@ -676,7 +781,6 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
   const [activeView, setActiveView] = useState<EmployeeView>('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [notifications, setNotifications] = useState<NotificationDto[]>([])
-  const [connectionStatus, setConnectionStatus] = useState('Connecting...')
   const employeeName = getUsername() || 'Alex Wilson'
 
   const navItems = useMemo(
@@ -692,35 +796,80 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
   )
 
   useEffect(() => {
-    const configuredHubBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
-    const notificationsHubUrl = configuredHubBaseUrl
-      ? `${configuredHubBaseUrl}/hubs/notifications`
-      : '/hubs/notifications'
+    let cancelled = false
+    let connection: signalR.HubConnection | null = null
 
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(notificationsHubUrl, {
-        accessTokenFactory: () => getToken() || '',
-      })
-      .withAutomaticReconnect()
-      .build()
+    async function initNotifications() {
+      try {
+        const history = await fetchNotifications()
+        if (!cancelled) {
+          setNotifications(history)
+        }
+      } catch {
+        if (!cancelled) {
+          setNotifications([])
+        }
+      }
 
-    connection.on('ReceiveNotification', (notification: NotificationDto) => {
-      setNotifications((current) => [notification, ...current])
-    })
+      const configuredHubBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(
+        /\/$/,
+        '',
+      )
+      const notificationsHubUrl = configuredHubBaseUrl
+        ? `${configuredHubBaseUrl}/hubs/notifications`
+        : '/hubs/notifications'
 
-    connection
-      .start()
-      .then(() => {
-        setConnectionStatus('Connected')
-      })
-      .catch(() => {
-        setConnectionStatus('Connection failed')
-      })
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(notificationsHubUrl, {
+          accessTokenFactory: () => getToken() || '',
+        })
+        .withAutomaticReconnect()
+        .build()
+
+      connection.on(
+        'ReceiveNotification',
+        (payload: Partial<NotificationDto> & Record<string, unknown>) => {
+          const incoming = normalizeNotification(payload)
+          setNotifications((current) => {
+            if (current.some((item) => item.id === incoming.id)) {
+              return current
+            }
+
+            return [incoming, ...current]
+          })
+        },
+      )
+
+      try {
+        await connection.start()
+      } catch {
+        // History still works if the live connection fails.
+      }
+    }
+
+    void initNotifications()
 
     return () => {
-      void connection.stop()
+      cancelled = true
+      void connection?.stop()
     }
   }, [])
+
+  function handleMarkAsRead(notificationId: number) {
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, isRead: true }
+          : notification,
+      ),
+    )
+  }
+
+  function handleMarkAllAsRead() {
+    setNotifications((current) =>
+      current.map((notification) => ({ ...notification, isRead: true })),
+    )
+  }
 
   return (
     <main className={managerStyles.shell(isSidebarOpen)}>
@@ -875,7 +1024,8 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
           ) : activeView === 'notifications' ? (
             <NotificationsView
               notifications={notifications}
-              connectionStatus={connectionStatus}
+              onMarkAsRead={handleMarkAsRead}
+              onMarkAllAsRead={handleMarkAllAsRead}
             />
           ) : activeView === 'myTasks' ? (
             <MyTasksView />
