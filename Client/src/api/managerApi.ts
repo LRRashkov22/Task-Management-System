@@ -240,3 +240,4 @@ export function archiveManagerTeamApi(id: number) {
     body: JSON.stringify({ id }),
   })
 }
+
