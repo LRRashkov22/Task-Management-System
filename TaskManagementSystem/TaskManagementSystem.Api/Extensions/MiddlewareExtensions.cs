@@ -11,13 +11,15 @@ namespace TaskManagementSystem.Api.Extensions
                 app.MapOpenApi();
                 app.MapScalarApiReference();
             }
-            app.UseCors("frontend");
             app.UseHttpsRedirection();
+
+            app.UseCors("frontend");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
         }
+    
     }
 }

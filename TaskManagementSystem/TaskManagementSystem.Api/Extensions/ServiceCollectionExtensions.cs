@@ -6,6 +6,7 @@ using TaskManagementSystem.Modules.Identity;
 using TaskManagementSystem.Modules.Statistics;
 using TaskManagementSystem.Modules.Tasks;
 using TaskManagementSystem.Modules.Teams;
+using TaskManagementSystem.Modules.Comments;
 
 namespace TaskManagementSystem.Api.Extensions
 {
@@ -24,6 +25,7 @@ namespace TaskManagementSystem.Api.Extensions
             services.AddTeamsModule();
             services.AddStasticsModule();
             services.AddTaskModule();
+            services.AddCommentsModule();
             //------------------------------------------------------------------------------------
 
             services.AddData(configuration);
@@ -47,17 +49,38 @@ namespace TaskManagementSystem.Api.Extensions
                         IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(configuration["AppSettings:Token"]!))
                     };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken =
+                                context.Request.Query["access_token"];
+
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/hubs/notifications"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             //--------------------------------------------------------------------------------------
+            services.AddSignalR();
             services.AddCors(options =>
             {
                 options.AddPolicy("frontend",
                     policy => policy
                         .WithOrigins("http://localhost:5173")
                         .AllowAnyHeader()
-                        .AllowAnyMethod());
-            });
+                        .AllowAnyMethod()
+                        .AllowCredentials());
+        });
             return services;
         }
     }
