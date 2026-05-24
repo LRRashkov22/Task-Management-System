@@ -312,9 +312,18 @@ export const managerStyles = {
     'mb-4 rounded-[14px] border border-[#e5e7eb] bg-gradient-to-b from-white to-[#f9fafb] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)]',
   checkboxGrid: 'grid grid-cols-2 gap-4 max-[760px]:grid-cols-1',
   checkboxOption:
-    'group relative grid min-h-[64px] cursor-pointer grid-cols-[24px_1fr] items-center gap-4 rounded-[12px] border-2 border-[#e5e7eb] bg-white p-4 transition-all duration-200 hover:border-[#bfdbfe] hover:shadow-[0_4px_12px_rgba(49,90,242,0.08)] focus-within:border-[#3b82f6] focus-within:shadow-[0_4px_12px_rgba(49,90,242,0.12)] focus-within:outline-none [&_input]:!m-0 [&_input]:!h-6 [&_input]:!min-h-6 [&_input]:!w-6 [&_input]:!rounded-[6px] [&_input]:!p-0 [&_input]:!accent-[#315af2] [&_input]:!cursor-pointer [&_span]:min-w-0 [&_span]:text-[15px] [&_span]:leading-[1.3] [&_span]:font-semibold [&_span]:text-[#1f2937]',
-  checkboxOptionSelected: 'border-[#315af2] bg-gradient-to-br from-[#eff6ff] to-[#f0f9ff] shadow-[0_4px_12px_rgba(49,90,242,0.12)]',
-  checkboxPanelTall: 'max-h-96 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-[10px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb]:bg-[#d1d5db] [&::-webkit-scrollbar-thumb:hover]:bg-[#9ca3af]',
+    'grid gap-3 rounded-[14px] border border-[#dfe4ec] bg-white p-4 transition duration-200 hover:border-[#315af2] focus-within:border-[#315af2] [&_input]:mt-1 [&_span]:text-[15px] [&_span]:font-semibold [&_span]:text-[#111827]',
+  checkboxOptionSelected: 'border-[#315af2] bg-[#eef5ff]',
+  checkboxPanelTall: 'max-h-60',
+  taskAssignPanel:
+    'mb-4 max-h-[176px] overflow-y-auto rounded-[10px] border border-[#dfe4ec] bg-white px-5 py-3',
+  taskAssignLabel: 'mb-3 text-[15px] leading-none font-extrabold text-[#050505]',
+  memberListPanel:
+    'mb-[22px] rounded-[10px] border border-[#dfe4ec] bg-white px-7 py-[18px]',
+  memberListLabel: 'mb-3 text-[16px] leading-none font-extrabold text-[#050505]',
+  memberList: 'grid gap-0.5',
+  memberListOption:
+    '!mb-0 !flex min-h-9 cursor-pointer !grid-cols-none !flex-row items-center !gap-3 text-[15px] leading-none font-extrabold text-[#111827] hover:text-[#315af2] [&_input]:!h-[13px] [&_input]:!min-h-[13px] [&_input]:!w-[13px] [&_input]:!appearance-auto [&_input]:!rounded-none [&_input]:!border-[#111827] [&_input]:!p-0 [&>span]:!text-[15px] [&>span]:!font-extrabold',
   taskDetailModal:
     'grid max-h-[74svh] w-[min(100%,896px)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 max-[760px]:max-h-[90svh]',
   taskDetailHead:

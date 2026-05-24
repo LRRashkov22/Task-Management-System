@@ -33,6 +33,7 @@
     | 'manager'
     | 'logs'
     | 'settings'
+    | 'logout'
     | 'close'
     | 'menu'
     | 'globe'
@@ -256,6 +257,16 @@
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M18 6 6 18" />
           <path d="m6 6 12 12" />
+        </svg>
+      )
+    }
+
+    if (name === 'logout') {
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 17 15 12 10 7" />
+          <path d="M15 12H3" />
+          <path d="M21 19V5a2 2 0 0 0-2-2h-5" />
         </svg>
       )
     }
@@ -863,8 +874,8 @@ try {
                 <Icon name="settings" />
                 <span>{t.settings}</span>
               </button>
-              <button className={adminStyles.footerButton} type="button" onClick={onLogout}>
-                <Icon name="close" />
+              <button className={`${adminStyles.footerButton} text-[#ef1d32] hover:text-[#ef1d32]`} type="button" onClick={onLogout}>
+                <Icon name="logout" />
                 <span>Logout</span>
               </button>
             </div>
