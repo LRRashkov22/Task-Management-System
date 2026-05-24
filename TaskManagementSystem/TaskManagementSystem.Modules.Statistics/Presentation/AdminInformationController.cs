@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Enums;
-using TaskManagementSystem.Modules.Statistics.Application.DTO_s;
-using TaskManagementSystem.Modules.Statistics.Application.Interface;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.AdminDto;
+using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Statistics.Presentation;
 
 [ApiController]
@@ -13,6 +14,15 @@ public class AdminInformationController : ControllerBase
     public AdminInformationController(IGetAdminInformation adminInfo)
     {
         this.adminInfo = adminInfo;
+    }
+
+    [Authorize]
+    [HttpGet("get-Notifications-List")]
+    public async Task<ActionResult> GetNotifications()
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var result = await adminInfo.GetNotificationsAsync(userid);
+        return Ok(result);
     }
 
     [Authorize(Roles = "Admin")]
