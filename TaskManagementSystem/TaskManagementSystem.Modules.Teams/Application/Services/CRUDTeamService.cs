@@ -1,13 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Notification.Application.Interfaces;
+using TaskManagementSystem.Modules.Notification.Application.Services;
 using TaskManagementSystem.Modules.Teams.Application.DTOs;
 using TaskManagementSystem.Modules.Teams.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Teams.Application.Services;
@@ -15,11 +18,11 @@ namespace TaskManagementSystem.Modules.Teams.Application.Services;
 public class CRUDTeamService : ICRUDTeamService
 {
     private readonly TaskManagementDbContext context;
-    private readonly INotificationService notificationService;
-    public CRUDTeamService(TaskManagementDbContext context, INotificationService notificationService)
+    private readonly ITeamNotificationService teamNotificationService;
+    public CRUDTeamService(TaskManagementDbContext context, ITeamNotificationService teamNotificationService)
     {
         this.context = context;
-        this.notificationService = notificationService;
+        this.teamNotificationService = teamNotificationService;
     }
 
     public async Task<(Team? team, string? error)> CreateTeamAsync(CreateTeamDto request, int userid)
@@ -50,13 +53,15 @@ public class CRUDTeamService : ICRUDTeamService
                 UserId = memberId
             });
         }
+        var managerName = await context.Users
+            .AsNoTracking()
+            .Where(m => m.Id == userid)
+            .Select(m => m.Username)
+            .FirstAsync();
+
         context.Teams.Add(team);
         await context.SaveChangesAsync();
-        foreach (var memberId in request.MemberIds)
-        {
-            await notificationService.SendNotificationAsync(memberId,
-                $"You were assigned to team: {team.Name}");
-        }
+        await teamNotificationService.NotifyCreateTeamAsync(team, request.MemberIds, managerName);
         return (team, null);
     }
 
@@ -93,8 +98,8 @@ public class CRUDTeamService : ICRUDTeamService
                 context.TaskAssignments.RemoveRange(task.Assignments);
             }
             await context.SaveChangesAsync();
-
             await transaction.CommitAsync();
+            await teamNotificationService.NotifyTeamTransferredAsync(team, userid, request.NewManagerId);
 
             return (true, null);
         }
@@ -138,19 +143,13 @@ public class CRUDTeamService : ICRUDTeamService
             var membersToRemove = team.Memberships
                 .Where(m => !requestMemberIds.Contains(m.UserId))
                 .ToList();
+            var memebreToRemoveIds = membersToRemove.Select(m => m.UserId).ToList();
 
             var membersToAdd = requestMemberIds
                 .Where(id => !currentMemberIds.Contains(id))
                 .ToList();
 
             context.TeamMemberships.RemoveRange(membersToRemove);
-
-            foreach (var memberId in membersToRemove)
-            {
-
-                await notificationService.SendNotificationAsync(memberId.UserId,
-                    $"You were unassigned to team: {team.Name}");
-            }
 
             foreach (var memberId in membersToAdd)
             {
@@ -159,10 +158,9 @@ public class CRUDTeamService : ICRUDTeamService
                     TeamId = team.Id,
                     UserId = memberId
                 });
-
-                await notificationService.SendNotificationAsync(memberId,
-             $"You were assigned to team: {team.Name}");
+             
             }
+            await teamNotificationService.NotifyTeamEditedAsync(team, memebreToRemoveIds, membersToAdd);
         }
 
         await context.SaveChangesAsync();
@@ -208,6 +206,7 @@ public class CRUDTeamService : ICRUDTeamService
         {
             task.IsArchived = true;
         }
+        await teamNotificationService.NotifyTeamArchivedAsync(team);
         await context.SaveChangesAsync();
 
         return (true, null);
@@ -222,6 +221,7 @@ public class CRUDTeamService : ICRUDTeamService
 
         team.IsArchived = false;
         var savedChanges = await context.SaveChangesAsync();
+        await teamNotificationService.NotifyTeamRecoveredAsync(team);
         return savedChanges > 0;
     }
 

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
-using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.AdminDto;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 
 namespace TaskManagementSystem.Modules.Statistics.Application.Interfaces
 {
@@ -15,6 +16,7 @@ namespace TaskManagementSystem.Modules.Statistics.Application.Interfaces
         Task<List<GetUsersDto>> GetAllUsersByRole(Role role);
         Task<DashboardDto> GetAdminDashboardInformation();
         Task<List<GetArchivedTeams>> GetAdminArchivedTeams();
+        Task<List<GetNotificationsListDto>> GetNotificationsAsync(int userid);
         // Task<DashboardDto> GetmanagerDashboardInformation();
         // Task<DashboardDto> GetUserDashboardInformation();
     }

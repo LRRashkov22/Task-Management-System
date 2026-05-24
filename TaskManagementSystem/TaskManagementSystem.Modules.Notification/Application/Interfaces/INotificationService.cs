@@ -9,6 +9,7 @@ namespace TaskManagementSystem.Modules.Notification.Application.Interfaces
     public interface INotificationService
     {
         Task SendNotificationAsync(int userId, string message);
-        Task NotifyTaskAssignedAsync(TaskItem task, IEnumerable<int> assignedUserIdss);
+        Task<int> GetAdminIdAsync();
+       
     }
 }

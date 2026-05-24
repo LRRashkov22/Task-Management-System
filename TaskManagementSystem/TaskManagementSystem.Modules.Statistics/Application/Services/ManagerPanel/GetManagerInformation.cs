@@ -12,6 +12,7 @@ public class GetManagerInformation : IGetManagerInformation
     {
         this.context = context;
     }
+
     //shows list of names of teams of the current manager
     public async Task<List<ManagerTeamDropdownDto>> GetManagerDropdownTeamsAsync(int userid)
     {
