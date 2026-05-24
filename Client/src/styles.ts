@@ -269,26 +269,44 @@ export const managerStyles = {
   calendarPanel:
     panel +
     ' rounded-[10px] p-[18px_18px_16px] [&_h3]:text-[19px] [&_h3]:leading-none [&_h3]:font-extrabold',
-  calendarHeader: 'mb-3 flex items-center justify-between gap-4 max-[760px]:items-start max-[760px]:flex-col',
+  calendarHeader: 'mb-5 flex items-center justify-between gap-4 max-[760px]:items-start max-[760px]:flex-col',
   calendarLabel: 'mb-1 text-[11px] font-normal tracking-[0.08em] text-[#4f5b72] uppercase',
   calendarActions: 'flex flex-wrap gap-2',
   calendarNav: 'min-h-8 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3 text-[12px] leading-none font-bold text-[#1f2937]',
   calendarToggle: (active = false) =>
     cx('min-h-8 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3 text-[12px] leading-none font-bold text-[#1f2937]', active && 'border-[#315af2] bg-[#315af2] text-white'),
-  calendarGrid: 'grid grid-cols-7 gap-1.5',
-  calendarWeekday: 'border-b border-[#e5e7eb] px-2 py-1.5 text-[11px] font-bold text-[#4b5563] uppercase',
+  calendarGrid: 'grid grid-cols-7 overflow-hidden rounded border border-[#e5e7eb] bg-white',
+  calendarWeekday: 'border-r border-b border-[#edf0f4] px-2 py-2 text-center text-[10px] font-bold text-[#6b7280] uppercase last:border-r-0',
+  calendarWeekRow: 'col-span-7 grid min-h-[118px] border-b border-[#edf0f4] last:border-b-0',
+  calendarWeekDays: 'col-start-1 row-start-1 grid grid-cols-7',
+  calendarBars: 'pointer-events-none col-start-1 row-start-1 grid grid-cols-7 auto-rows-[24px] content-start gap-y-1 px-0 pt-[38px]',
   calendarDay: (outside: boolean, today: boolean) =>
-    cx('flex min-h-[72px] flex-col gap-1.5 rounded-lg border border-[#edf0f4] bg-white p-2 max-[760px]:min-h-[64px] max-[760px]:p-1.5', outside && 'bg-[#f8fafc] opacity-55', today && 'border-[#315af2] shadow-[0_0_0_1px_rgba(49,90,242,0.12)]'),
-  calendarDayNumber: 'text-[12px] leading-none font-bold text-[#0f172a]',
+    cx('min-h-[118px] border-r border-[#edf0f4] bg-white p-2 last:border-r-0 max-[760px]:min-h-[92px] max-[760px]:p-1.5', outside && 'bg-[#f8fafc] text-[#9ca3af]', today && 'bg-[#eff6ff]'),
+  calendarDayNumber: 'inline-grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] leading-none font-bold text-[#0f172a]',
   calendarDayTasks: 'grid gap-1',
   calendarTaskPill: (more = false) =>
     cx('block overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-[10px] leading-none font-bold', more ? 'bg-[#e2e8f0] text-[#475569]' : 'bg-[#eff6ff] text-[#1d4ed8]'),
+  calendarRangeBar: (index: number) =>
+    cx(
+      'pointer-events-auto relative mx-0 flex h-6 cursor-pointer items-center overflow-hidden rounded-full border-0 px-2 text-left shadow-[0_1px_3px_rgba(17,24,39,0.22)] hover:brightness-95 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[rgba(49,90,242,0.3)]',
+      index % 6 === 0 && 'bg-[#6326ff]',
+      index % 6 === 1 && 'bg-[#0ea5e9]',
+      index % 6 === 2 && 'bg-[#10b981]',
+      index % 6 === 3 && 'bg-[#f59e0b]',
+      index % 6 === 4 && 'bg-[#ef4444]',
+      index % 6 === 5 && 'bg-[#14b8a6]',
+    ),
+  calendarRangeName:
+    'block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] leading-none font-extrabold text-white',
+  calendarTaskInfo:
+    'mb-6 grid grid-cols-[0.65fr_1fr] gap-x-4 gap-y-3 rounded-lg bg-[#f8fafc] p-4 text-[14px] [&_span]:font-bold [&_span]:text-[#64748b] [&_strong]:font-extrabold [&_strong]:text-[#111827]',
   teamsPanel: 'grid gap-3.5',
   teamCard:
     panel +
     ' rounded-[10px] p-[28px_24px]',
   teamCardMain: 'flex min-h-[58px] items-center justify-between gap-5 max-[760px]:flex-col max-[760px]:items-start [&_h3]:mb-2.5 [&_h3]:text-[18px] [&_h3]:leading-[1.2] [&_h3]:font-extrabold [&_h3]:text-[#050505] [&_p]:text-[14px] [&_p]:leading-[1.35] [&_p]:font-medium [&_p]:text-[#25324a]',
   teamActions: iconSvg + ' flex flex-wrap justify-end gap-2.5 max-[760px]:justify-start [&_button]:inline-flex [&_button]:min-h-[30px] [&_button]:cursor-pointer [&_button]:items-center [&_button]:gap-1 [&_button]:border-0 [&_button]:bg-transparent [&_button]:p-0 [&_button]:text-[14px] [&_button]:leading-none [&_button]:font-bold [&_button]:text-[#315af2] [&_button:hover]:underline [&_svg]:h-[15px] [&_svg]:w-[15px]',
+  teamDangerAction: '!text-[#ef1d32] hover:!text-[#d11028]',
   teamDetails: 'mt-[18px] border-t border-[#edf0f4] pt-6',
   detailSection: iconSvg + ' mb-6 grid gap-3.5 last:mb-0 [&_h4]:mb-2.5 [&_h4]:inline-flex [&_h4]:items-center [&_h4]:gap-2 [&_h4]:text-[15px] [&_h4]:font-extrabold [&_h4]:text-[#050505] [&_h4_svg]:h-[18px] [&_h4_svg]:w-[18px] [&_p]:text-[13px] [&_p]:leading-[1.35] [&_p]:text-[#25324a]',
   memberGrid: 'grid grid-cols-3 gap-3 max-[760px]:grid-cols-1',
