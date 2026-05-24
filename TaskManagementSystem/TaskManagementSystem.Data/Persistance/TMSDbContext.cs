@@ -221,10 +221,6 @@ public class TaskManagementDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(1000);
 
-            entity.Property(notification => notification.Type)
-                .HasConversion<string>()
-                .HasMaxLength(50);
-
             entity.Property(notification => notification.IsRead)
                 .HasDefaultValue(false);
 

@@ -134,11 +134,6 @@ namespace TaskManagementSystem.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -221,7 +216,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.Property<int?>("CreatedById")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("Deadline")
+                    b.Property<DateTime>("Deadline")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")

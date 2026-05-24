@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
-using TaskManagementSystem.Modules.Tasks.Application.Dto;
-using TaskManagementSystem.Modules.Tasks.Application.Interface;
+using TaskManagementSystem.Modules.Tasks.Application.DTOs;
+using TaskManagementSystem.Modules.Tasks.Application.Interfaces;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace TaskManagementSystem.Modules.Tasks.Presentation;
 
@@ -62,8 +62,8 @@ public class ManageTasksController : ControllerBase
     }
 
     [Authorize(Roles = "Manager")]
-    [HttpPost("Change-task-status/{taskid}")]
-    public async Task<ActionResult<CreateTaskDto>> CreateTask(int taskid, ChangeStatusOnTaskDto request)
+    [HttpPatch("Change-task-status/{taskid}")]
+    public async Task<ActionResult<ChangeStatusOnTaskDto>> ChangeStatusTask(int taskid, ChangeStatusOnTaskDto request)
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
         var (result, error) = await task.ChangeStausOnTaskAsync(userid, taskid, request);
@@ -104,6 +104,18 @@ public class ManageTasksController : ControllerBase
         var (status, error) = await task.DeleteArchivedTaskAsync(taskId);
 
         if (error != null)  return BadRequest(error);
+
+        return Ok(status);
+    }
+
+    [Authorize(Roles = "Manager")]
+    [HttpPatch("Edit-Task/{taskId}")]
+    public async Task<ActionResult> EditTask(int taskId, EditTaskDto request)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.EditTaskAsync(userid, taskId, request);
+
+        if (error != null) return BadRequest(error);
 
         return Ok(status);
     }
