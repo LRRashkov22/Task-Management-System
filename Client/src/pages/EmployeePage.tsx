@@ -14,6 +14,7 @@ type IconName =
   | 'calendar'
   | 'checkCircle'
   | 'chevron'
+  | 'chevronLeft'
   | 'clock'
   | 'comment'
   | 'dashboard'
@@ -22,6 +23,7 @@ type IconName =
   | 'logout'
   | 'menu'
   | 'settings'
+  | 'team'
   | 'warning'
   | 'x'
 
@@ -39,6 +41,44 @@ const tasks = [
     priority: 'Urgent',
     status: 'REVIEW',
     dueDate: '',
+  },
+]
+
+const teamTasks = [
+  {
+    id: 1,
+    title: 'Implement user authentication flow',
+    status: 'TODO',
+    assignees: 'Alex Wilson, Maria Garcia',
+    deadline: '6/4/2026',
+  },
+  {
+    id: 2,
+    title: 'Redesign dashboard layout',
+    status: 'IN_PROGRESS',
+    assignees: 'James Brown, Kevin Allen',
+    deadline: '6/10/2026',
+  },
+  {
+    id: 3,
+    title: 'Fix navigation menu bug',
+    status: 'REVIEW',
+    assignees: 'Alex Wilson',
+    deadline: '-',
+  },
+  {
+    id: 4,
+    title: 'Optimize search functionality',
+    status: 'DONE',
+    assignees: 'Maria Garcia, Lisa Hill',
+    deadline: '6/9/2026',
+  },
+  {
+    id: 5,
+    title: 'Add dark mode support',
+    status: 'TODO',
+    assignees: 'James Brown',
+    deadline: '6/14/2026',
   },
 ]
 
@@ -76,6 +116,14 @@ function Icon({ name }: { name: IconName }) {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M9 18 15 12 9 6" />
+      </svg>
+    )
+  }
+
+  if (name === 'chevronLeft') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 18 9 12 15 6" />
       </svg>
     )
   }
@@ -157,6 +205,17 @@ function Icon({ name }: { name: IconName }) {
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="3.4" />
         <path d="M19 15a1.8 1.8 0 0 0 .4 2l.1.1-2.4 2.4-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1 1.6V21h-4v-.4a1.8 1.8 0 0 0-1-1.6 1.8 1.8 0 0 0-2 .4l-.1.1-2.4-2.4.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.6-1H3v-4h.4A1.8 1.8 0 0 0 5 9a1.8 1.8 0 0 0-.4-2l-.1-.1 2.4-2.4.1.1a1.8 1.8 0 0 0 2 .4 1.8 1.8 0 0 0 1-1.6V3h4v.4A1.8 1.8 0 0 0 15 5a1.8 1.8 0 0 0 2-.4l.1-.1 2.4 2.4-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.6 1h.4v4h-.4A1.8 1.8 0 0 0 19 15Z" />
+      </svg>
+    )
+  }
+
+  if (name === 'team') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M16 20v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="10" cy="7" r="3" />
+        <path d="M20 20v-2.2a4 4 0 0 0-3-3.8" />
+        <path d="M16 4.2a3 3 0 0 1 0 5.6" />
       </svg>
     )
   }
@@ -356,6 +415,10 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
             <NotificationsView />
           ) : activeView === 'myTasks' ? (
             <MyTasksView />
+          ) : activeView === 'teamTasks' ? (
+            <TeamTasksView />
+          ) : activeView === 'calendar' ? (
+            <CalendarView />
           ) : (
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-8 shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
               <h2
@@ -372,6 +435,239 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         </div>
       </section>
     </main>
+  )
+}
+
+function TeamTasksView() {
+  return (
+    <section aria-labelledby="employee-page-title">
+      <h2
+        className="mb-7 text-[25px] leading-none font-extrabold text-[#050505]"
+        id="employee-page-title"
+      >
+        Team Tasks
+      </h2>
+
+      <div className="mb-5 flex items-center gap-3 text-[#344054] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
+        <Icon name="team" />
+        <h3 className="text-[22px] leading-none font-extrabold text-[#050505]">
+          Frontend Development
+        </h3>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
+        <div className="grid min-h-[44px] grid-cols-[1.45fr_0.45fr_1fr_0.45fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085] max-[1000px]:min-w-[880px]">
+          <span>TITLE</span>
+          <span>STATUS</span>
+          <span>ASSIGN TO</span>
+          <span>DEADLINE</span>
+        </div>
+
+        {teamTasks.map((task) => (
+          <article
+            className="grid min-h-[62px] grid-cols-[1.45fr_0.45fr_1fr_0.45fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] max-[1000px]:min-w-[880px]"
+            key={task.id}
+          >
+            <span>{task.title}</span>
+            <span>
+              <TaskBadge tone={statusTone(task.status)}>{task.status}</TaskBadge>
+            </span>
+            <span className="text-[#475467]">{task.assignees}</span>
+            <span className="text-[#475467]">{task.deadline}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function endOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+function startOfWeek(date: Date) {
+  const day = date.getDay()
+  const result = new Date(date)
+  result.setDate(date.getDate() - day)
+  return result
+}
+
+function endOfWeek(date: Date) {
+  const day = date.getDay()
+  const result = new Date(date)
+  result.setDate(date.getDate() + (6 - day))
+  return result
+}
+
+function addDays(date: Date, days: number) {
+  const result = new Date(date)
+  result.setDate(date.getDate() + days)
+  return result
+}
+
+function addMonths(date: Date, months: number) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1)
+}
+
+function formatCalendarMonth(date: Date) {
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function getDayKey(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function isSameDay(dateA: Date, dateB: Date) {
+  return (
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate()
+  )
+}
+
+type CalendarTask = { id: string; title: string }
+
+function CalendarView() {
+  const [calendarView, setCalendarView] = useState<'weekly' | 'monthly'>('monthly')
+  const [calendarDate, setCalendarDate] = useState(new Date())
+
+  const calendarTasksByDay = useMemo(() => {
+    const map = new Map<string, CalendarTask[]>()
+
+    const addTask = (id: string, title: string, dateValue: string) => {
+      if (!dateValue || dateValue === '-') return
+
+      const parsed = new Date(dateValue)
+      if (Number.isNaN(parsed.getTime())) return
+
+      const key = getDayKey(parsed)
+      const current = map.get(key) ?? []
+      current.push({ id, title })
+      map.set(key, current)
+    }
+
+    tasks.forEach((task) => addTask(`my-${task.id}`, task.title, task.dueDate))
+    teamTasks.forEach((task) =>
+      addTask(`team-${task.id}`, task.title, task.deadline),
+    )
+
+    return map
+  }, [])
+
+  const calendarDays = useMemo(() => {
+    const focalDate = new Date(calendarDate)
+
+    const start =
+      calendarView === 'monthly'
+        ? startOfWeek(startOfMonth(focalDate))
+        : startOfWeek(focalDate)
+
+    const end =
+      calendarView === 'monthly'
+        ? endOfWeek(endOfMonth(focalDate))
+        : endOfWeek(focalDate)
+
+    const days: Date[] = []
+    let current = new Date(start)
+
+    while (current <= end) {
+      days.push(new Date(current))
+      current = addDays(current, 1)
+    }
+
+    return days
+  }, [calendarDate, calendarView])
+
+  return (
+    <section className={managerStyles.calendarPanel} aria-label="Calendar">
+      <div className={managerStyles.calendarHeader}>
+        <div>
+          <p className={managerStyles.calendarLabel}>Calendar</p>
+          <h3 id="employee-page-title">{formatCalendarMonth(calendarDate)}</h3>
+        </div>
+        <div className={managerStyles.calendarActions}>
+          <button
+            type="button"
+            className={managerStyles.calendarNav}
+            onClick={() => setCalendarDate(addMonths(calendarDate, -1))}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className={managerStyles.calendarNav}
+            onClick={() => setCalendarDate(new Date())}
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            className={managerStyles.calendarNav}
+            onClick={() => setCalendarDate(addMonths(calendarDate, 1))}
+          >
+            ›
+          </button>
+          <button
+            type="button"
+            className={managerStyles.calendarToggle(calendarView === 'weekly')}
+            onClick={() => setCalendarView('weekly')}
+          >
+            Weekly
+          </button>
+          <button
+            type="button"
+            className={managerStyles.calendarToggle(calendarView === 'monthly')}
+            onClick={() => setCalendarView('monthly')}
+          >
+            Monthly
+          </button>
+        </div>
+      </div>
+      <div className={managerStyles.calendarGrid}>
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          <div key={day} className={managerStyles.calendarWeekday}>
+            {day}
+          </div>
+        ))}
+        {calendarDays.map((day) => {
+          const dayKey = getDayKey(day)
+          const dayTasks = calendarTasksByDay.get(dayKey) ?? []
+
+          return (
+            <article
+              key={dayKey}
+              className={managerStyles.calendarDay(
+                day.getMonth() !== calendarDate.getMonth(),
+                isSameDay(day, new Date()),
+              )}
+            >
+              <div className={managerStyles.calendarDayNumber}>
+                {day.getDate()}
+              </div>
+              <div className={managerStyles.calendarDayTasks}>
+                {dayTasks.slice(0, 2).map((task) => (
+                  <span key={task.id} className={managerStyles.calendarTaskPill()}>
+                    {task.title}
+                  </span>
+                ))}
+                {dayTasks.length > 2 ? (
+                  <span className={managerStyles.calendarTaskPill(true)}>
+                    +{dayTasks.length - 2} more
+                  </span>
+                ) : null}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 
@@ -469,14 +765,16 @@ function TaskBadge({
   tone,
 }: {
   children: string
-  tone: 'high' | 'review' | 'todo' | 'urgent'
+  tone: 'done' | 'high' | 'inprogress' | 'review' | 'todo' | 'urgent'
 }) {
   return (
     <span
       className={cx(
         'inline-flex min-h-[26px] items-center rounded-md px-2 text-[13px] leading-none font-bold',
         tone === 'todo' && 'bg-[#f2f4f7] text-[#475467]',
+        tone === 'inprogress' && 'bg-[#dbe9ff] text-[#315af2]',
         tone === 'review' && 'bg-[#fef7c3] text-[#b7791f]',
+        tone === 'done' && 'bg-[#dcfce7] text-[#15803d]',
         tone === 'high' && 'bg-[#ffedd5] text-[#c2410c]',
         tone === 'urgent' && 'bg-[#fee2e2] text-[#dc2626]',
       )}
@@ -484,6 +782,13 @@ function TaskBadge({
       {children}
     </span>
   )
+}
+
+function statusTone(status: string) {
+  if (status === 'IN_PROGRESS') return 'inprogress'
+  if (status === 'REVIEW') return 'review'
+  if (status === 'DONE') return 'done'
+  return 'todo'
 }
 
 function StatCard({
