@@ -14,7 +14,7 @@ namespace TaskManagementSystem.Api.Extensions
             }
             app.UseHttpsRedirection();
 
-            app.UseCors("frontend");
+            app.UseCors("CorsPolicy");
 
             app.UseAuthentication();
             app.UseAuthorization();
