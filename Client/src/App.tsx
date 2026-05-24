@@ -6,10 +6,8 @@ import EmployeePage from './pages/EmployeePage'
 import ManagerPage from './pages/ManagerPage'
 import { commonStyles, loginStyles } from './styles'
 import { getRole, logout, saveAuth } from './utils/auth'
-import EmployeePage from './pages/EmployeePage'
 
-
-  type Message = {
+type Message = {
     text: string
     type: 'error' | 'success'
   }
@@ -78,7 +76,7 @@ import EmployeePage from './pages/EmployeePage'
           return
         }
 
-        if (role === 'Employee') {
+        if (role === 'Employee' || role === 'User') {
           navigate('/employee')
           return
         }
@@ -120,15 +118,11 @@ import EmployeePage from './pages/EmployeePage'
       return <EmployeePage onLogout={handleLogout} />
     }
 
-    if (path === '/employee' && getRole() === 'Employee') {
-      return (
-        <EmployeePage
-          onLogout={() => {
-            logout()
-            navigate('/')
-          }}
-        />
-      )
+    if (
+      (path === '/home' || path === '/employee') &&
+      ['Employee', 'User'].includes(getRole() ?? '')
+    ) {
+      return <EmployeePage onLogout={handleLogout} />
     }
 
     return (

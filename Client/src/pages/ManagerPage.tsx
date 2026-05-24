@@ -2002,7 +2002,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       {isTeamModalOpen ? (
         <div className={managerStyles.modalBackdrop} role="presentation">
           <form
-            className={`${managerStyles.modal} ${managerStyles.teamModal} self-center`}
+            className={`${managerStyles.modal} self-center`}
             aria-label={editingTeam ? 'Edit Team' : 'Create Team'}
             onSubmit={handleSaveTeam}
           >

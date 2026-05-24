@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
-import { commonStyles, managerStyles } from '../styles'
+import { commonStyles, cx, managerStyles } from '../styles'
 import { getToken, getUsername } from '../utils/auth'
 
 type NotificationDto = {
@@ -8,133 +8,6 @@ type NotificationDto = {
   message: string
   createdAt: string
 }
-
-function EmployeePage({
-  onLogout,
-}: {
-  onLogout: () => void
-}) {
-  const [notifications, setNotifications] = useState<
-    NotificationDto[]
-  >([])
-
-  const [connectionStatus, setConnectionStatus] =
-    useState('Connecting...')
-
-  const username = getUsername()
-
-  useEffect(() => {
-    const token = getToken()
-
-const connection = new signalR.HubConnectionBuilder()
-  .withUrl(
-    `${import.meta.env.VITE_API_BASE_URL}/hubs/notifications`,
-    {
-      accessTokenFactory: () =>
-        localStorage.getItem("token") || "",
-    }
-  )
-  .withAutomaticReconnect()
-  .build();
-
-    connection.on(
-      'ReceiveNotification',
-      (notification: NotificationDto) => {
-        setNotifications((current) => [
-          notification,
-          ...current,
-        ])
-      },
-    )
-
-    connection
-      .start()
-      .then(() => {
-        setConnectionStatus('Connected')
-      })
-      .catch(() => {
-        setConnectionStatus('Connection failed')
-      })
-
-    return () => {
-      connection.stop()
-    }
-  }, [])
-
-  return (
-    <main className={managerStyles.shell(true)}>
-      <section className={managerStyles.main}>
-        <header className={managerStyles.topbar(true)}>
-          <div>
-            <h2 className="text-[24px] font-bold">
-              Employee Panel
-            </h2>
-
-            <p className="text-sm text-[#6b7280]">
-              Welcome {username}
-            </p>
-          </div>
-
-          <button
-            className={managerStyles.languageButton}
-            onClick={onLogout}
-          >
-            Logout
-          </button>
-        </header>
-
-        <div className={managerStyles.content}>
-          <div className="mb-6">
-            <div
-              className={`${commonStyles.message(
-                connectionStatus === 'Connected'
-                  ? 'success'
-                  : 'error',
-              )}`}
-            >
-              SignalR: {connectionStatus}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="text-[22px] font-bold">
-                Notifications
-              </h3>
-
-              <span className="rounded-full bg-[#315af2] px-3 py-1 text-sm font-bold text-white">
-                {notifications.length}
-              </span>
-            </div>
-
-            {notifications.length === 0 ? (
-              <div className="py-10 text-center text-[#6b7280]">
-                No notifications yet.
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4"
-                  >
-                    <div className="mb-2 text-[15px] font-semibold text-[#111827]">
-                      {notification.message}
-                    </div>
-
-                    <div className="text-sm text-[#6b7280]">
-                      {new Date(
-                        notification.createdAt,
-                      ).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-import { useMemo, useState } from 'react'
-import { cx, managerStyles } from '../styles'
-import { getUsername } from '../utils/auth'
 
 type EmployeeView =
   | 'dashboard'
@@ -372,250 +245,6 @@ function Icon({ name }: { name: IconName }) {
   )
 }
 
-function EmployeePage({ onLogout }: { onLogout: () => void }) {
-  const [activeView, setActiveView] = useState<EmployeeView>('dashboard')
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const employeeName = getUsername() || 'Alex Wilson'
-
-  const navItems = useMemo(
-    () =>
-      [
-        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-        { id: 'notifications', label: 'Notifications', icon: 'bell' },
-        { id: 'myTasks', label: 'My Tasks', icon: 'list' },
-        { id: 'teamTasks', label: 'Team Tasks', icon: 'list' },
-        { id: 'calendar', label: 'Calendar', icon: 'calendar' },
-      ] satisfies Array<{ id: EmployeeView; label: string; icon: IconName }>,
-    [],
-  )
-
-  const pageTitle =
-    navItems.find((item) => item.id === activeView)?.label ?? 'Dashboard'
-
-  return (
-    <main className={managerStyles.shell(isSidebarOpen)}>
-      <aside
-        className={managerStyles.sidebar(isSidebarOpen)}
-        aria-label="Employee navigation"
-        aria-hidden={!isSidebarOpen}
-      >
-        <div
-          className={`${managerStyles.sidebarInner(isSidebarOpen)} ${managerStyles.brand}`}
-        >
-          <h1>TaskMan</h1>
-          <p>{employeeName}</p>
-          <span>User</span>
-        </div>
-
-        <nav className={managerStyles.nav(isSidebarOpen)}>
-          {navItems.map((item) => (
-            <button
-              className={managerStyles.navButton(activeView === item.id)}
-              type="button"
-              key={item.id}
-              onClick={() => setActiveView(item.id)}
-            >
-              <Icon name={item.icon} />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className={managerStyles.sidebarFooter(isSidebarOpen)}>
-          <button className={managerStyles.footerButton} type="button">
-            <Icon name="settings" />
-            <span>Settings</span>
-          </button>
-          <button
-            className={`${managerStyles.footerButton} text-[#ef1d32]`}
-            type="button"
-            onClick={onLogout}
-          >
-            <Icon name="logout" />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      <section className={managerStyles.main} aria-labelledby="employee-page-title">
-        <header className={managerStyles.topbar(isSidebarOpen)}>
-          <button
-            className={managerStyles.iconButton}
-            type="button"
-            aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-            onClick={() => setIsSidebarOpen((current) => !current)}
-          >
-            <Icon name={isSidebarOpen ? 'x' : 'menu'} />
-          </button>
-
-          <button
-            className={managerStyles.languageButton}
-            type="button"
-          >
-            <Icon name="globe" />
-            <span>EN</span>
-          </button>
-        </header>
-
-        <div className="px-6 pt-7 pb-8 max-[820px]:px-5">
-          {activeView === 'dashboard' ? (
-            <>
-              <h2
-                className="mb-6 text-[25px] leading-none font-extrabold text-[#050505]"
-                id="employee-page-title"
-              >
-                Dashboard
-              </h2>
-
-              <section
-                className="mb-6 grid grid-cols-4 gap-[22px] max-[1250px]:grid-cols-2 max-[700px]:grid-cols-1"
-                aria-label="Task summary"
-              >
-                <StatCard
-                  icon="checkCircle"
-                  iconTone="blue"
-                  label="My Tasks"
-                  value="2"
-                />
-                <StatCard
-                  icon="clock"
-                  iconTone="yellow"
-                  label="In Progress"
-                  value="0"
-                />
-                <StatCard
-                  icon="checkCircle"
-                  iconTone="green"
-                  label="Completed"
-                  value="0"
-                />
-                <StatCard
-                  icon="warning"
-                  iconTone="red"
-                  label="Overdue"
-                  value="0"
-                />
-              </section>
-
-              <div className="grid grid-cols-2 gap-[22px] max-[1050px]:grid-cols-1">
-                <section className="min-h-[240px] rounded-xl border border-[#e5e7eb] bg-white px-6 pt-6 pb-6 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
-                  <h3 className="mb-5 text-[21px] leading-none font-extrabold text-[#050505]">
-                    Recent Tasks
-                  </h3>
-
-                  <div className="grid gap-3">
-                    {tasks.map((task) => (
-                      <article
-                        className="grid min-h-[68px] grid-cols-[1fr_auto] items-center gap-4 rounded-lg border border-[#d9dde5] bg-white px-4 py-3"
-                        key={task.id}
-                      >
-                        <div className="min-w-0">
-                          <h4 className="mb-2 truncate text-[16px] leading-none font-extrabold text-[#111827]">
-                            {task.title}
-                          </h4>
-                          <p className="text-[14px] leading-none font-bold text-[#667085]">
-                            {task.priority}
-                          </p>
-                        </div>
-                        <div className="grid justify-items-end gap-2">
-                          <span className="rounded-md bg-[#f2f4f7] px-2 py-1 text-[12px] leading-none font-extrabold text-[#475467]">
-                            {task.status}
-                          </span>
-                          {task.dueDate ? (
-                            <time className="text-[13px] leading-none font-bold text-[#667085]">
-                              {task.dueDate}
-                            </time>
-                          ) : null}
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="min-h-[240px] rounded-xl border border-[#e5e7eb] bg-white px-6 pt-6 pb-6 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
-                  <h3 className="mb-7 text-[21px] leading-none font-extrabold text-[#050505]">
-                    Time Summary
-                  </h3>
-
-                  <div className="grid gap-6">
-                    <SummaryRow label="Total Hours Logged" value="5h" />
-                    <SummaryRow label="Tasks Completed" value="0" />
-                    <SummaryRow label="Avg Time/Task" value="0h" />
-                  </div>
-                </section>
-              </div>
-            </>
-          ) : activeView === 'notifications' ? (
-            <NotificationsView />
-          ) : activeView === 'myTasks' ? (
-            <MyTasksView />
-          ) : activeView === 'teamTasks' ? (
-            <TeamTasksView />
-          ) : activeView === 'calendar' ? (
-            <CalendarView />
-          ) : (
-            <section className="rounded-xl border border-[#e5e7eb] bg-white p-8 shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
-              <h2
-                className="mb-4 text-[25px] leading-none font-extrabold text-[#050505]"
-                id="employee-page-title"
-              >
-                {pageTitle}
-              </h2>
-              <p className="text-[16px] font-bold text-[#667085]">
-                This screen will be matched from the next screenshot.
-              </p>
-            </section>
-          )}
-        </div>
-      </section>
-    </main>
-  )
-}
-
-export default EmployeePage
-function TeamTasksView() {
-  return (
-    <section aria-labelledby="employee-page-title">
-      <h2
-        className="mb-7 text-[25px] leading-none font-extrabold text-[#050505]"
-        id="employee-page-title"
-      >
-        Team Tasks
-      </h2>
-
-      <div className="mb-5 flex items-center gap-3 text-[#344054] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
-        <Icon name="team" />
-        <h3 className="text-[22px] leading-none font-extrabold text-[#050505]">
-          Frontend Development
-        </h3>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
-        <div className="grid min-h-[44px] grid-cols-[1.45fr_0.45fr_1fr_0.45fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085] max-[1000px]:min-w-[880px]">
-          <span>TITLE</span>
-          <span>STATUS</span>
-          <span>ASSIGN TO</span>
-          <span>DEADLINE</span>
-        </div>
-
-        {teamTasks.map((task) => (
-          <article
-            className="grid min-h-[62px] grid-cols-[1.45fr_0.45fr_1fr_0.45fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] max-[1000px]:min-w-[880px]"
-            key={task.id}
-          >
-            <span>{task.title}</span>
-            <span>
-              <TaskBadge tone={statusTone(task.status)}>{task.status}</TaskBadge>
-            </span>
-            <span className="text-[#475467]">{task.assignees}</span>
-            <span className="text-[#475467]">{task.deadline}</span>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1)
 }
@@ -664,6 +293,129 @@ function isSameDay(dateA: Date, dateB: Date) {
     dateA.getFullYear() === dateB.getFullYear() &&
     dateA.getMonth() === dateB.getMonth() &&
     dateA.getDate() === dateB.getDate()
+  )
+}
+
+function statusTone(status: string) {
+  if (status === 'IN_PROGRESS') return 'inprogress'
+  if (status === 'REVIEW') return 'review'
+  if (status === 'DONE') return 'done'
+  return 'todo'
+}
+
+function TaskBadge({
+  children,
+  tone,
+}: {
+  children: string
+  tone: 'done' | 'high' | 'inprogress' | 'review' | 'todo' | 'urgent'
+}) {
+  return (
+    <span
+      className={cx(
+        'inline-flex min-h-[26px] items-center rounded-md px-2 text-[13px] leading-none font-bold',
+        tone === 'todo' && 'bg-[#f2f4f7] text-[#475467]',
+        tone === 'inprogress' && 'bg-[#dbe9ff] text-[#315af2]',
+        tone === 'review' && 'bg-[#fef7c3] text-[#b7791f]',
+        tone === 'done' && 'bg-[#dcfce7] text-[#15803d]',
+        tone === 'high' && 'bg-[#ffedd5] text-[#c2410c]',
+        tone === 'urgent' && 'bg-[#fee2e2] text-[#dc2626]',
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+function StatCard({
+  icon,
+  iconTone,
+  label,
+  value,
+}: {
+  icon: IconName
+  iconTone: 'blue' | 'green' | 'red' | 'yellow'
+  label: string
+  value: string
+}) {
+  return (
+    <article className="flex min-h-[112px] items-center justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-6 py-5 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
+      <div>
+        <p className="mb-3 text-[15px] leading-none font-bold text-[#667085]">
+          {label}
+        </p>
+        <strong className="block text-[32px] leading-none font-medium text-black">
+          {value}
+        </strong>
+      </div>
+      <span
+        className={cx(
+          'grid h-[50px] w-[50px] shrink-0 place-items-center rounded-xl [&_svg]:h-[27px] [&_svg]:w-[27px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]',
+          iconTone === 'blue' && 'bg-[#dbe9ff] text-[#315af2]',
+          iconTone === 'green' && 'bg-[#dcfce7] text-[#2ea95a]',
+          iconTone === 'red' && 'bg-[#fee2e2] text-[#ef1d32]',
+          iconTone === 'yellow' && 'bg-[#fef7c3] text-[#111827]',
+        )}
+      >
+        <Icon name={icon} />
+      </span>
+    </article>
+  )
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-8">
+      <span className="text-[17px] leading-none font-medium text-[#667085]">
+        {label}
+      </span>
+      <strong className="text-[27px] leading-none font-medium text-black">
+        {value}
+      </strong>
+    </div>
+  )
+}
+
+function TeamTasksView() {
+  return (
+    <section aria-labelledby="employee-page-title">
+      <h2
+        className="mb-7 text-[25px] leading-none font-extrabold text-[#050505]"
+        id="employee-page-title"
+      >
+        Team Tasks
+      </h2>
+
+      <div className="mb-5 flex items-center gap-3 text-[#344054] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
+        <Icon name="team" />
+        <h3 className="text-[22px] leading-none font-extrabold text-[#050505]">
+          Frontend Development
+        </h3>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
+        <div className="grid min-h-[44px] grid-cols-[1.45fr_0.45fr_1fr_0.45fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085] max-[1000px]:min-w-[880px]">
+          <span>TITLE</span>
+          <span>STATUS</span>
+          <span>ASSIGN TO</span>
+          <span>DEADLINE</span>
+        </div>
+
+        {teamTasks.map((task) => (
+          <article
+            className="grid min-h-[62px] grid-cols-[1.45fr_0.45fr_1fr_0.45fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] max-[1000px]:min-w-[880px]"
+            key={task.id}
+          >
+            <span>{task.title}</span>
+            <span>
+              <TaskBadge tone={statusTone(task.status)}>{task.status}</TaskBadge>
+            </span>
+            <span className="text-[#475467]">{task.assignees}</span>
+            <span className="text-[#475467]">{task.deadline}</span>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -806,33 +558,58 @@ function CalendarView() {
   )
 }
 
-function NotificationsView() {
+function NotificationsView({
+  notifications,
+  connectionStatus,
+}: {
+  notifications: NotificationDto[]
+  connectionStatus: string
+}) {
   return (
     <section aria-labelledby="employee-page-title">
       <h2
-        className="mb-8 text-[25px] leading-none font-extrabold text-[#050505]"
+        className="mb-6 text-[25px] leading-none font-extrabold text-[#050505]"
         id="employee-page-title"
       >
         Notifications
       </h2>
 
-      <h3 className="mb-4 text-[15px] leading-none font-extrabold tracking-[0.02em] text-[#667085]">
-        READ (1)
-      </h3>
-
-      <article className="flex min-h-[76px] items-center gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 shadow-[0_2px_5px_rgba(17,24,39,0.04)]">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#f2f4f7] text-[#98a2b3] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
-          <Icon name="comment" />
-        </span>
-        <div>
-          <p className="mb-2 text-[15px] leading-none font-bold text-[#98a2b3]">
-            Alex Wilson mentioned you in a comment on "Fix navigation menu bug"
-          </p>
-          <time className="text-[13px] leading-none font-bold text-[#98a2b3]">
-            5/22/2026, 11:54:16 AM
-          </time>
+      <div className="mb-6">
+        <div
+          className={commonStyles.message(
+            connectionStatus === 'Connected' ? 'success' : 'error',
+          )}
+        >
+          SignalR: {connectionStatus}
         </div>
-      </article>
+      </div>
+
+      {notifications.length === 0 ? (
+        <div className="rounded-xl border border-[#e5e7eb] bg-white px-6 py-10 text-center text-[16px] font-medium text-[#6b7280] shadow-[0_2px_5px_rgba(17,24,39,0.04)]">
+          No notifications yet.
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {notifications.map((notification) => (
+            <article
+              key={notification.id}
+              className="flex min-h-[76px] items-center gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 shadow-[0_2px_5px_rgba(17,24,39,0.04)]"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#eff6ff] text-[#315af2] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
+                <Icon name="bell" />
+              </span>
+              <div>
+                <p className="mb-2 text-[15px] leading-snug font-bold text-[#111827]">
+                  {notification.message}
+                </p>
+                <time className="text-[13px] leading-none font-bold text-[#667085]">
+                  {new Date(notification.createdAt).toLocaleString()}
+                </time>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
@@ -895,83 +672,221 @@ function MyTasksView() {
   )
 }
 
-function TaskBadge({
-  children,
-  tone,
-}: {
-  children: string
-  tone: 'done' | 'high' | 'inprogress' | 'review' | 'todo' | 'urgent'
-}) {
-  return (
-    <span
-      className={cx(
-        'inline-flex min-h-[26px] items-center rounded-md px-2 text-[13px] leading-none font-bold',
-        tone === 'todo' && 'bg-[#f2f4f7] text-[#475467]',
-        tone === 'inprogress' && 'bg-[#dbe9ff] text-[#315af2]',
-        tone === 'review' && 'bg-[#fef7c3] text-[#b7791f]',
-        tone === 'done' && 'bg-[#dcfce7] text-[#15803d]',
-        tone === 'high' && 'bg-[#ffedd5] text-[#c2410c]',
-        tone === 'urgent' && 'bg-[#fee2e2] text-[#dc2626]',
-      )}
-    >
-      {children}
-    </span>
+function EmployeePage({ onLogout }: { onLogout: () => void }) {
+  const [activeView, setActiveView] = useState<EmployeeView>('dashboard')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [notifications, setNotifications] = useState<NotificationDto[]>([])
+  const [connectionStatus, setConnectionStatus] = useState('Connecting...')
+  const employeeName = getUsername() || 'Alex Wilson'
+
+  const navItems = useMemo(
+    () =>
+      [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+        { id: 'notifications', label: 'Notifications', icon: 'bell' },
+        { id: 'myTasks', label: 'My Tasks', icon: 'list' },
+        { id: 'teamTasks', label: 'Team Tasks', icon: 'list' },
+        { id: 'calendar', label: 'Calendar', icon: 'calendar' },
+      ] satisfies Array<{ id: EmployeeView; label: string; icon: IconName }>,
+    [],
   )
-}
 
-function statusTone(status: string) {
-  if (status === 'IN_PROGRESS') return 'inprogress'
-  if (status === 'REVIEW') return 'review'
-  if (status === 'DONE') return 'done'
-  return 'todo'
-}
+  useEffect(() => {
+    const configuredHubBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
+    const notificationsHubUrl = configuredHubBaseUrl
+      ? `${configuredHubBaseUrl}/hubs/notifications`
+      : '/hubs/notifications'
 
-function StatCard({
-  icon,
-  iconTone,
-  label,
-  value,
-}: {
-  icon: IconName
-  iconTone: 'blue' | 'green' | 'red' | 'yellow'
-  label: string
-  value: string
-}) {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(notificationsHubUrl, {
+        accessTokenFactory: () => getToken() || '',
+      })
+      .withAutomaticReconnect()
+      .build()
+
+    connection.on('ReceiveNotification', (notification: NotificationDto) => {
+      setNotifications((current) => [notification, ...current])
+    })
+
+    connection
+      .start()
+      .then(() => {
+        setConnectionStatus('Connected')
+      })
+      .catch(() => {
+        setConnectionStatus('Connection failed')
+      })
+
+    return () => {
+      void connection.stop()
+    }
+  }, [])
+
   return (
-    <article className="flex min-h-[112px] items-center justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-6 py-5 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
-      <div>
-        <p className="mb-3 text-[15px] leading-none font-bold text-[#667085]">
-          {label}
-        </p>
-        <strong className="block text-[32px] leading-none font-medium text-black">
-          {value}
-        </strong>
-      </div>
-      <span
-        className={cx(
-          'grid h-[50px] w-[50px] shrink-0 place-items-center rounded-xl [&_svg]:h-[27px] [&_svg]:w-[27px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]',
-          iconTone === 'blue' && 'bg-[#dbe9ff] text-[#315af2]',
-          iconTone === 'green' && 'bg-[#dcfce7] text-[#2ea95a]',
-          iconTone === 'red' && 'bg-[#fee2e2] text-[#ef1d32]',
-          iconTone === 'yellow' && 'bg-[#fef7c3] text-[#111827]',
-        )}
+    <main className={managerStyles.shell(isSidebarOpen)}>
+      <aside
+        className={managerStyles.sidebar(isSidebarOpen)}
+        aria-label="Employee navigation"
+        aria-hidden={!isSidebarOpen}
       >
-        <Icon name={icon} />
-      </span>
-    </article>
-  )
-}
+        <div
+          className={`${managerStyles.sidebarInner(isSidebarOpen)} ${managerStyles.brand}`}
+        >
+          <h1>TaskMan</h1>
+          <p>{employeeName}</p>
+          <span>User</span>
+        </div>
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-8">
-      <span className="text-[17px] leading-none font-medium text-[#667085]">
-        {label}
-      </span>
-      <strong className="text-[27px] leading-none font-medium text-black">
-        {value}
-      </strong>
-    </div>
+        <nav className={managerStyles.nav(isSidebarOpen)}>
+          {navItems.map((item) => (
+            <button
+              className={managerStyles.navButton(activeView === item.id)}
+              type="button"
+              key={item.id}
+              onClick={() => setActiveView(item.id)}
+            >
+              <Icon name={item.icon} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className={managerStyles.sidebarFooter(isSidebarOpen)}>
+          <button className={managerStyles.footerButton} type="button">
+            <Icon name="settings" />
+            <span>Settings</span>
+          </button>
+          <button
+            className={`${managerStyles.footerButton} text-[#ef1d32]`}
+            type="button"
+            onClick={onLogout}
+          >
+            <Icon name="logout" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <section className={managerStyles.main} aria-labelledby="employee-page-title">
+        <header className={managerStyles.topbar(isSidebarOpen)}>
+          <button
+            className={managerStyles.iconButton}
+            type="button"
+            aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setIsSidebarOpen((current) => !current)}
+          >
+            <Icon name={isSidebarOpen ? 'x' : 'menu'} />
+          </button>
+
+          <button className={managerStyles.languageButton} type="button">
+            <Icon name="globe" />
+            <span>EN</span>
+          </button>
+        </header>
+
+        <div className="px-6 pt-7 pb-8 max-[820px]:px-5">
+          {activeView === 'dashboard' ? (
+            <>
+              <h2
+                className="mb-6 text-[25px] leading-none font-extrabold text-[#050505]"
+                id="employee-page-title"
+              >
+                Dashboard
+              </h2>
+
+              <section
+                className="mb-6 grid grid-cols-4 gap-[22px] max-[1250px]:grid-cols-2 max-[700px]:grid-cols-1"
+                aria-label="Task summary"
+              >
+                <StatCard
+                  icon="checkCircle"
+                  iconTone="blue"
+                  label="My Tasks"
+                  value="2"
+                />
+                <StatCard
+                  icon="clock"
+                  iconTone="yellow"
+                  label="In Progress"
+                  value="0"
+                />
+                <StatCard
+                  icon="checkCircle"
+                  iconTone="green"
+                  label="Completed"
+                  value="0"
+                />
+                <StatCard
+                  icon="warning"
+                  iconTone="red"
+                  label="Overdue"
+                  value="0"
+                />
+              </section>
+
+              <div className="grid grid-cols-2 gap-[22px] max-[1050px]:grid-cols-1">
+                <section className="min-h-[240px] rounded-xl border border-[#e5e7eb] bg-white px-6 pt-6 pb-6 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
+                  <h3 className="mb-5 text-[21px] leading-none font-extrabold text-[#050505]">
+                    Recent Tasks
+                  </h3>
+
+                  <div className="grid gap-3">
+                    {tasks.map((task) => (
+                      <article
+                        className="grid min-h-[68px] grid-cols-[1fr_auto] items-center gap-4 rounded-lg border border-[#d9dde5] bg-white px-4 py-3"
+                        key={task.id}
+                      >
+                        <div className="min-w-0">
+                          <h4 className="mb-2 truncate text-[16px] leading-none font-extrabold text-[#111827]">
+                            {task.title}
+                          </h4>
+                          <p className="text-[14px] leading-none font-bold text-[#667085]">
+                            {task.priority}
+                          </p>
+                        </div>
+                        <div className="grid justify-items-end gap-2">
+                          <span className="rounded-md bg-[#f2f4f7] px-2 py-1 text-[12px] leading-none font-extrabold text-[#475467]">
+                            {task.status}
+                          </span>
+                          {task.dueDate ? (
+                            <time className="text-[13px] leading-none font-bold text-[#667085]">
+                              {task.dueDate}
+                            </time>
+                          ) : null}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="min-h-[240px] rounded-xl border border-[#e5e7eb] bg-white px-6 pt-6 pb-6 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
+                  <h3 className="mb-7 text-[21px] leading-none font-extrabold text-[#050505]">
+                    Time Summary
+                  </h3>
+
+                  <div className="grid gap-6">
+                    <SummaryRow label="Total Hours Logged" value="5h" />
+                    <SummaryRow label="Tasks Completed" value="0" />
+                    <SummaryRow label="Avg Time/Task" value="0h" />
+                  </div>
+                </section>
+              </div>
+            </>
+          ) : activeView === 'notifications' ? (
+            <NotificationsView
+              notifications={notifications}
+              connectionStatus={connectionStatus}
+            />
+          ) : activeView === 'myTasks' ? (
+            <MyTasksView />
+          ) : activeView === 'teamTasks' ? (
+            <TeamTasksView />
+          ) : activeView === 'calendar' ? (
+            <CalendarView />
+          ) : null}
+        </div>
+      </section>
+    </main>
   )
 }
 
