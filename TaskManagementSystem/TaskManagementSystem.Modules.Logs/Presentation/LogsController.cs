@@ -28,11 +28,6 @@ public class LogsController : ControllerBase
             .Include(x => x.User)
             .ToListAsync();
 
-        if (logs.Count == 0)
-        {
-            return BadRequest("empty logs");
-        }
-
         return Ok(logs);
     }
 
