@@ -10,6 +10,4 @@ namespace TaskManagementSystem.Modules.Logs.Application.Interfaces;
 public interface ICRUDLogService
 {
     Task<(bool IsDeleted, string? error)> DeleteLog(int logId);
-
-    Task<(Log? log, string? error)> CreateLog(CreateLogDto request);
 }

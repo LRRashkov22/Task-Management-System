@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
+using TaskManagementSystem.Data.Domain.Interfaces;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Logs.Application.DTOs;
 using TaskManagementSystem.Modules.Logs.Application.Interfaces;
@@ -37,31 +38,4 @@ public class CRUDLogService : ICRUDLogService
         return (true, null);
     }
 
-    public async Task<(Log? log, string? error)> CreateLog(CreateLogDto request)
-    {
-        var user = await _context.Users.AsNoTracking().AnyAsync(x => x.Id == request.UserId);
-
-        if (!user)
-        {
-            return (null, "no user found");
-        }
-
-        if (request.Action == String.Empty)
-        {
-            return (null, "missing action");
-        }
-
-        var log = new Log
-        {
-            Module = request.Module,
-            ActionType = request.ActionType,
-            Action = request.Action,
-            UserId = request.UserId,
-            Data = request.Data
-        };
-
-        _context.Logs.Add(log);
-        await _context.SaveChangesAsync();
-        return (log, null);
-    }
 }
