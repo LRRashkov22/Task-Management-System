@@ -18,5 +18,6 @@ namespace TaskManagementSystem.Modules.Tasks.Application.Interfaces
         Task<(bool status, string? error)> AdminRecoverTask(RecoverOrArchiveDto request);
         Task<(bool? status, string? error)> TransferTaskAsync(TransferTaskDto request, int userid, bool isAdmin);
         Task<(bool status, string? error)> DeleteArchivedTaskAsync(int taskId);
+        Task<(bool?, string?)> EditTaskAsync(int userid, int taskid, EditTaskDto request);
     }
 }
