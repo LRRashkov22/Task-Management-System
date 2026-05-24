@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
+using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Notification.Application.Interfaces;
 using TaskManagementSystem.Modules.Tasks.Application.DTOs;
@@ -35,7 +37,7 @@ public class ManageTasks : IManageTasks
                 Deadline = t.Deadline,
                 AssignedEmployeesCount = t.Assignments.Count,
                 WorkHours = t.WorkSessions.Sum(w => w.Hours)
-            }).ToListAsync();  
+            }).ToListAsync();
     }
 
     //get detailed info for one (the clicked one) task
@@ -66,7 +68,7 @@ public class ManageTasks : IManageTasks
                     {
                         Id = c.Id,
                         Content = c.Content,
-                         Username = c.User != null ? c.User.Username : "Deleted User",
+                        Username = c.User != null ? c.User.Username : "Deleted User",
                         CreatedAt = c.CreatedAt
                     }).ToList(),
                 WorkSessions = t.WorkSessions
@@ -108,13 +110,14 @@ public class ManageTasks : IManageTasks
             Id = t.Id,
             Title = t.Title,
             TeamName = t.Team.Name,
-            ManagerName = t.CreatedBy!.Username, 
+            ManagerName = t.CreatedBy!.Username,
             AssignedEmployeesCount = t.Assignments.Count
         }).ToList();
     }
 
     //Create a task
-    public async Task<(CreateTaskDto?, string?)> CreateTaskAsync(CreateTaskDto request, int userid) {
+    public async Task<(CreateTaskDto?, string?)> CreateTaskAsync(CreateTaskDto request, int userid)
+    {
 
         if (string.IsNullOrWhiteSpace(request.Title) ||
             string.IsNullOrWhiteSpace(request.Description) ||
@@ -155,7 +158,7 @@ public class ManageTasks : IManageTasks
         };
         foreach (var memberId in request.Assignments)
         {
-            task.Assignments.Add(new TaskAssignment 
+            task.Assignments.Add(new TaskAssignment
             {
                 UserId = memberId
             });
@@ -172,7 +175,7 @@ public class ManageTasks : IManageTasks
         await taskMotificationService.NotifyTaskAssignedAsync(task, request.Assignments, managerName);
         return (request, null);
     }
-    public async Task<(bool isDeleted, string? error)> ArchiveTask(RecoverOrArchiveDto request,int userid)
+    public async Task<(bool isDeleted, string? error)> ArchiveTask(RecoverOrArchiveDto request, int userid)
     {
         var task = await context.TaskItems
             .Include(t => t.Assignments)
@@ -196,7 +199,7 @@ public class ManageTasks : IManageTasks
         return (true, null);
     }
 
-    public async Task<(bool? status, string? error)> TransferTaskAsync(TransferTaskDto request,int userid, bool isAdmin)
+    public async Task<(bool? status, string? error)> TransferTaskAsync(TransferTaskDto request, int userid, bool isAdmin)
     {
         using var transaction =
             await context.Database.BeginTransactionAsync();
@@ -208,7 +211,7 @@ public class ManageTasks : IManageTasks
                     .ThenInclude(team => team.Manager)
                 .Include(t => t.History)
                 .FirstOrDefaultAsync(t => t.Id == request.TaskId);
-            
+
             if (task == null)
                 return (false, "Task not found");
 
@@ -265,7 +268,7 @@ public class ManageTasks : IManageTasks
             });
 
             await context.SaveChangesAsync();
-            
+
             await transaction.CommitAsync();
 
             //SignalR
@@ -273,14 +276,16 @@ public class ManageTasks : IManageTasks
 
             return (true, null);
 
-        } catch (Exception) {
+        }
+        catch (Exception)
+        {
 
             await transaction.RollbackAsync();
 
             return (false, "Transfer failed");
         }
     }
-    
+
 
     public async Task<(bool status, string? error)> AdminRecoverTask(RecoverOrArchiveDto request)
     {
@@ -289,7 +294,7 @@ public class ManageTasks : IManageTasks
             .Where(t => t.IsArchived).FirstAsync(t => t.Id == request.Id);
         if (task.Team.IsArchived == true) return (false, "Cannot recover task due it's team is archived");
         task.IsArchived = false;
-        
+
         await context.SaveChangesAsync();
         //SignalR 
         await taskMotificationService.NotifyTaskRecoverAsync(task);
@@ -312,7 +317,7 @@ public class ManageTasks : IManageTasks
 
         return (true, null);
     }
-    public async Task<(bool?, string?)> ChangeStausOnTaskAsync(int userid, int taskid,ChangeStatusOnTaskDto request)
+    public async Task<(bool?, string?)> ChangeStausOnTaskAsync(int userid, int taskid, ChangeStatusOnTaskDto request)
     {
         var task = await context.TaskItems
             .Include(t => t.Team)
@@ -321,7 +326,7 @@ public class ManageTasks : IManageTasks
             && !t.IsArchived);
 
         if (task == null) return (null, "No task was found");
-        
+
         task.Status = request.status;
 
         await context.SaveChangesAsync();
@@ -342,7 +347,7 @@ public class ManageTasks : IManageTasks
 
         if (!string.IsNullOrWhiteSpace(request.Name)) task.Title = request.Name;
 
-        if (!string.IsNullOrWhiteSpace(request.Description))  task.Description = request.Description;
+        if (!string.IsNullOrWhiteSpace(request.Description)) task.Description = request.Description;
 
         if (request.Deadline.HasValue) task.Deadline = request.Deadline.Value;
 
@@ -399,6 +404,22 @@ public class ManageTasks : IManageTasks
             .FirstOrDefaultAsync();
         if (task == null) return (false, "No task was found");
         task.Status = Data.Domain.Enums.Status.Done;
+        await context.SaveChangesAsync();
+        return (true, null);
+    }
+
+
+    public async Task<(bool?, string?)> RequestCompletedTaskAsync(int userid, int taskid)
+    {
+        var task = await context.TaskItems
+            .Include(t => t.Assignments)
+            .FirstOrDefaultAsync(t =>
+                t.Id == taskid &&
+                !t.IsArchived &&
+                t.Assignments.Any(a => a.UserId == userid) &&
+                t.Status == Status.InProgress);
+        if (task == null) return (false, "No task was found");
+        task.Status = Data.Domain.Enums.Status.Review;
         await context.SaveChangesAsync();
         return (true, null);
     }
