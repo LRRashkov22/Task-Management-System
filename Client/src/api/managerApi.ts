@@ -77,6 +77,14 @@ export type ManagerTeamDropdownDto = {
   name: string
 }
 
+export type ManagerCalendarTaskDto = {
+  taskName: string
+  teamName: string
+  status: string | number
+  deadline: string
+  startDate: string
+}
+
 export type TransferTeamPreviewDto = {
   teamId: number
   teamName: string
@@ -148,6 +156,12 @@ export function getManagerTeamDetailsApi(id: number) {
 
 export function getManagerEmployeesApi() {
   return apiJson<ManagerMemberDto[]>('/Statistics/Manager/get-manager-employees')
+}
+
+export function getManagerCalendarInformationApi() {
+  return apiJson<ManagerCalendarTaskDto[]>(
+    '/Statistics/Manager/get-calendar-information',
+  )
 }
 
 export function getManagersForTransferApi() {
