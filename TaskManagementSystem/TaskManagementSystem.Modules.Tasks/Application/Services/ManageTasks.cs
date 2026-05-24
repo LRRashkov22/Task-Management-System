@@ -388,4 +388,18 @@ public class ManageTasks : IManageTasks
         return (true, null);
     }
 
+    public async Task<(bool?, string?)> MarkAsDone(int userid, int taskid)
+    {
+        var task = await context.TaskItems
+            .Where(t => t.Id == taskid
+            && !t.IsArchived
+            && t.Team.ManagerId == userid
+            && t.Status != Data.Domain.Enums.Status.Done
+            && t.Status == Data.Domain.Enums.Status.Review)
+            .FirstOrDefaultAsync();
+        if (task == null) return (false, "No task was found");
+        task.Status = Data.Domain.Enums.Status.Done;
+        await context.SaveChangesAsync();
+        return (true, null);
+    }
 }
