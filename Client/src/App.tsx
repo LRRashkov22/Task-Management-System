@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { loginApi, logoutApi } from './api/authApi'
 import AdminPage from './pages/AdminPage'
+import EmployeePage from './pages/EmployeePage'
 import ManagerPage from './pages/ManagerPage'
 import { commonStyles, loginStyles } from './styles'
 import { getRole, logout, saveAuth } from './utils/auth'
@@ -112,14 +113,11 @@ import EmployeePage from './pages/EmployeePage'
     }
 
     if (path === '/manager' && getRole() === 'Manager') {
-      return (
-        <ManagerPage
-          onLogout={() => {
-            logout()
-            navigate('/')
-          }}
-        />
-      )
+      return <ManagerPage onLogout={handleLogout} />
+    }
+
+    if ((path === '/home' || path === '/employee') && ['User', 'Employee'].includes(getRole() ?? '')) {
+      return <EmployeePage onLogout={handleLogout} />
     }
 
     if (path === '/employee' && getRole() === 'Employee') {
