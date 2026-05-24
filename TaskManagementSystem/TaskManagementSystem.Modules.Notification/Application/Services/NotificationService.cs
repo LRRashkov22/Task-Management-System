@@ -51,6 +51,32 @@ public class NotificationService : INotificationService
                 });
     }
 
+    //Mark as read notification
+    public async Task<(bool? , string?)> MarkAsReadAsync(int userid, int notificationId)
+    {
+        var notification = await context.Notifications
+             .FirstAsync(n => n.UserId == userid
+             && !n.IsRead
+             && n.Id == notificationId);
+        if (notification == null) return (false, "Error marking as read");
+        notification.IsRead = true;
+        await context.SaveChangesAsync();
+        return (true, null);
+    }
 
+
+    //Mark all as read
+    public async Task<(bool?, string?)> MarkAsReadAllAsync(int userid)
+    {
+        var notification = await context.Notifications
+             .Where(n => n.UserId == userid
+             && !n.IsRead)
+             .ToListAsync();
+        if (!notification.Any()) return (false, "Error marking as read");
+
+        notification.ForEach(t => t.IsRead = true);
+        await context.SaveChangesAsync();
+        return (true, null);
+    }
 
 }
