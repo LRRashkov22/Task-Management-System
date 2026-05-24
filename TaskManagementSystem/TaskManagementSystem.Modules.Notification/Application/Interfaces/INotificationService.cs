@@ -10,6 +10,9 @@ namespace TaskManagementSystem.Modules.Notification.Application.Interfaces
     {
         Task SendNotificationAsync(int userId, string message);
         Task<int> GetAdminIdAsync();
-       
+        Task<(bool?, string?)> MarkAsReadAsync(int userid, int notificationId);
+        Task<(bool?, string?)> MarkAsReadAllAsync(int userid);
+
+
     }
 }
