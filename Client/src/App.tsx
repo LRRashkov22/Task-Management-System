@@ -6,6 +6,8 @@ import EmployeePage from './pages/EmployeePage'
 import ManagerPage from './pages/ManagerPage'
 import { commonStyles, loginStyles } from './styles'
 import { getRole, logout, saveAuth } from './utils/auth'
+import EmployeePage from './pages/EmployeePage'
+
 
   type Message = {
     text: string
@@ -76,8 +78,8 @@ import { getRole, logout, saveAuth } from './utils/auth'
           return
         }
 
-        if (role === 'User' || role === 'Employee') {
-          navigate('/home')
+        if (role === 'Employee') {
+          navigate('/employee')
           return
         }
 
@@ -116,6 +118,17 @@ import { getRole, logout, saveAuth } from './utils/auth'
 
     if ((path === '/home' || path === '/employee') && ['User', 'Employee'].includes(getRole() ?? '')) {
       return <EmployeePage onLogout={handleLogout} />
+    }
+
+    if (path === '/employee' && getRole() === 'Employee') {
+      return (
+        <EmployeePage
+          onLogout={() => {
+            logout()
+            navigate('/')
+          }}
+        />
+      )
     }
 
     return (

@@ -2,6 +2,7 @@
   <Project Path="TaskManagementSystem.Api/TaskManagementSystem.Api.csproj" Id="4e95e928-c950-4474-9998-255413549696" />
   <Project Path="TaskManagementSystem.Data/TaskManagementSystem.Data.csproj" />
   <Project Path="TaskManagementSystem.Modules.Identity/TaskManagementSystem.Modules.Identity.csproj" />
+  <Project Path="TaskManagementSystem.Modules.Notification/TaskManagementSystem.Modules.Notification.csproj" Id="551aa53b-9c8e-4ca5-9ede-27e16f59aef7" />
   <Project Path="TaskManagementSystem.Modules.Statistics/TaskManagementSystem.Modules.Statistics.csproj" Id="e5f0ef2b-2681-4db6-9fc9-3046ce805d03" />
   <Project Path="TaskManagementSystem.Modules.Tasks/TaskManagementSystem.Modules.Tasks.csproj" Id="3bb4ca89-775a-4ae2-bed5-47b743c911cb" />
   <Project Path="TaskManagementSystem.Modules.Teams/TaskManagementSystem.Modules.Teams.csproj" />
