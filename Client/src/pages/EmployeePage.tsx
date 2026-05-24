@@ -15,6 +15,7 @@ type IconName =
   | 'checkCircle'
   | 'chevron'
   | 'clock'
+  | 'comment'
   | 'dashboard'
   | 'globe'
   | 'list'
@@ -84,6 +85,14 @@ function Icon({ name }: { name: IconName }) {
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="9" />
         <path d="M12 7v5l3 2" />
+      </svg>
+    )
+  }
+
+  if (name === 'comment') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" />
       </svg>
     )
   }
@@ -255,18 +264,18 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
           </button>
         </header>
 
-        <div className="px-[30px] pt-[40px] pb-10 max-[820px]:px-5">
+        <div className="px-6 pt-7 pb-8 max-[820px]:px-5">
           {activeView === 'dashboard' ? (
             <>
               <h2
-                className="mb-[38px] text-[31px] leading-none font-extrabold text-[#050505]"
+                className="mb-6 text-[25px] leading-none font-extrabold text-[#050505]"
                 id="employee-page-title"
               >
                 Dashboard
               </h2>
 
               <section
-                className="mb-[31px] grid grid-cols-4 gap-[30px] max-[1250px]:grid-cols-2 max-[700px]:grid-cols-1"
+                className="mb-6 grid grid-cols-4 gap-[22px] max-[1250px]:grid-cols-2 max-[700px]:grid-cols-1"
                 aria-label="Task summary"
               >
                 <StatCard
@@ -295,32 +304,32 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
                 />
               </section>
 
-              <div className="grid grid-cols-2 gap-[30px] max-[1050px]:grid-cols-1">
-                <section className="min-h-[310px] rounded-xl border border-[#e5e7eb] bg-white px-[32px] pt-[36px] pb-[30px] shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
-                  <h3 className="mb-[30px] text-[26px] leading-none font-extrabold text-[#050505]">
+              <div className="grid grid-cols-2 gap-[22px] max-[1050px]:grid-cols-1">
+                <section className="min-h-[240px] rounded-xl border border-[#e5e7eb] bg-white px-6 pt-6 pb-6 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
+                  <h3 className="mb-5 text-[21px] leading-none font-extrabold text-[#050505]">
                     Recent Tasks
                   </h3>
 
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     {tasks.map((task) => (
                       <article
-                        className="grid min-h-[86px] grid-cols-[1fr_auto] items-center gap-5 rounded-xl border border-[#d9dde5] bg-white px-[17px] py-[15px]"
+                        className="grid min-h-[68px] grid-cols-[1fr_auto] items-center gap-4 rounded-lg border border-[#d9dde5] bg-white px-4 py-3"
                         key={task.id}
                       >
                         <div className="min-w-0">
-                          <h4 className="mb-3 truncate text-[19px] leading-none font-extrabold text-[#111827]">
+                          <h4 className="mb-2 truncate text-[16px] leading-none font-extrabold text-[#111827]">
                             {task.title}
                           </h4>
-                          <p className="text-[17px] leading-none font-bold text-[#667085]">
+                          <p className="text-[14px] leading-none font-bold text-[#667085]">
                             {task.priority}
                           </p>
                         </div>
                         <div className="grid justify-items-end gap-2">
-                          <span className="rounded-md bg-[#f2f4f7] px-[10px] py-[5px] text-[15px] leading-none font-extrabold text-[#475467]">
+                          <span className="rounded-md bg-[#f2f4f7] px-2 py-1 text-[12px] leading-none font-extrabold text-[#475467]">
                             {task.status}
                           </span>
                           {task.dueDate ? (
-                            <time className="text-[16px] leading-none font-bold text-[#667085]">
+                            <time className="text-[13px] leading-none font-bold text-[#667085]">
                               {task.dueDate}
                             </time>
                           ) : null}
@@ -330,12 +339,12 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
                   </div>
                 </section>
 
-                <section className="min-h-[310px] rounded-xl border border-[#e5e7eb] bg-white px-[32px] pt-[36px] pb-[30px] shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
-                  <h3 className="mb-[40px] text-[26px] leading-none font-extrabold text-[#050505]">
+                <section className="min-h-[240px] rounded-xl border border-[#e5e7eb] bg-white px-6 pt-6 pb-6 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
+                  <h3 className="mb-7 text-[21px] leading-none font-extrabold text-[#050505]">
                     Time Summary
                   </h3>
 
-                  <div className="grid gap-[32px]">
+                  <div className="grid gap-6">
                     <SummaryRow label="Total Hours Logged" value="5h" />
                     <SummaryRow label="Tasks Completed" value="0" />
                     <SummaryRow label="Avg Time/Task" value="0h" />
@@ -343,10 +352,14 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
                 </section>
               </div>
             </>
+          ) : activeView === 'notifications' ? (
+            <NotificationsView />
+          ) : activeView === 'myTasks' ? (
+            <MyTasksView />
           ) : (
             <section className="rounded-xl border border-[#e5e7eb] bg-white p-8 shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
               <h2
-                className="mb-4 text-[31px] leading-none font-extrabold text-[#050505]"
+                className="mb-4 text-[25px] leading-none font-extrabold text-[#050505]"
                 id="employee-page-title"
               >
                 {pageTitle}
@@ -362,6 +375,117 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
   )
 }
 
+function NotificationsView() {
+  return (
+    <section aria-labelledby="employee-page-title">
+      <h2
+        className="mb-8 text-[25px] leading-none font-extrabold text-[#050505]"
+        id="employee-page-title"
+      >
+        Notifications
+      </h2>
+
+      <h3 className="mb-4 text-[15px] leading-none font-extrabold tracking-[0.02em] text-[#667085]">
+        READ (1)
+      </h3>
+
+      <article className="flex min-h-[76px] items-center gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 shadow-[0_2px_5px_rgba(17,24,39,0.04)]">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#f2f4f7] text-[#98a2b3] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
+          <Icon name="comment" />
+        </span>
+        <div>
+          <p className="mb-2 text-[15px] leading-none font-bold text-[#98a2b3]">
+            Alex Wilson mentioned you in a comment on "Fix navigation menu bug"
+          </p>
+          <time className="text-[13px] leading-none font-bold text-[#98a2b3]">
+            5/22/2026, 11:54:16 AM
+          </time>
+        </div>
+      </article>
+    </section>
+  )
+}
+
+function MyTasksView() {
+  return (
+    <section aria-labelledby="employee-page-title">
+      <div className="mb-7 flex items-center justify-between gap-6">
+        <h2
+          className="text-[25px] leading-none font-extrabold text-[#050505]"
+          id="employee-page-title"
+        >
+          My Tasks
+        </h2>
+
+        <select
+          className="h-8 w-[130px] rounded-md border border-[#d0d5dd] bg-white px-3 text-[15px] leading-none font-medium text-[#111827]"
+          defaultValue="all"
+          aria-label="Task status filter"
+        >
+          <option value="all">All</option>
+          <option value="todo">TODO</option>
+          <option value="review">REVIEW</option>
+        </select>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
+        <div className="grid min-h-[44px] grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.3fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085] max-[1000px]:min-w-[820px]">
+          <span>TITLE</span>
+          <span>STATUS</span>
+          <span>PRIORITY</span>
+          <span>DEADLINE</span>
+          <span>TIME</span>
+        </div>
+
+        {tasks.map((task) => (
+          <article
+            className="grid min-h-[62px] grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.3fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] max-[1000px]:min-w-[820px]"
+            key={task.id}
+          >
+            <span>{task.title}</span>
+            <span>
+              <TaskBadge tone={task.status === 'TODO' ? 'todo' : 'review'}>
+                {task.status}
+              </TaskBadge>
+            </span>
+            <span>
+              <TaskBadge tone={task.priority === 'High' ? 'high' : 'urgent'}>
+                {task.priority.toUpperCase()}
+              </TaskBadge>
+            </span>
+            <span className="text-[#475467]">{task.dueDate || '-'}</span>
+            <span className="text-[#475467]">
+              {task.id === 1 ? '11h' : '2h'}
+            </span>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function TaskBadge({
+  children,
+  tone,
+}: {
+  children: string
+  tone: 'high' | 'review' | 'todo' | 'urgent'
+}) {
+  return (
+    <span
+      className={cx(
+        'inline-flex min-h-[26px] items-center rounded-md px-2 text-[13px] leading-none font-bold',
+        tone === 'todo' && 'bg-[#f2f4f7] text-[#475467]',
+        tone === 'review' && 'bg-[#fef7c3] text-[#b7791f]',
+        tone === 'high' && 'bg-[#ffedd5] text-[#c2410c]',
+        tone === 'urgent' && 'bg-[#fee2e2] text-[#dc2626]',
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
 function StatCard({
   icon,
   iconTone,
@@ -374,18 +498,18 @@ function StatCard({
   value: string
 }) {
   return (
-    <article className="flex min-h-[150px] items-center justify-between gap-5 rounded-xl border border-[#e5e7eb] bg-white px-[32px] py-[28px] shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
+    <article className="flex min-h-[112px] items-center justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-6 py-5 shadow-[0_3px_7px_rgba(17,24,39,0.1)]">
       <div>
-        <p className="mb-[18px] text-[19px] leading-none font-bold text-[#667085]">
+        <p className="mb-3 text-[15px] leading-none font-bold text-[#667085]">
           {label}
         </p>
-        <strong className="block text-[42px] leading-none font-medium text-black">
+        <strong className="block text-[32px] leading-none font-medium text-black">
           {value}
         </strong>
       </div>
       <span
         className={cx(
-          'grid h-16 w-16 shrink-0 place-items-center rounded-xl [&_svg]:h-[34px] [&_svg]:w-[34px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]',
+          'grid h-[50px] w-[50px] shrink-0 place-items-center rounded-xl [&_svg]:h-[27px] [&_svg]:w-[27px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]',
           iconTone === 'blue' && 'bg-[#dbe9ff] text-[#315af2]',
           iconTone === 'green' && 'bg-[#dcfce7] text-[#2ea95a]',
           iconTone === 'red' && 'bg-[#fee2e2] text-[#ef1d32]',
@@ -401,10 +525,10 @@ function StatCard({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-8">
-      <span className="text-[21px] leading-none font-medium text-[#667085]">
+      <span className="text-[17px] leading-none font-medium text-[#667085]">
         {label}
       </span>
-      <strong className="text-[34px] leading-none font-medium text-black">
+      <strong className="text-[27px] leading-none font-medium text-black">
         {value}
       </strong>
     </div>
