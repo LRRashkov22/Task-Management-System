@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TaskManagementSystem.Data\TaskManagementSystem.Data.csproj" />
+    <ProjectReference Include="..\TaskManagementSystem.Modules.Notification\TaskManagementSystem.Modules.Notification.csproj" />
   </ItemGroup>
 
 </Project>

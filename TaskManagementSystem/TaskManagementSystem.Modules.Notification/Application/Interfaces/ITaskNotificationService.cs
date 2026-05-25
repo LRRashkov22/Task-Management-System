@@ -12,5 +12,7 @@ namespace TaskManagementSystem.Modules.Notification.Application.Interfaces
         Task NotifyTaskArchivedAsync(TaskItem task, int userid);
         Task NotifyTaskTransferedAsync(TaskItem task, IEnumerable<int> oldAssignedUsers);
         Task NotifyTaskEditAsync(TaskItem task, IEnumerable<int> removedUsers, IEnumerable<int> addedUsers);
+        Task NotifyCommentAddedAsync(TaskItem task, IEnumerable<int> asssignedUsers, string AuthorName);
+        Task NotifyCommentMentionAsync(TaskItem task, string TaggerName, IEnumerable<int> MentionedUsers);
     }
 }

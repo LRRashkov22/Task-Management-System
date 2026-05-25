@@ -36,9 +36,7 @@ public class TaskNotificationService : ITaskNotificationService
             $"Task: {task.Title} was created by {managerName}");
     }
 
-    public async Task NotifyTaskArchivedAsync(
-        TaskItem task,
-        int userid)
+    public async Task NotifyTaskArchivedAsync( TaskItem task, int userid)
     {
         foreach (var memberId in task.Assignments)
         {
@@ -59,9 +57,7 @@ public class TaskNotificationService : ITaskNotificationService
             $"Task: {task.Title} was archived");
     }
 
-    public async Task NotifyTaskTransferedAsync(
-        TaskItem task,
-        IEnumerable<int> oldAssignedUsers)
+    public async Task NotifyTaskTransferedAsync( TaskItem task, IEnumerable<int> oldAssignedUsers)
     {
         foreach (var userId in oldAssignedUsers)
         {
@@ -78,10 +74,7 @@ public class TaskNotificationService : ITaskNotificationService
             $"Your task: {task.Title} was recovered");
     }
 
-    public async Task NotifyTaskEditAsync(
-        TaskItem task,
-        IEnumerable<int> removedUsers,
-        IEnumerable<int> addedUsers)
+    public async Task NotifyTaskEditAsync(TaskItem task, IEnumerable<int> removedUsers, IEnumerable<int> addedUsers)
     {
         foreach (var userId in removedUsers)
         {
@@ -95,6 +88,24 @@ public class TaskNotificationService : ITaskNotificationService
             await notificationService.SendNotificationAsync(
                 userId,
                 $"You were assigned to task: {task.Title}");
+        }
+    }
+
+    public async Task NotifyCommentAddedAsync(TaskItem task, IEnumerable<int> asssignedUsers, string AuthorName)
+    {
+        foreach (var userId in asssignedUsers)
+        {
+            await notificationService.SendNotificationAsync(userId,
+                $"New comment by {AuthorName} in task: {task.Title}");
+        }
+
+    }
+    public async Task NotifyCommentMentionAsync(TaskItem task, string TaggerName, IEnumerable<int> MentionedUsers) {
+
+        foreach (var userId in MentionedUsers)
+        {
+            await notificationService.SendNotificationAsync(userId, 
+                $"You were mentioned by {TaggerName} in task: {task.Title}");
         }
     }
 }

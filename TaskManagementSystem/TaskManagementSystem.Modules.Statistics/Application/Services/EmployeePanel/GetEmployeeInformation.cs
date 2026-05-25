@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.AdminDto;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.EmployeeDto;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
-using TaskManagementSystem.Modules.Statistics.Application.DTOs;
-using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
+using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 
 namespace TaskManagementSystem.Modules.Statistics.Application.Services.EmployeePanel;
 
@@ -159,5 +159,28 @@ public class GetEmployeeInformation : IGetEmployeeInformation
                     .ToList()
             })
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<GetCommentMentionedNamesDto>> GetSearchEmployees(string? search, int taskId)
+    {
+        var query = context.Users
+            .AsNoTracking()
+            .Where(u => u.Role == Role.Employee &&
+            u.TaskAssignments.Any(u => u.TaskId == taskId)
+            );
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(u => u.Username.Contains(search));
+        }
+
+        return await query
+            .OrderBy(u => u.Username)
+            .Select(u => new GetCommentMentionedNamesDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+            })
+            .ToListAsync();
     }
 }

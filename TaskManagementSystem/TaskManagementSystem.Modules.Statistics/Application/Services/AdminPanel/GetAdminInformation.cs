@@ -137,9 +137,7 @@ public class GetAdminInformation : IGetAdminInformation {
             {
                 Id = u.Id,
                 Username = u.Username,
-                ManagerName = u.Manager != null
-                    ? u.Manager.Username
-                    : string.Empty
+                ManagerName = u.Manager != null ? u.Manager.Username : string.Empty
             })
             .ToListAsync();
     }

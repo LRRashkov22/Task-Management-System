@@ -1,21 +1,24 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Comments.Application.DTOs;
 using TaskManagementSystem.Modules.Comments.Application.Interfaces;
+using TaskManagementSystem.Modules.Notification.Application.Interfaces;
 
 namespace TaskManagementSystem.Modules.Comments.Application.Services
 {
     public class CommentService : ICommentService
     {
         private readonly TaskManagementDbContext _context;
-
-        public CommentService(TaskManagementDbContext context)
+        private readonly ITaskNotificationService notificationService;
+        public CommentService(TaskManagementDbContext context, ITaskNotificationService notificationService)
         {
             _context = context;
+            this.notificationService = notificationService;
         }
 
         public async Task<CommentDto> AddCommentAsync(CreateCommentDto dto, int currentUserId)
@@ -34,7 +37,7 @@ namespace TaskManagementSystem.Modules.Comments.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            //  Process Mentioned Users if any exist
+               //  Process Mentioned Users if any exist
             if (dto.MentionedUserIds != null && dto.MentionedUserIds.Any())
             {
                 // Verify IDs are actual real users to safeguard data integrity
@@ -55,11 +58,42 @@ namespace TaskManagementSystem.Modules.Comments.Application.Services
             _context.Set<Comment>().Add(comment);
             await _context.SaveChangesAsync();
 
+
+
+            var task = await _context.Set<TaskItem>()
+                .AsNoTracking()
+                .Include(t => t.Assignments)
+                .FirstAsync(t => t.Id == dto.TaskId);
+
+            //Comment Mention Logic
+            var mentionedUsernames = Regex.Matches(dto.Content, @"@([a-zA-Z0-9]+)");
+            var usernames = new HashSet<string>();
+            foreach (Match matched in mentionedUsernames)
+            {
+                usernames.Add(matched.Groups[1].Value);
+            }
+
+            var mentionedUserIds = await _context.Users
+                .Where(u => usernames.Contains(u.Username)
+                && task.Assignments.Any(a => a.UserId == u.Id))
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            var assignedUsers = task.Assignments
+                .Select(t => t.UserId)
+                .ToList();
+
             // Fetch author's name for returning accurate DTO mapping
             var username = await _context.Set<User>()
                 .Where(u => u.Id == currentUserId)
                 .Select(u => u.Username)
                 .FirstOrDefaultAsync() ?? "Unknown";
+
+         await Task.WhenAll(
+             notificationService.NotifyCommentMentionAsync(task, username, mentionedUserIds),
+             notificationService.NotifyCommentAddedAsync(task, assignedUsers, username)
+          );
+            
 
             return MapToDto(comment, username);
         }
