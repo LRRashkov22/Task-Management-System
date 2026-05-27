@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
-{
+
     public class CommentDto
     {
         public int Id { get; set; }
@@ -14,4 +14,4 @@ namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
 
         public DateTime CreatedAt { get; set; }
     }
-}
+
