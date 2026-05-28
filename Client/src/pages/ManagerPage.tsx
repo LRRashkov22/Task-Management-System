@@ -15,6 +15,7 @@ import {
   transferManagerTaskApi,
   transferManagerTeamApi,
   changeManagerTaskStatusApi,
+  markManagerTaskAsDoneApi,
 } from '../api/managerApi'
 import type {
   ManagerMemberDto,
@@ -319,13 +320,36 @@ function statusLabel(status: string) {
 }
 
 function getEnumStatusForColumn(column: BoardColumnId) {
-  if (column === 'done') return 2
-  if (column === 'review') return 3
+  if (column === 'inprogress') return 2
+  if (column === 'done') return 3
+  if (column === 'review') return 4
   return 1
 }
 
+function statusStringForColumn(column: BoardColumnId) {
+  if (column === 'inprogress') return 'InProgress'
+  if (column === 'done') return 'Done'
+  if (column === 'review') return 'Review'
+  return 'ToDo'
+}
+
 function isDropTargetColumn(column: BoardColumnId) {
-  return column !== 'done'
+  return column === 'inprogress'
+}
+
+function canMoveTaskToColumn(task: BoardTask, targetColumn: BoardColumnId) {
+  const current = statusColumn(task.status)
+
+  if (targetColumn === 'inprogress') {
+    return current === 'todo' || current === 'review'
+  }
+
+  return false
+}
+
+function isTaskDraggable(task: BoardTask) {
+  const current = statusColumn(task.status)
+  return current === 'todo' || current === 'review'
 }
 
 function priorityLabel(priority: string) {
@@ -808,9 +832,13 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     const taskId = Number(event.dataTransfer.getData('text/plain'))
     if (!taskId) return
 
+    const task = boardTasks.find((item) => item.id === taskId)
+    if (!task || !canMoveTaskToColumn(task, newStatus)) return
+
     const previousTasks = boardTasks
-    const updatedTasks = boardTasks.map((task) =>
-      task.id === taskId ? { ...task, status: newStatus } : task,
+    const nextStatus = statusStringForColumn(newStatus)
+    const updatedTasks = boardTasks.map((item) =>
+      item.id === taskId ? { ...item, status: nextStatus } : item,
     )
 
     setBoardTasks(updatedTasks)
@@ -820,7 +848,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       await changeManagerTaskStatusApi(taskId, {
         status: getEnumStatusForColumn(newStatus),
       })
-      setMessage({ text: 'Task status updated.', type: 'success' })
+      setMessage({ text: 'Task moved to In Progress.', type: 'success' })
     } catch (error) {
       setBoardTasks(previousTasks)
       setMessage({
@@ -830,6 +858,31 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             : 'Could not update task status.',
         type: 'error',
       })
+    }
+  }
+
+  async function handleMarkTaskAsDone(taskId: number) {
+    const previousTasks = boardTasks
+    const updatedTasks = boardTasks.map((task) =>
+      task.id === taskId ? { ...task, status: 'Done' } : task,
+    )
+
+    setBoardTasks(updatedTasks)
+    setMessage(null)
+    setIsSaving(true)
+
+    try {
+      await markManagerTaskAsDoneApi(taskId)
+      setMessage({ text: 'Task marked as done.', type: 'success' })
+    } catch (error) {
+      setBoardTasks(previousTasks)
+      setMessage({
+        text:
+          error instanceof Error ? error.message : 'Could not mark task as done.',
+        type: 'error',
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -1311,8 +1364,12 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                           <article
                             className={managerStyles.taskCard(selectedTask?.id === task.id)}
                             key={task.id}
-                            draggable
-                            onDragStart={(event) => handleDragStart(event, task.id)}
+                            draggable={isTaskDraggable(task)}
+                            onDragStart={
+                              isTaskDraggable(task)
+                                ? (event) => handleDragStart(event, task.id)
+                                : undefined
+                            }
                             onClick={() => {
                               void openTaskDetails(task)
                             }}
@@ -1392,17 +1449,26 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     {selectedTask.description || 'No description provided.'}
                   </p>
 
-                  <div className="flex flex-wrap justify-between gap-4 text-[14px] text-[#4f5b72]">
+                  <div className="flex flex-wrap items-center justify-between gap-4 text-[14px] text-[#4f5b72]">
                     <span>
                       <Icon name="user" /> Assigned employees: {selectedTask.assignedEmployeesCount}
                     </span>
                     <span>
-                      Drag task cards into a different column to update status locally.
+                      Drag To Do or Review tasks into In Progress to update status.
                     </span>
                   </div>
-                  <p className={managerStyles.endpointNote}>
-                    ! Status movement is currently local because the backend status edit endpoint is not implemented yet.
-                  </p>
+                  {statusColumn(selectedTask.status) === 'review' ? (
+                    <button
+                      className="mt-4 min-h-10 cursor-pointer rounded-lg border-0 bg-[#315af2] px-5 text-[15px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => {
+                        void handleMarkTaskAsDone(selectedTask.id)
+                      }}
+                    >
+                      Mark as Done
+                    </button>
+                  ) : null}
                 </section>
               ) : null}
             </section>
@@ -1858,9 +1924,23 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               >
                 Archive
               </button>
-              <button type="button" onClick={openTransferTaskModal}>
-                Transfer Task
-              </button>
+              <div className="flex flex-wrap items-center justify-end gap-4">
+                {statusColumn(selectedTask.status) === 'review' ? (
+                  <button
+                    className="min-h-10 cursor-pointer rounded-lg border-0 bg-[#315af2] px-5 text-[15px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => {
+                      void handleMarkTaskAsDone(selectedTask.id)
+                    }}
+                  >
+                    Mark as Done
+                  </button>
+                ) : null}
+                <button type="button" onClick={openTransferTaskModal}>
+                  Transfer Task
+                </button>
+              </div>
             </footer>
           </section>
         </div>

@@ -192,6 +192,12 @@ export function changeManagerTaskStatusApi(
   })
 }
 
+export function markManagerTaskAsDoneApi(taskId: number) {
+  return apiJson<boolean>(`/Task/Mark-AsDone/${taskId}`, {
+    method: 'PATCH',
+  })
+}
+
 export function createManagerTaskApi(request: CreateManagerTaskRequest) {
   return apiJson<void>('/Task/Create-task', {
     method: 'POST',
