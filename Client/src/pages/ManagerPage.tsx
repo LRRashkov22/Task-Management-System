@@ -36,6 +36,7 @@ import {
   sortNotifications,
   type NotificationDto,
 } from '../api/notificationsApi'
+import { ChangePasswordModal } from '../components/ChangePasswordModal'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { commonStyles, managerStyles } from '../styles'
 import { getToken, getUserId, getUsername } from '../utils/auth'
@@ -501,6 +502,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [managerEmployees, setManagerEmployees] = useState<ManagerMemberDto[]>([])
   const [notifications, setNotifications] = useState<NotificationDto[]>([])
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const managerName = getUsername() || 'Manager'
   const managerId = Number(getUserId() ?? 0)
@@ -1335,7 +1337,11 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
         </nav>
 
         <div className={managerStyles.sidebarFooter(isSidebarOpen)}>
-          <button className={managerStyles.footerButton} type="button">
+          <button
+            className={managerStyles.footerButton}
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+          >
             <Icon name="settings" />
             <span>Settings</span>
           </button>
@@ -2537,6 +2543,17 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
           </div>
         </div>
       ) : null}
+
+      <ChangePasswordModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSuccess={(text) => {
+          setIsSettingsOpen(false)
+          setMessage({ text, type: 'success' })
+        }}
+        onError={(text) => setMessage({ text, type: 'error' })}
+        variant="manager"
+      />
     </main>
   )
 }

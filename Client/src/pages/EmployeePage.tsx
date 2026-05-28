@@ -11,6 +11,7 @@ import {
   markAllNotificationsAsReadApi,
   markNotificationAsReadApi,
 } from '../api/notificationApi'
+import { ChangePasswordModal } from '../components/ChangePasswordModal'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { commonStyles, cx, managerStyles } from '../styles'
 import { getToken, getUsername } from '../utils/auth'
@@ -894,6 +895,11 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
   const [activeTaskTab, setActiveTaskTab] = useState<TaskTab>('comments')
   const [requestingTaskId, setRequestingTaskId] = useState<number | null>(null)
   const [taskMessage, setTaskMessage] = useState<string | null>(null)
+  const [pageMessage, setPageMessage] = useState<{
+    text: string
+    type: 'error' | 'success'
+  } | null>(null)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const employeeName = getUsername() || 'Alex Wilson'
 
   const navItems = useMemo(
@@ -1084,7 +1090,11 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         </nav>
 
         <div className={managerStyles.sidebarFooter(isSidebarOpen)}>
-          <button className={managerStyles.footerButton} type="button">
+          <button
+            className={managerStyles.footerButton}
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+          >
             <Icon name="settings" />
             <span>Settings</span>
           </button>
@@ -1117,6 +1127,15 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         </header>
 
         <div className="px-6 pt-7 pb-8 max-[820px]:px-5">
+          {pageMessage ? (
+            <p
+              className={`${managerStyles.message} ${commonStyles.message(pageMessage.type)}`}
+              role="status"
+            >
+              {pageMessage.text}
+            </p>
+          ) : null}
+
           {activeView === 'dashboard' ? (
             <>
               <h2
@@ -1253,6 +1272,17 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
           }}
         />
       ) : null}
+
+      <ChangePasswordModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSuccess={(text) => {
+          setIsSettingsOpen(false)
+          setPageMessage({ text, type: 'success' })
+        }}
+        onError={(text) => setPageMessage({ text, type: 'error' })}
+        variant="manager"
+      />
     </main>
   )
 }

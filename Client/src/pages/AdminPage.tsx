@@ -37,6 +37,7 @@
   } from '../api/notificationsApi'
   import { NotificationsPanel } from '../components/NotificationsPanel'
   import { adminStyles, commonStyles } from '../styles'
+  import { ChangePasswordModal } from '../components/ChangePasswordModal'
   import { getToken } from '../utils/auth'
 
   type IconName =
@@ -140,6 +141,15 @@
       updated: 'Updated successfully.',
       archiveRecovered: 'Recovered successfully.',
       archiveDeleted: 'Deleted permanently.',
+      changePassword: 'Change password',
+      currentPassword: 'Current password',
+      newPassword: 'New password',
+      confirmPassword: 'Confirm new password',
+      passwordChanged: 'Password changed successfully.',
+      passwordMismatch: 'New passwords do not match.',
+      passwordRequired: 'All password fields are required.',
+      passwordInvalid:
+        'Password must contain uppercase, lowercase, number and special symbol.',
     },
     bg: {
       brand: 'TaskMan',
@@ -188,6 +198,15 @@
       apiError: 'Данните не могат да бъдат заредени от сървъра.',
       created: 'Създадено успешно.',
       updated: 'Обновено успешно.',
+      changePassword: 'Смяна на парола',
+      currentPassword: 'Текуща парола',
+      newPassword: 'Нова парола',
+      confirmPassword: 'Потвърди новата парола',
+      passwordChanged: 'Паролата е сменена успешно.',
+      passwordMismatch: 'Новите пароли не съвпадат.',
+      passwordRequired: 'Попълни всички полета за парола.',
+      passwordInvalid:
+        'Паролата трябва да съдържа главна, малка буква, цифра и специален символ.',
     },
   }
 
@@ -203,6 +222,7 @@
     password: '',
     managerId: '',
   }
+
   const usernameRegex = /^[A-Za-z]{4,}$/
 
   const passwordRegex =
@@ -373,6 +393,7 @@
     const [deleteTransferManagerId, setDeleteTransferManagerId] = useState('')
     const [isDeletePreviewLoading, setIsDeletePreviewLoading] = useState(false)
     const [createForm, setCreateForm] = useState<CreateForm>(emptyCreateForm)
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
     const [logFilter, setLogFilter] = useState('All')
     const [dashboard, setDashboard] =
       useState<AdminDashboardDto>(emptyDashboard)
@@ -1020,7 +1041,11 @@ try {
             </nav>
 
             <div className={adminStyles.sidebarFooter(isSidebarOpen)}>
-              <button className={adminStyles.footerButton} type="button">
+              <button
+                className={adminStyles.footerButton}
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+              >
                 <Icon name="settings" />
                 <span>{t.settings}</span>
               </button>
@@ -1356,6 +1381,31 @@ try {
             )}
           </div>
         </section>
+
+        <ChangePasswordModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          onSuccess={(text) => {
+            setIsSettingsOpen(false)
+            setMessage({ text, type: 'success' })
+          }}
+          onError={(text) => setMessage({ text, type: 'error' })}
+          variant="admin"
+          labels={{
+            changePassword: t.changePassword,
+            currentPassword: t.currentPassword,
+            newPassword: t.newPassword,
+            confirmPassword: t.confirmPassword,
+            cancel: t.cancel,
+            save: t.save,
+            loading: t.loading,
+            passwordChanged: t.passwordChanged,
+            passwordMismatch: t.passwordMismatch,
+            passwordRequired: t.passwordRequired,
+            passwordInvalid: t.passwordInvalid,
+            apiError: t.apiError,
+          }}
+        />
 
         {createModal ? (
           <div className={adminStyles.modalBackdrop} role="presentation">
