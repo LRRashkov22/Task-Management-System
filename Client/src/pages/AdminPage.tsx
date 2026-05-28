@@ -1,3 +1,4 @@
+  import * as signalR from '@microsoft/signalr'
   import { useCallback, useEffect, useState } from 'react'
   import type { FormEvent } from 'react'
   import {
@@ -24,7 +25,19 @@
     ArchivedTaskDto,
     ArchivedTeamDto,
   } from '../api/adminApi'
+  import {
+    markAllNotificationsAsReadApi,
+    markNotificationAsReadApi,
+  } from '../api/notificationApi'
+  import {
+    fetchNotifications,
+    normalizeNotification,
+    sortNotifications,
+    type NotificationDto,
+  } from '../api/notificationsApi'
+  import { NotificationsPanel } from '../components/NotificationsPanel'
   import { adminStyles, commonStyles } from '../styles'
+  import { getToken } from '../utils/auth'
 
   type IconName =
     | 'dashboard'
@@ -105,6 +118,9 @@
       closeMenu: 'Close menu',
       openMenu: 'Open menu',
       noNotifications: 'No notifications yet',
+      markAllAsRead: 'Mark as Read all',
+      unread: (count: number) => `Unread (${count})`,
+      read: (count: number) => `Read (${count})`,
       createUser: 'Create User',
       createManager: 'Create Manager',
       password: 'Password',
@@ -152,6 +168,9 @@
       closeMenu: 'Затвори менюто',
       openMenu: 'Отвори менюто',
       noNotifications: 'Все още няма известия',
+      markAllAsRead: 'Маркирай всички като прочетени',
+      unread: (count: number) => `Непрочетени (${count})`,
+      read: (count: number) => `Прочетени (${count})`,
       createUser: 'Създай потребител',
       createManager: 'Създай мениджър',
       password: 'Парола',
@@ -170,7 +189,7 @@
       created: 'Създадено успешно.',
       updated: 'Обновено успешно.',
     },
-  } satisfies Record<Language, Record<string, string>>
+  }
 
   const emptyDashboard: AdminDashboardDto = {
     firstEntity: 0,
@@ -369,6 +388,8 @@
       string | null
     >(null)
     const [message, setMessage] = useState<StatusMessage | null>(null)
+    const [notifications, setNotifications] = useState<NotificationDto[]>([])
+    const [isNotificationsLoading, setIsNotificationsLoading] = useState(false)
     const t = translations[language]
 
     const loadAdminData = useCallback(async () => {
@@ -421,6 +442,65 @@
         setIsArchiveLoading(false)
       }
     }, [t.apiError])
+
+    const handleMarkAsRead = useCallback(
+      async (notificationId: number) => {
+        const target = notifications.find(
+          (notification) => notification.id === notificationId,
+        )
+
+        if (!target || target.isRead) {
+          return
+        }
+
+        const previous = notifications
+
+        setNotifications((current) =>
+          sortNotifications(
+            current.map((notification) =>
+              notification.id === notificationId
+                ? { ...notification, isRead: true }
+                : notification,
+            ),
+          ),
+        )
+
+        try {
+          await markNotificationAsReadApi(notificationId)
+        } catch (error) {
+          setNotifications(previous)
+          setMessage({
+            text: error instanceof Error ? error.message : t.apiError,
+            type: 'error',
+          })
+        }
+      },
+      [notifications, t.apiError],
+    )
+
+    const handleMarkAllAsRead = useCallback(async () => {
+      if (!notifications.some((notification) => !notification.isRead)) {
+        return
+      }
+
+      const previous = notifications
+
+      setNotifications((current) =>
+        sortNotifications(
+          current.map((notification) => ({ ...notification, isRead: true })),
+        ),
+      )
+
+      try {
+        await markAllNotificationsAsReadApi()
+      } catch (error) {
+        setNotifications(previous)
+        setMessage({
+          text: error instanceof Error ? error.message : t.apiError,
+          type: 'error',
+        })
+      }
+    }, [notifications, t.apiError])
     
 useEffect(() => {
   const timeoutId = window.setTimeout(() => {
@@ -443,6 +523,76 @@ useEffect(() => {
 
   return () => window.clearTimeout(timeoutId)
 }, [activeView, loadArchivedTasks, loadArchivedTeams])
+
+useEffect(() => {
+  let cancelled = false
+  let connection: signalR.HubConnection | null = null
+
+  async function initNotifications() {
+    setIsNotificationsLoading(true)
+
+    try {
+      const history = await fetchNotifications()
+      if (!cancelled) {
+        setNotifications(history)
+      }
+    } catch (error) {
+      if (!cancelled) {
+        setNotifications([])
+        setMessage({
+          text: error instanceof Error ? error.message : t.apiError,
+          type: 'error',
+        })
+      }
+    } finally {
+      if (!cancelled) {
+        setIsNotificationsLoading(false)
+      }
+    }
+
+    const configuredHubBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(
+      /\/$/,
+      '',
+    )
+    const notificationsHubUrl = configuredHubBaseUrl
+      ? `${configuredHubBaseUrl}/hubs/notifications`
+      : '/hubs/notifications'
+
+    connection = new signalR.HubConnectionBuilder()
+      .withUrl(notificationsHubUrl, {
+        accessTokenFactory: () => getToken() || '',
+      })
+      .withAutomaticReconnect()
+      .build()
+
+    connection.on(
+      'ReceiveNotification',
+      (payload: Partial<NotificationDto> & Record<string, unknown>) => {
+        const incoming = normalizeNotification(payload)
+        setNotifications((current) => {
+          if (current.some((item) => item.id === incoming.id)) {
+            return current
+          }
+
+          return sortNotifications([incoming, ...current])
+        })
+      },
+    )
+
+    try {
+      await connection.start()
+    } catch {
+      // History still works if the live connection fails.
+    }
+  }
+
+  void initNotifications()
+
+  return () => {
+    cancelled = true
+    void connection?.stop()
+  }
+}, [t.apiError])
 
 useEffect(() => {
   const timeoutId = window.setTimeout(() => {
@@ -905,7 +1055,9 @@ try {
 
           <div className={adminStyles.content(isSidebarOpen)}>
             <div className={adminStyles.heading}>
-              <h2 id="admin-page-title">{pageTitle}</h2>
+              {activeView !== 'notifications' ? (
+                <h2 id="admin-page-title">{pageTitle}</h2>
+              ) : null}
               {activeView === 'users' ? (
                 <button
                   className={adminStyles.createButton}
@@ -935,12 +1087,23 @@ try {
             ) : null}
 
             {activeView === 'notifications' ? (
-              <section className={adminStyles.emptyState} aria-label={t.notifications}>
-                <div className={adminStyles.emptyContent}>
-                  <Icon name="bell" />
-                  <p>{t.noNotifications}</p>
-                </div>
-              </section>
+              <NotificationsPanel
+                notifications={notifications}
+                onMarkAsRead={(notificationId) => {
+                  void handleMarkAsRead(notificationId)
+                }}
+                onMarkAllAsRead={() => {
+                  void handleMarkAllAsRead()
+                }}
+                title={t.notifications}
+                emptyMessage={t.noNotifications}
+                markAllLabel={t.markAllAsRead}
+                unreadLabel={t.unread}
+                readLabel={t.read}
+                isLoading={isNotificationsLoading}
+                loadingMessage={t.loading}
+                titleId="admin-page-title"
+              />
             ) : activeView === 'users' ? (
               <section className={adminStyles.tableCard} aria-label={t.users}>
                 <div className={adminStyles.search}>

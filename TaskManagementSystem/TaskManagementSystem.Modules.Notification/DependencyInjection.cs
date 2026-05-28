@@ -22,7 +22,9 @@ public static class DependencyInjection
                .PartManager.ApplicationParts.Add(
                    new AssemblyPart(typeof(NotificationController).Assembly));
 
-        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<NotificationService>();
+        services.AddScoped<INotificationService>(provider =>
+            provider.GetRequiredService<NotificationService>());
         services.AddScoped<ITaskNotificationService, TaskNotificationService>();
         services.AddScoped<ITeamNotificationService, TeamNotificationService>();
 

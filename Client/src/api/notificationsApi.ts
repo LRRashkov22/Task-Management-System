@@ -27,15 +27,40 @@ function mapNotification(dto: NotificationApiDto): NotificationDto {
   }
 }
 
+export function normalizeNotification(
+  payload: Partial<NotificationDto> & Record<string, unknown>,
+): NotificationDto {
+  return {
+    id: Number(payload.id ?? payload.Id),
+    message: String(payload.message ?? payload.Message ?? ''),
+    createdAt: String(payload.createdAt ?? payload.CreatedAt ?? ''),
+    isRead: Boolean(payload.isRead ?? payload.IsRead ?? false),
+  }
+}
+
+export function sortNotifications(items: NotificationDto[]): NotificationDto[] {
+  const unread = items
+    .filter((notification) => !notification.isRead)
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() -
+        new Date(left.createdAt).getTime(),
+    )
+
+  const read = items
+    .filter((notification) => notification.isRead)
+    .sort(
+      (left, right) =>
+        new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
+    )
+
+  return [...unread, ...read]
+}
+
 export async function fetchNotifications() {
   const data = await apiJson<NotificationApiDto[]>(
     '/Statistics/Admin/get-Notifications-List',
   )
 
-  return data
-    .map(mapNotification)
-    .sort(
-      (left, right) =>
-        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-    )
+  return sortNotifications(data.map(mapNotification))
 }

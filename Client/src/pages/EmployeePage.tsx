@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
 import { requestTaskReviewApi } from '../api/employeeApi'
-import { fetchNotifications, type NotificationDto } from '../api/notificationsApi'
+import {
+  fetchNotifications,
+  normalizeNotification,
+  sortNotifications,
+  type NotificationDto,
+} from '../api/notificationsApi'
+import {
+  markAllNotificationsAsReadApi,
+  markNotificationAsReadApi,
+} from '../api/notificationApi'
+import { NotificationsPanel } from '../components/NotificationsPanel'
 import { commonStyles, cx, managerStyles } from '../styles'
 import { getToken, getUsername } from '../utils/auth'
 
@@ -797,153 +807,6 @@ function CalendarView() {
   )
 }
 
-function normalizeNotification(
-  payload: Partial<NotificationDto> & Record<string, unknown>,
-): NotificationDto {
-  return {
-    id: Number(payload.id ?? payload.Id),
-    message: String(payload.message ?? payload.Message ?? ''),
-    createdAt: String(payload.createdAt ?? payload.CreatedAt ?? ''),
-    isRead: Boolean(payload.isRead ?? payload.IsRead ?? false),
-  }
-}
-
-function getNotificationIcon(message: string): IconName {
-  if (/mentioned/i.test(message) && /comment/i.test(message)) {
-    return 'comment'
-  }
-
-  if (/assigned/i.test(message)) {
-    return 'list'
-  }
-
-  return 'bell'
-}
-
-function NotificationCard({
-  notification,
-  onMarkAsRead,
-}: {
-  notification: NotificationDto
-  onMarkAsRead?: (id: number) => void
-}) {
-  const iconName = getNotificationIcon(notification.message)
-
-  return (
-    <article
-      className={cx(
-        'flex min-h-[76px] items-center gap-4 rounded-xl border bg-white px-5 py-4 shadow-[0_2px_5px_rgba(17,24,39,0.04)]',
-        notification.isRead
-          ? 'border-[#e5e7eb]'
-          : 'border-[#93c5fd]',
-      )}
-    >
-      <span
-        className={cx(
-          'grid h-10 w-10 shrink-0 place-items-center rounded-lg [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-2 [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]',
-          notification.isRead
-            ? 'bg-[#f2f4f7] text-[#98a2b3]'
-            : 'bg-[#eff6ff] text-[#315af2]',
-        )}
-      >
-        <Icon name={iconName} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="mb-2 text-[15px] leading-snug font-bold text-[#111827]">
-          {notification.message}
-        </p>
-        <time className="text-[13px] leading-none font-bold text-[#667085]">
-          {new Date(notification.createdAt).toLocaleString()}
-        </time>
-      </div>
-      {!notification.isRead && onMarkAsRead ? (
-        <button
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[#315af2] hover:bg-[#eff6ff] [&_svg]:h-6 [&_svg]:w-6 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.5] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]"
-          type="button"
-          aria-label="Mark as read"
-          onClick={() => onMarkAsRead(notification.id)}
-        >
-          <Icon name="check" />
-        </button>
-      ) : null}
-    </article>
-  )
-}
-
-function NotificationsView({
-  notifications,
-  onMarkAsRead,
-  onMarkAllAsRead,
-}: {
-  notifications: NotificationDto[]
-  onMarkAsRead: (id: number) => void
-  onMarkAllAsRead: () => void
-}) {
-  const unread = notifications.filter((notification) => !notification.isRead)
-  const read = notifications.filter((notification) => notification.isRead)
-
-  return (
-    <section aria-labelledby="employee-page-title">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <h2
-          className="text-[25px] leading-none font-extrabold text-[#050505]"
-          id="employee-page-title"
-        >
-          Notifications
-        </h2>
-        {unread.length > 0 ? (
-          <button
-            className="inline-flex items-center gap-2 text-[15px] font-bold text-[#315af2] hover:underline [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.5] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]"
-            type="button"
-            onClick={onMarkAllAsRead}
-          >
-            <Icon name="checkDouble" />
-            <span>Mark as Read all</span>
-          </button>
-        ) : null}
-      </div>
-
-      {notifications.length === 0 ? (
-        <div className="rounded-xl border border-[#e5e7eb] bg-white px-6 py-10 text-center text-[16px] font-medium text-[#6b7280] shadow-[0_2px_5px_rgba(17,24,39,0.04)]">
-          No notifications yet.
-        </div>
-      ) : (
-        <div className="grid gap-8">
-          {unread.length > 0 ? (
-            <section>
-              <h3 className="mb-4 text-[13px] font-extrabold tracking-[0.08em] text-[#98a2b3] uppercase">
-                Unread ({unread.length})
-              </h3>
-              <div className="grid gap-4">
-                {unread.map((notification) => (
-                  <NotificationCard
-                    key={notification.id}
-                    notification={notification}
-                    onMarkAsRead={onMarkAsRead}
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {read.length > 0 ? (
-            <section>
-              <h3 className="mb-4 text-[13px] font-extrabold tracking-[0.08em] text-[#98a2b3] uppercase">
-                Read ({read.length})
-              </h3>
-              <div className="grid gap-4">
-                {read.map((notification) => (
-                  <NotificationCard key={notification.id} notification={notification} />
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </div>
-      )}
-    </section>
-  )
-}
-
 function MyTasksView({
   tasks,
   taskMessage,
@@ -1093,7 +956,7 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
               return current
             }
 
-            return [incoming, ...current]
+            return sortNotifications([incoming, ...current])
           })
         },
       )
@@ -1113,20 +976,52 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
     }
   }, [])
 
-  function handleMarkAsRead(notificationId: number) {
+  async function handleMarkAsRead(notificationId: number) {
+    const target = notifications.find(
+      (notification) => notification.id === notificationId,
+    )
+
+    if (!target || target.isRead) {
+      return
+    }
+
+    const previous = notifications
+
     setNotifications((current) =>
-      current.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, isRead: true }
-          : notification,
+      sortNotifications(
+        current.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification,
+        ),
       ),
     )
+
+    try {
+      await markNotificationAsReadApi(notificationId)
+    } catch {
+      setNotifications(previous)
+    }
   }
 
-  function handleMarkAllAsRead() {
+  async function handleMarkAllAsRead() {
+    if (!notifications.some((notification) => !notification.isRead)) {
+      return
+    }
+
+    const previous = notifications
+
     setNotifications((current) =>
-      current.map((notification) => ({ ...notification, isRead: true })),
+      sortNotifications(
+        current.map((notification) => ({ ...notification, isRead: true })),
+      ),
     )
+
+    try {
+      await markAllNotificationsAsReadApi()
+    } catch {
+      setNotifications(previous)
+    }
   }
 
   async function handleRequestReview(taskId: number) {
@@ -1319,10 +1214,20 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
               </div>
             </>
           ) : activeView === 'notifications' ? (
-            <NotificationsView
+            <NotificationsPanel
               notifications={notifications}
-              onMarkAsRead={handleMarkAsRead}
-              onMarkAllAsRead={handleMarkAllAsRead}
+              onMarkAsRead={(notificationId) => {
+                void handleMarkAsRead(notificationId)
+              }}
+              onMarkAllAsRead={() => {
+                void handleMarkAllAsRead()
+              }}
+              title="Notifications"
+              emptyMessage="No notifications yet."
+              markAllLabel="Mark as Read all"
+              unreadLabel={(count) => `Unread (${count})`}
+              readLabel={(count) => `Read (${count})`}
+              titleId="employee-page-title"
             />
           ) : activeView === 'myTasks' ? (
             <MyTasksView

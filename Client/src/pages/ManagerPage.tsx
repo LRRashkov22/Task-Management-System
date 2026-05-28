@@ -1,3 +1,4 @@
+import * as signalR from '@microsoft/signalr'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DragEvent, FormEvent } from 'react'
 import {
@@ -25,8 +26,19 @@ import type {
   ManagerUserDto,
   TransferTeamPreviewDto,
 } from '../api/managerApi'
+import {
+  markAllNotificationsAsReadApi,
+  markNotificationAsReadApi,
+} from '../api/notificationApi'
+import {
+  fetchNotifications,
+  normalizeNotification,
+  sortNotifications,
+  type NotificationDto,
+} from '../api/notificationsApi'
+import { NotificationsPanel } from '../components/NotificationsPanel'
 import { commonStyles, managerStyles } from '../styles'
-import { getUserId, getUsername } from '../utils/auth'
+import { getToken, getUserId, getUsername } from '../utils/auth'
 
 type ManagerView =
   | 'dashboard'
@@ -487,9 +499,149 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [taskForm, setTaskForm] = useState<TaskForm>(emptyTaskForm)
   const [teamForm, setTeamForm] = useState<TeamForm>(emptyTeamForm)
   const [managerEmployees, setManagerEmployees] = useState<ManagerMemberDto[]>([])
+  const [notifications, setNotifications] = useState<NotificationDto[]>([])
+  const [isNotificationsLoading, setIsNotificationsLoading] = useState(false)
 
   const managerName = getUsername() || 'Manager'
   const managerId = Number(getUserId() ?? 0)
+
+  const handleMarkAsRead = useCallback(
+    async (notificationId: number) => {
+      const target = notifications.find(
+        (notification) => notification.id === notificationId,
+      )
+
+      if (!target || target.isRead) {
+        return
+      }
+
+      const previous = notifications
+
+      setNotifications((current) =>
+        sortNotifications(
+          current.map((notification) =>
+            notification.id === notificationId
+              ? { ...notification, isRead: true }
+              : notification,
+          ),
+        ),
+      )
+
+      try {
+        await markNotificationAsReadApi(notificationId)
+      } catch (error) {
+        setNotifications(previous)
+        setMessage({
+          text:
+            error instanceof Error
+              ? error.message
+              : 'Could not mark notification as read.',
+          type: 'error',
+        })
+      }
+    },
+    [notifications],
+  )
+
+  const handleMarkAllAsRead = useCallback(async () => {
+    if (!notifications.some((notification) => !notification.isRead)) {
+      return
+    }
+
+    const previous = notifications
+
+    setNotifications((current) =>
+      sortNotifications(
+        current.map((notification) => ({ ...notification, isRead: true })),
+      ),
+    )
+
+    try {
+      await markAllNotificationsAsReadApi()
+    } catch (error) {
+      setNotifications(previous)
+      setMessage({
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Could not mark all notifications as read.',
+        type: 'error',
+      })
+    }
+  }, [notifications])
+
+  useEffect(() => {
+    let cancelled = false
+    let connection: signalR.HubConnection | null = null
+
+    async function initNotifications() {
+      setIsNotificationsLoading(true)
+
+      try {
+        const history = await fetchNotifications()
+        if (!cancelled) {
+          setNotifications(history)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setNotifications([])
+          setMessage({
+            text:
+              error instanceof Error
+                ? error.message
+                : 'Could not load notifications.',
+            type: 'error',
+          })
+        }
+      } finally {
+        if (!cancelled) {
+          setIsNotificationsLoading(false)
+        }
+      }
+
+      const configuredHubBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(
+        /\/$/,
+        '',
+      )
+      const notificationsHubUrl = configuredHubBaseUrl
+        ? `${configuredHubBaseUrl}/hubs/notifications`
+        : '/hubs/notifications'
+
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(notificationsHubUrl, {
+          accessTokenFactory: () => getToken() || '',
+        })
+        .withAutomaticReconnect()
+        .build()
+
+      connection.on(
+        'ReceiveNotification',
+        (payload: Partial<NotificationDto> & Record<string, unknown>) => {
+          const incoming = normalizeNotification(payload)
+          setNotifications((current) => {
+            if (current.some((item) => item.id === incoming.id)) {
+              return current
+            }
+
+            return sortNotifications([incoming, ...current])
+          })
+        },
+      )
+
+      try {
+        await connection.start()
+      } catch {
+        // History still works if the live connection fails.
+      }
+    }
+
+    void initNotifications()
+
+    return () => {
+      cancelled = true
+      void connection?.stop()
+    }
+  }, [])
 
   const loadManagerData = useCallback(async () => {
     setIsLoading(true)
@@ -1218,7 +1370,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
 
         <div className={managerStyles.content}>
           <div className={managerStyles.heading}>
-            <h2 id="manager-page-title">{pageTitle}</h2>
+            {activeView !== 'notifications' ? (
+              <h2 id="manager-page-title">{pageTitle}</h2>
+            ) : null}
             {activeView === 'teamTasks' ? (
               <button
                 className={managerStyles.createButton}
@@ -1693,6 +1847,24 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 <p className={managerStyles.emptyText}>No teams yet</p>
               )}
             </section>
+          ) : activeView === 'notifications' ? (
+            <NotificationsPanel
+              notifications={notifications}
+              onMarkAsRead={(notificationId) => {
+                void handleMarkAsRead(notificationId)
+              }}
+              onMarkAllAsRead={() => {
+                void handleMarkAllAsRead()
+              }}
+              title="Notifications"
+              emptyMessage="No notifications yet."
+              markAllLabel="Mark as Read all"
+              unreadLabel={(count) => `Unread (${count})`}
+              readLabel={(count) => `Read (${count})`}
+              isLoading={isNotificationsLoading}
+              loadingMessage="Loading..."
+              titleId="manager-page-title"
+            />
           ) : (
             <section className={managerStyles.dashboardPanel} aria-label={pageTitle}>
               <p>No data yet</p>

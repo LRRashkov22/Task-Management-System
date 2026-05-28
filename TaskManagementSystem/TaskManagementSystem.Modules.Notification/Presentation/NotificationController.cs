@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text;
+using TaskManagementSystem.Modules.Notification.Application.Interfaces;
 
 namespace TaskManagementSystem.Modules.Notification.Presentation;
 
@@ -11,8 +9,8 @@ namespace TaskManagementSystem.Modules.Notification.Presentation;
 [Route("api/Notification")]
 public class NotificationController : ControllerBase
 {
-    private readonly NotificationService notificationService;
-    public NotificationController(NotificationService notificationService) { 
+    private readonly INotificationService notificationService;
+    public NotificationController(INotificationService notificationService) { 
     this.notificationService = notificationService;
     }
 
@@ -27,7 +25,7 @@ public class NotificationController : ControllerBase
 
     [Authorize]
     [HttpPatch("mark-as-read-all")]
-    public async Task<ActionResult> MarkAsReadAll(int notificationId)
+    public async Task<ActionResult> MarkAsReadAll()
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
         var (result, error) = await notificationService.MarkAsReadAllAsync(userid);
