@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
+using TaskManagementSystem.Modules.Logs.Application.DTOs;
 
-namespace TaskManagementSystem.Data.Domain.Interfaces;
+namespace TaskManagementSystem.Modules.Logs.Application.Interfaces;
 
 public interface IAppLogger
 {
-    Task<(bool isCreate, string? error)> CreateLog(Log request);
-
 }

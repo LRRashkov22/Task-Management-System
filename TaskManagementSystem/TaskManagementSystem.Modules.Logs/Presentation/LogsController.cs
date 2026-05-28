@@ -24,19 +24,17 @@ public class LogsController : ControllerBase
     [HttpGet("get-logs")]
     public async Task<ActionResult> GetLog()
     {
-        var logs = await _context.Logs
-            .Include(x => x.User)
-            .ToListAsync();
+        var (logs, eror) = await _logService.GetLog();
 
         return Ok(logs);
     }
 
 
     [Authorize(Roles = "Admin")]
-    [HttpDelete("delete-logs")]
-    public async Task<ActionResult> DeleteLog(DeleteLogDto deleteLogDto)
+    [HttpDelete("delete-logs/{logid:int}")]
+    public async Task<ActionResult> DeleteLog(int logid)
     {
-        var (isDelete, error) = await _logService.DeleteLog(deleteLogDto.Id);
+        var (isDelete, error) = await _logService.DeleteLog(logid);
 
         if (!isDelete)
         {
