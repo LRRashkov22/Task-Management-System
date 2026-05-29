@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
-using TaskManagementSystem.Data.Domain.Interfaces;
 using TaskManagementSystem.Modules.Logs.Application.Interfaces;
 using TaskManagementSystem.Modules.Logs.Application.Services;
 using TaskManagementSystem.Modules.Logs.Presentation;
@@ -15,7 +14,7 @@ public static class DependencyInjection
             .PartManager.ApplicationParts.Add(
                 new AssemblyPart(typeof(LogsController).Assembly));
         services.AddScoped<ICRUDLogService, CRUDLogService>();
-        services.AddScoped<IAppLogger, AppLogger>();
+        services.AddScoped<ITaskLogger, TaskLogger>();
 
         return services;
     }
