@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
-import { requestTaskReviewApi } from '../api/employeeApi'
+import {
+  getEmployeeDashboardApi,
+  getEmployeeTaskDetailsApi,
+  getEmployeeTaskPreviewApi,
+  requestTaskReviewApi,
+  type EmployeeDashboardDto,
+  type EmployeeTaskDetailsDto,
+  type EmployeeTaskPreviewDto,
+} from '../api/employeeApi'
 import {
   fetchNotifications,
   normalizeNotification,
@@ -73,6 +81,7 @@ type MyTask = {
   priority: string
   status: string
   teamName: string
+  startDate: string
   dueDate: string
   timeLogged: string
   workHours: number
@@ -80,17 +89,36 @@ type MyTask = {
   comments: TaskComment[]
   workSessions: TaskWorkSession[]
   history: TaskHistoryItem[]
+  hasDetails?: boolean
+}
+
+type EmployeeCalendarItem = MyTask & {
+  colorIndex: number
+  start: Date
+  end: Date
+}
+
+const emptyEmployeeDashboard: EmployeeDashboardDto = {
+  myTasks: 0,
+  inProgressTasks: 0,
+  completedTasks: 0,
+  overdueTasks: 0,
+  totalHoursLogged: 0,
+  tasksCompleted: 0,
+  avgTimePerTask: 0,
+  recentTasks: [],
 }
 
 const initialMyTasks: MyTask[] = [
   {
     id: 1,
-    title: 'Implement user authentication flow',
+    title: 'Implement employee authentication flow',
     description:
       'Add OAuth2 integration with Google and GitHub providers. Include proper error handling and token refresh logic.',
     priority: 'High',
     status: 'ToDo',
     teamName: 'Frontend Development',
+    startDate: '5/20/2026',
     dueDate: '6/4/2026',
     timeLogged: '14h',
     workHours: 14,
@@ -133,6 +161,7 @@ const initialMyTasks: MyTask[] = [
     priority: 'Urgent',
     status: 'InProgress',
     teamName: 'Frontend Development',
+    startDate: '5/24/2026',
     dueDate: '',
     timeLogged: '2h',
     workHours: 2,
@@ -346,6 +375,12 @@ function addMonths(date: Date, months: number) {
   return new Date(date.getFullYear(), date.getMonth() + months, 1)
 }
 
+function addCalendarPages(date: Date, calendarView: 'weekly' | 'monthly', amount: number) {
+  return calendarView === 'weekly'
+    ? addDays(date, amount * 7)
+    : addMonths(date, amount)
+}
+
 function formatCalendarMonth(date: Date) {
   return date.toLocaleDateString('en-US', {
     month: 'long',
@@ -354,7 +389,29 @@ function formatCalendarMonth(date: Date) {
 }
 
 function getDayKey(date: Date) {
-  return date.toISOString().slice(0, 10)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function parseCalendarDate(value?: string | null) {
+  if (!value || value === '-') return null
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+function daysBetween(start: Date, end: Date) {
+  const oneDay = 24 * 60 * 60 * 1000
+  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())
+  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate())
+
+  return Math.round((endUtc - startUtc) / oneDay)
 }
 
 function isSameDay(dateA: Date, dateB: Date) {
@@ -407,6 +464,62 @@ function formatDate(value?: string | null) {
   if (Number.isNaN(date.getTime())) return value
 
   return date.toLocaleDateString('en-US')
+}
+
+function mapRecentTaskToMyTask(task: EmployeeDashboardDto['recentTasks'][number]): MyTask {
+  return {
+    id: task.id,
+    title: task.title,
+    description: '',
+    priority: task.priority,
+    status: task.status,
+    teamName: '',
+    startDate: '',
+    dueDate: formatDate(task.deadline),
+    timeLogged: '0h',
+    workHours: 0,
+    assignees: [],
+    comments: [],
+    workSessions: [],
+    history: [],
+  }
+}
+
+function mapPreviewTaskToMyTask(task: EmployeeTaskPreviewDto): MyTask {
+  return {
+    id: task.id,
+    title: task.title,
+    description: '',
+    priority: task.priority,
+    status: task.status,
+    teamName: '',
+    startDate: formatDate(task.createdAt),
+    dueDate: formatDate(task.deadline),
+    timeLogged: `${task.workHours}h`,
+    workHours: task.workHours,
+    assignees: [],
+    comments: [],
+    workSessions: [],
+    history: [],
+  }
+}
+
+function mergeTaskDetails(task: MyTask, details: EmployeeTaskDetailsDto): MyTask {
+  return {
+    ...task,
+    title: details.title,
+    description: details.description ?? '',
+    priority: details.priority,
+    status: details.status,
+    dueDate: formatDate(details.deadline),
+    timeLogged: `${details.workHours}h`,
+    workHours: details.workHours,
+    assignees: details.assignedUsers,
+    comments: details.comments,
+    workSessions: details.workSessions,
+    history: details.history,
+    hasDetails: true,
+  }
 }
 
 function TaskBadge({
@@ -482,8 +595,6 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-type CalendarTask = { id: string; title: string }
-
 function EmployeeTaskDetailModal({
   task,
   activeTab,
@@ -557,6 +668,11 @@ function EmployeeTaskDetailModal({
                   {member.username}
                 </span>
               ))}
+              {!task.assignees.length ? (
+                <p className="text-[14px] font-semibold text-[#6b7280]">
+                  No assignees loaded.
+                </p>
+              ) : null}
             </div>
           </section>
 
@@ -674,29 +790,36 @@ function EmployeeTaskDetailModal({
   )
 }
 
-function CalendarView() {
+function CalendarView({ tasks }: { tasks: MyTask[] }) {
   const [calendarView, setCalendarView] = useState<'weekly' | 'monthly'>('monthly')
   const [calendarDate, setCalendarDate] = useState(new Date())
+  const [selectedCalendarTask, setSelectedCalendarTask] =
+    useState<EmployeeCalendarItem | null>(null)
 
-  const calendarTasksByDay = useMemo(() => {
-    const map = new Map<string, CalendarTask[]>()
+  const calendarItems = useMemo(
+    () =>
+      tasks
+        .map((task, index) => {
+          const deadline = parseCalendarDate(task.dueDate)
+          if (!deadline) return null
 
-    const addTask = (id: string, title: string, dateValue: string) => {
-      if (!dateValue || dateValue === '-') return
+          const taskStartDate = parseCalendarDate(task.startDate)
+          const firstHistoryDate = parseCalendarDate(task.history[0]?.createdAt)
+          const firstWorkDate = parseCalendarDate(task.workSessions[0]?.date)
+          const start = taskStartDate ?? firstHistoryDate ?? firstWorkDate ?? deadline
+          const rangeStart = start <= deadline ? start : deadline
+          const rangeEnd = start <= deadline ? deadline : start
 
-      const parsed = new Date(dateValue)
-      if (Number.isNaN(parsed.getTime())) return
-
-      const key = getDayKey(parsed)
-      const current = map.get(key) ?? []
-      current.push({ id, title })
-      map.set(key, current)
-    }
-
-    initialMyTasks.forEach((task) => addTask(`my-${task.id}`, task.title, task.dueDate))
-
-    return map
-  }, [])
+          return {
+            ...task,
+            colorIndex: index,
+            start: rangeStart,
+            end: rangeEnd,
+          }
+        })
+        .filter((task): task is EmployeeCalendarItem => Boolean(task)),
+    [tasks],
+  )
 
   const calendarDays = useMemo(() => {
     const focalDate = new Date(calendarDate)
@@ -722,89 +845,174 @@ function CalendarView() {
     return days
   }, [calendarDate, calendarView])
 
-  return (
-    <section className={managerStyles.calendarPanel} aria-label="Calendar">
-      <div className={managerStyles.calendarHeader}>
-        <div>
-          <p className={managerStyles.calendarLabel}>Calendar</p>
-          <h3 id="employee-page-title">{formatCalendarMonth(calendarDate)}</h3>
-        </div>
-        <div className={managerStyles.calendarActions}>
-          <button
-            type="button"
-            className={managerStyles.calendarNav}
-            onClick={() => setCalendarDate(addMonths(calendarDate, -1))}
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            className={managerStyles.calendarNav}
-            onClick={() => setCalendarDate(new Date())}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            className={managerStyles.calendarNav}
-            onClick={() => setCalendarDate(addMonths(calendarDate, 1))}
-          >
-            ›
-          </button>
-          <button
-            type="button"
-            className={managerStyles.calendarToggle(calendarView === 'weekly')}
-            onClick={() => setCalendarView('weekly')}
-          >
-            Weekly
-          </button>
-          <button
-            type="button"
-            className={managerStyles.calendarToggle(calendarView === 'monthly')}
-            onClick={() => setCalendarView('monthly')}
-          >
-            Monthly
-          </button>
-        </div>
-      </div>
-      <div className={managerStyles.calendarGrid}>
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className={managerStyles.calendarWeekday}>
-            {day}
-          </div>
-        ))}
-        {calendarDays.map((day) => {
-          const dayKey = getDayKey(day)
-          const dayTasks = calendarTasksByDay.get(dayKey) ?? []
+  const calendarWeeks = useMemo(() => {
+    const weeks: Date[][] = []
 
-          return (
-            <article
-              key={dayKey}
-              className={managerStyles.calendarDay(
-                day.getMonth() !== calendarDate.getMonth(),
-                isSameDay(day, new Date()),
-              )}
+    for (let index = 0; index < calendarDays.length; index += 7) {
+      weeks.push(calendarDays.slice(index, index + 7))
+    }
+
+    return weeks
+  }, [calendarDays])
+
+  return (
+    <>
+      <section className={managerStyles.calendarPanel} aria-label="Calendar">
+        <div className={managerStyles.calendarHeader}>
+          <div>
+            <p className={managerStyles.calendarLabel}>Calendar</p>
+            <h3 id="employee-page-title">{formatCalendarMonth(calendarDate)}</h3>
+          </div>
+          <div className={managerStyles.calendarActions}>
+            <button
+              type="button"
+              className={managerStyles.calendarNav}
+              onClick={() =>
+                setCalendarDate(addCalendarPages(calendarDate, calendarView, -1))
+              }
             >
-              <div className={managerStyles.calendarDayNumber}>
-                {day.getDate()}
+              ‹
+            </button>
+            <button
+              type="button"
+              className={managerStyles.calendarNav}
+              onClick={() => setCalendarDate(new Date())}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              className={managerStyles.calendarNav}
+              onClick={() =>
+                setCalendarDate(addCalendarPages(calendarDate, calendarView, 1))
+              }
+            >
+              ›
+            </button>
+            <button
+              type="button"
+              className={managerStyles.calendarToggle(calendarView === 'weekly')}
+              onClick={() => setCalendarView('weekly')}
+            >
+              Weekly
+            </button>
+            <button
+              type="button"
+              className={managerStyles.calendarToggle(calendarView === 'monthly')}
+              onClick={() => setCalendarView('monthly')}
+            >
+              Monthly
+            </button>
+          </div>
+        </div>
+        <div className={managerStyles.calendarGrid}>
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+            <div key={day} className={managerStyles.calendarWeekday}>
+              {day}
+            </div>
+          ))}
+          {calendarWeeks.map((week) => {
+            const weekStart = week[0]
+            const weekEnd = week[6]
+            const weekTasks = calendarItems
+              .filter((task) => task.start <= weekEnd && task.end >= weekStart)
+              .sort((taskA, taskB) => {
+                const startDiff = taskA.start.getTime() - taskB.start.getTime()
+                if (startDiff !== 0) return startDiff
+
+                return taskB.end.getTime() - taskA.end.getTime()
+              })
+
+            return (
+              <div className={managerStyles.calendarWeekRow} key={getDayKey(weekStart)}>
+                <div className={managerStyles.calendarWeekDays}>
+                  {week.map((day) => (
+                    <article
+                      key={getDayKey(day)}
+                      className={managerStyles.calendarDay(
+                        calendarView === 'monthly' &&
+                          day.getMonth() !== calendarDate.getMonth(),
+                        isSameDay(day, new Date()),
+                      )}
+                    >
+                      <div className={managerStyles.calendarDayNumber}>
+                        {day.getDate()}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <div className={managerStyles.calendarBars}>
+                  {weekTasks.map((task) => {
+                    const barStart = task.start < weekStart ? weekStart : task.start
+                    const barEnd = task.end > weekEnd ? weekEnd : task.end
+                    const columnStart = daysBetween(weekStart, barStart) + 1
+                    const columnEnd = daysBetween(weekStart, barEnd) + 2
+
+                    return (
+                      <button
+                        className={managerStyles.calendarRangeBar(task.colorIndex)}
+                        key={`${task.id}-${getDayKey(weekStart)}`}
+                        style={{
+                          gridColumn: `${columnStart} / ${columnEnd}`,
+                        }}
+                        title={`${task.title} - ${task.teamName}`}
+                        type="button"
+                        onClick={() => setSelectedCalendarTask(task)}
+                      >
+                        <span className={managerStyles.calendarRangeName}>
+                          {task.title}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              <div className={managerStyles.calendarDayTasks}>
-                {dayTasks.slice(0, 2).map((task) => (
-                  <span key={task.id} className={managerStyles.calendarTaskPill()}>
-                    {task.title}
-                  </span>
-                ))}
-                {dayTasks.length > 2 ? (
-                  <span className={managerStyles.calendarTaskPill(true)}>
-                    +{dayTasks.length - 2} more
-                  </span>
-                ) : null}
-              </div>
-            </article>
-          )
-        })}
-      </div>
-    </section>
+            )
+          })}
+        </div>
+      </section>
+
+      {selectedCalendarTask ? (
+        <div className={managerStyles.modalBackdrop} role="presentation">
+          <div
+            className={`${managerStyles.modal} w-[min(100%,448px)] self-center`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="employee-calendar-task-title"
+          >
+            <h2 id="employee-calendar-task-title">
+              {selectedCalendarTask.title}
+            </h2>
+            <div className={managerStyles.calendarTaskInfo}>
+              <span>Team</span>
+              <strong>{selectedCalendarTask.teamName || '-'}</strong>
+              <span>Status</span>
+              <strong>{statusLabel(selectedCalendarTask.status)}</strong>
+              <span>Start</span>
+              <strong>{formatDate(getDayKey(selectedCalendarTask.start))}</strong>
+              <span>Deadline</span>
+              <strong>{selectedCalendarTask.dueDate || '-'}</strong>
+            </div>
+            <div className={managerStyles.modalActions}>
+              <button
+                className={managerStyles.modalCancel}
+                type="button"
+                onClick={() => setSelectedCalendarTask(null)}
+              >
+                Close
+              </button>
+              <button
+                className={managerStyles.modalSave}
+                type="button"
+                onClick={() => setSelectedCalendarTask(null)}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }
 
@@ -815,7 +1023,7 @@ function MyTasksView({
 }: {
   tasks: MyTask[]
   taskMessage: string | null
-  onSelectTask: (task: MyTask) => void
+  onSelectTask: (task: MyTask) => Promise<void>
 }) {
   return (
     <section aria-labelledby="employee-page-title">
@@ -856,11 +1064,13 @@ function MyTasksView({
           <article
             className="grid min-h-[62px] cursor-pointer grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] transition hover:bg-[#f8fafc] max-[1000px]:min-w-[820px]"
             key={task.id}
-            onClick={() => onSelectTask(task)}
+            onClick={() => {
+              void onSelectTask(task)
+            }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault()
-                onSelectTask(task)
+                void onSelectTask(task)
               }
             }}
             role="button"
@@ -890,7 +1100,10 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
   const [activeView, setActiveView] = useState<EmployeeView>('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [notifications, setNotifications] = useState<NotificationDto[]>([])
+  const [dashboard, setDashboard] =
+    useState<EmployeeDashboardDto>(emptyEmployeeDashboard)
   const [myTasks, setMyTasks] = useState<MyTask[]>(initialMyTasks)
+  const [isEmployeeDataLoading, setIsEmployeeDataLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState<MyTask | null>(null)
   const [activeTaskTab, setActiveTaskTab] = useState<TaskTab>('comments')
   const [requestingTaskId, setRequestingTaskId] = useState<number | null>(null)
@@ -913,14 +1126,76 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
     [],
   )
 
-  function openTask(task: MyTask) {
+  async function openTask(task: MyTask) {
     setSelectedTask(task)
     setActiveTaskTab('comments')
+
+    if (task.hasDetails) return
+
+    try {
+      const details = await getEmployeeTaskDetailsApi(task.id)
+      const detailedTask = mergeTaskDetails(task, details)
+
+      setMyTasks((current) =>
+        current.map((item) => (item.id === task.id ? detailedTask : item)),
+      )
+      setSelectedTask((current) =>
+        current?.id === task.id ? detailedTask : current,
+      )
+    } catch (error) {
+      setTaskMessage(
+        error instanceof Error ? error.message : 'Could not load task details.',
+      )
+    }
   }
 
   function closeTask() {
     setSelectedTask(null)
   }
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadEmployeeDashboard() {
+      setIsEmployeeDataLoading(true)
+
+      try {
+        const [data, taskPreviews] = await Promise.all([
+          getEmployeeDashboardApi(),
+          getEmployeeTaskPreviewApi(),
+        ])
+        if (cancelled) return
+
+        setDashboard(data)
+
+        if (taskPreviews.length) {
+          setMyTasks(taskPreviews.map(mapPreviewTaskToMyTask))
+        } else if (data.recentTasks.length) {
+          setMyTasks(data.recentTasks.map(mapRecentTaskToMyTask))
+        } else {
+          setMyTasks([])
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setPageMessage({
+            text:
+              error instanceof Error
+                ? error.message
+                : 'Could not load employee dashboard.',
+            type: 'error',
+          })
+        }
+      } finally {
+        if (!cancelled) setIsEmployeeDataLoading(false)
+      }
+    }
+
+    void loadEmployeeDashboard()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -1072,7 +1347,7 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         >
           <h1>TaskMan</h1>
           <p>{employeeName}</p>
-          <span>User</span>
+          <span>Employee</span>
         </div>
 
         <nav className={managerStyles.nav(isSidebarOpen)}>
@@ -1153,25 +1428,25 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
                   icon="checkCircle"
                   iconTone="blue"
                   label="My Tasks"
-                  value="2"
+                  value={isEmployeeDataLoading ? '' : String(dashboard.myTasks)}
                 />
                 <StatCard
                   icon="clock"
                   iconTone="yellow"
                   label="In Progress"
-                  value="0"
+                  value={isEmployeeDataLoading ? '' : String(dashboard.inProgressTasks)}
                 />
                 <StatCard
                   icon="checkCircle"
                   iconTone="green"
                   label="Completed"
-                  value="0"
+                  value={isEmployeeDataLoading ? '' : String(dashboard.completedTasks)}
                 />
                 <StatCard
                   icon="warning"
                   iconTone="red"
                   label="Overdue"
-                  value="0"
+                  value={isEmployeeDataLoading ? '' : String(dashboard.overdueTasks)}
                 />
               </section>
 
@@ -1182,15 +1457,17 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
                   </h3>
 
                   <div className="grid gap-3">
-                    {myTasks.map((task) => (
+                    {myTasks.length ? myTasks.map((task) => (
                       <article
                         className="grid min-h-[68px] cursor-pointer grid-cols-[1fr_auto] items-center gap-4 rounded-lg border border-[#d9dde5] bg-white px-4 py-3 transition hover:border-[#93c5fd] hover:bg-[#f8fbff]"
                         key={task.id}
-                        onClick={() => openTask(task)}
+                        onClick={() => {
+                          void openTask(task)
+                        }}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault()
-                            openTask(task)
+                            void openTask(task)
                           }
                         }}
                         role="button"
@@ -1215,7 +1492,11 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
                           ) : null}
                         </div>
                       </article>
-                    ))}
+                    )) : (
+                      <p className="text-[14px] font-semibold text-[#667085]">
+                        No recent tasks.
+                      </p>
+                    )}
                   </div>
                 </section>
 
@@ -1225,9 +1506,18 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
                   </h3>
 
                   <div className="grid gap-6">
-                    <SummaryRow label="Total Hours Logged" value="5h" />
-                    <SummaryRow label="Tasks Completed" value="0" />
-                    <SummaryRow label="Avg Time/Task" value="0h" />
+                    <SummaryRow
+                      label="Total Hours Logged"
+                      value={isEmployeeDataLoading ? '' : `${dashboard.totalHoursLogged}h`}
+                    />
+                    <SummaryRow
+                      label="Tasks Completed"
+                      value={isEmployeeDataLoading ? '' : String(dashboard.tasksCompleted)}
+                    />
+                    <SummaryRow
+                      label="Avg Time/Task"
+                      value={isEmployeeDataLoading ? '' : `${dashboard.avgTimePerTask}h`}
+                    />
                   </div>
                 </section>
               </div>
@@ -1255,7 +1545,7 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
               onSelectTask={openTask}
             />
           ) : activeView === 'calendar' ? (
-            <CalendarView />
+            <CalendarView tasks={myTasks} />
           ) : null}
         </div>
       </section>
