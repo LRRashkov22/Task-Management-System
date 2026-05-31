@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
+using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Logs.Application.DTOs;
 using TaskManagementSystem.Modules.Logs.Application.Interfaces;
@@ -31,6 +32,7 @@ public class TaskLogger : ITaskLogger
             .Select(x => x.Username)
             .ToListAsync();
 
+        createLogDto.Module = LogModule.Tasks;
         createLogDto.Action = 
             $"Task '{task.Title}' was assigned by {managerName} to {string.Join(", ", usernames)}";
 
@@ -41,6 +43,7 @@ public class TaskLogger : ITaskLogger
     CreateLogDto createLogDto,
     TaskItem task)
     {
+        createLogDto.Module = LogModule.Tasks;
         createLogDto.Action =
             $"Task '{task.Title}' was recovered.";
 
@@ -57,6 +60,7 @@ public class TaskLogger : ITaskLogger
             .Select(x => x.Username)
             .FirstOrDefaultAsync();
 
+        createLogDto.Module = LogModule.Tasks;
         createLogDto.Action =
             $"Task '{task.Title}' was archived by {username}.";
 
@@ -73,6 +77,7 @@ public class TaskLogger : ITaskLogger
             .Select(x => x.Username)
             .ToListAsync();
 
+        createLogDto.Module = LogModule.Tasks;
         createLogDto.Action =
             $"Task '{task.Title}' was transferred from {string.Join(", ", usernames)}.";
 
@@ -95,6 +100,7 @@ public class TaskLogger : ITaskLogger
             .Select(x => x.Username)
             .ToListAsync();
 
+        createLogDto.Module = LogModule.Tasks;
         createLogDto.Action =
             $"Task '{task.Title}' was edited. " +
             $"Removed: {string.Join(", ", removedUsernames)}. " +

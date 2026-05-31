@@ -20,7 +20,7 @@ public class TeamLogger : ITeamLogger
         _context = context;
     }
 
-    public async Task LogCreateTeamAsync(
+    public async Task LogCreateTeam(
         CreateLogDto createLogDto,
         Team team,
         IEnumerable<int> memberIds,
@@ -31,58 +31,32 @@ public class TeamLogger : ITeamLogger
             .Select(x => x.Username)
             .ToListAsync();
 
-        var dto = new CreateLogDto
-        {
-            Module = LogModule.Teams,
-            Action = $"Team '{team.Name}' was created by {managerName} and assigned to {string.Join(", ", usernames)}"
-        };
+        createLogDto.Module = LogModule.Teams;
+        createLogDto.Action =
+            $"Team '{team.Name}' was created by {managerName} and assigned to {string.Join(", ", usernames)}";
 
-        await _logService.CreateLog(dto);
-
-        var adminId = await _context.Users
-            .Where(x => x.Role == Role.Admin)
-            .Select(x => x.Id)
-            .FirstOrDefaultAsync();
-
-        await _logService.CreateLog(new CreateLogDto
-        {
-            Module = LogModule.Teams,
-            Action = $"Team '{team.Name}' was created by {managerName}"
-        });
+        await _logService.CreateLog(createLogDto);
     }
 
-    public async Task LogTeamArchivedAsync(CreateLogDto createLogDto, Team team)
+    public async Task LogTeamArchived(CreateLogDto createLogDto, Team team)
     {
         var userIds = team.Memberships.Select(x => x.UserId).ToList();
 
-        var dto = new CreateLogDto
-        {
-            Module = LogModule.Teams,
-            Action = $"Team '{team.Name}' was archived"
-        };
+        createLogDto.Module = LogModule.Teams;
+        createLogDto.Action = $"Team '{team.Name}' was archived";
 
-        await _logService.CreateLog(dto);
-
-        foreach (var userId in userIds)
-        {
-            await _logService.CreateLog(new CreateLogDto
-            {
-                Module = LogModule.Teams,
-                Action = $"Team '{team.Name}' was archived"
-            });
-        }
+        await _logService.CreateLog(createLogDto);
     }
 
-    public async Task LogTeamRecoveredAsync(CreateLogDto createLogDto, Team team)
+    public async Task LogTeamRecovered(CreateLogDto createLogDto, Team team)
     {
-        await _logService.CreateLog(new CreateLogDto
-        {
-            Module = LogModule.Teams,
-            Action = $"Team '{team.Name}' was recovered by manager {team.ManagerId}"
-        });
+        createLogDto.Module = LogModule.Teams;
+        createLogDto.Action = $"Team '{team.Name}' was recovered by manager {team.ManagerId}";
+
+        await _logService.CreateLog(createLogDto);
     }
 
-    public async Task LogTeamTransferredAsync(
+    public async Task LogTeamTransferred(
         CreateLogDto createLogDto,
         Team team,
         int oldManagerId,
@@ -98,14 +72,13 @@ public class TeamLogger : ITeamLogger
             .Select(x => x.Username)
             .FirstOrDefaultAsync();
 
-        await _logService.CreateLog(new CreateLogDto
-        {
-            Module = LogModule.Teams,
-            Action = $"Team '{team.Name}' was transferred from {oldManager} to {newManager}"
-        });
+        createLogDto.Module = LogModule.Teams;
+        createLogDto.Action = $"Team '{team.Name}' was transferred from {oldManager} to {newManager}";
+
+        await _logService.CreateLog(createLogDto);
     }
 
-    public async Task LogTeamEditedAsync(
+    public async Task LogTeamEdited(
         CreateLogDto createLogDto,
         Team team,
         IEnumerable<int> removedUsers,
@@ -121,13 +94,12 @@ public class TeamLogger : ITeamLogger
             .Select(x => x.Username)
             .ToListAsync();
 
-        await _logService.CreateLog(new CreateLogDto
-        {
-            Module = LogModule.Teams,
-            Action =
-                $"Team '{team.Name}' was edited. " +
-                $"Removed: {string.Join(", ", removedUsernames)}. " +
-                $"Added: {string.Join(", ", addedUsernames)}"
-        });
+        createLogDto.Module = LogModule.Teams;
+        createLogDto.Action =
+            $"Team '{team.Name}' was edited. " +
+            $"Removed: {string.Join(", ", removedUsernames)}. " +
+            $"Added: {string.Join(", ", addedUsernames)}";
+
+        await _logService.CreateLog(createLogDto);
     }
 }

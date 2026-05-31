@@ -5,27 +5,27 @@ namespace TaskManagementSystem.Modules.Logs.Application.Interfaces;
 public interface ITeamLogger
 {
 
-    Task LogCreateTeamAsync(
+    Task LogCreateTeam(
         CreateLogDto createLogDto,
         Team team,
         IEnumerable<int> memberIds,
         string managerName);
 
-    Task LogTeamArchivedAsync(
+    Task LogTeamArchived(
         CreateLogDto createLogDto,
         Team team);
 
-    Task LogTeamRecoveredAsync(
+    Task LogTeamRecovered(
         CreateLogDto createLogDto,
         Team team);
 
-    Task LogTeamTransferredAsync(
+    Task LogTeamTransferred(
         CreateLogDto createLogDto, 
         Team team,
         int oldManagerId,
         int newManagerId);
 
-    Task LogTeamEditedAsync(
+    Task LogTeamEdited(
         CreateLogDto createLogDto,
         Team team,
         IEnumerable<int> removedUsers,

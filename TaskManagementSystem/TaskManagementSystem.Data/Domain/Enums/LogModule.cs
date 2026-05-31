@@ -7,6 +7,6 @@ namespace TaskManagementSystem.Data.Domain.Enums;
 public enum LogModule
 {
     Identity,
-    ManageTasks,
+    Tasks,
     Teams,
 }
