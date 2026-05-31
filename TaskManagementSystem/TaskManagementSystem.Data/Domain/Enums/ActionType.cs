@@ -6,8 +6,8 @@ namespace TaskManagementSystem.Data.Domain.Enums;
 
 public enum ActionType
 {
-    Create,
-    Replace,
-    Modify,
-    Remove
+    Create = 1,
+    Replace = 2,
+    Modify = 3,
+    Remove = 4
 }

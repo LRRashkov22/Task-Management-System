@@ -43,19 +43,19 @@ public class IdentityLogger : IIdentityLogger
     public async Task UserCreatedLog(User user)
     {
         await CreateLog(
-            $"User '{user.Username}' was created by {GetAdminName()}.", ActionType.Create);
+            $"User '{user.Username}' was created by {await GetAdminName()}.", ActionType.Create);
     }
 
     public async Task UserEditedLog(User user)
     {
         await CreateLog(
-            $"User '{user.Username}' was edited by {GetAdminName()}.", ActionType.Modify);
+            $"User '{user.Username}' was edited by {await GetAdminName()}.", ActionType.Modify);
     }
 
     public async Task UserDeletedLog(User user)
     {
         await CreateLog(
-            $"User '{user.Username}' was deleted by {GetAdminName()}.", ActionType.Remove);
+            $"User '{user.Username}' was deleted by {await GetAdminName()}.", ActionType.Remove);
     }
 
     public async Task OwnershipTransferredLog(
@@ -63,14 +63,14 @@ public class IdentityLogger : IIdentityLogger
         User newManager)
     {
         await CreateLog(
-            $"Ownership was transferred from '{oldManager.Username}' to '{newManager.Username}' by {GetAdminName()}.", 
+            $"Ownership was transferred from '{oldManager.Username}' to '{newManager.Username}' by {await GetAdminName()}.", 
             ActionType.Modify);
     }
 
     public async Task ManagerForceDeletedLog(User manager)
     {
         await CreateLog(
-            $"Manager '{manager.Username}' was permanently deleted by {GetAdminName()}.", ActionType.Remove);
+            $"Manager '{manager.Username}' was permanently deleted by {await GetAdminName()}.", ActionType.Remove);
     }
 
     public async Task PasswordChangedLog(User user)

@@ -15,6 +15,4 @@ public class CreateLogDto
     public string Action { get; set; } = string.Empty;
 
     public int? UserId { get; set; }
-
-    public string? Data { get; set; }
 }

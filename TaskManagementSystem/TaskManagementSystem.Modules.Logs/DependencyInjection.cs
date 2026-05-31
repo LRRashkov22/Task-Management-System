@@ -15,6 +15,8 @@ public static class DependencyInjection
                 new AssemblyPart(typeof(LogsController).Assembly));
         services.AddScoped<ICRUDLogService, CRUDLogService>();
         services.AddScoped<ITaskLogger, TaskLogger>();
+        services.AddScoped<ITeamLogger, TeamLogger>();
+        services.AddScoped<IIdentityLogger, IdentityLogger>();
 
         return services;
     }

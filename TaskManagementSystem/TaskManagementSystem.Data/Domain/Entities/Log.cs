@@ -17,7 +17,5 @@ public class Log
 
     public User? User { get; set; }
 
-    public string? Data { get; set; }
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

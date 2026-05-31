@@ -22,9 +22,9 @@ public class LogsController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpGet("get-logs")]
-    public async Task<ActionResult> GetLog()
+    public async Task<ActionResult> GetLogs([FromQuery] GetLogsRequestDto request)
     {
-        var (logs, eror) = await _logService.GetLog();
+        var (logs, error) = await _logService.GetLogs(request);
 
         return Ok(logs);
     }
