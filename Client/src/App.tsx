@@ -179,7 +179,7 @@ type Message = {
             <br />
             <strong>Manager:</strong> manager@taskman.com / Manager123!
             <br />
-            <strong>User:</strong> user@taskman.com / User123!
+            <strong>Employee:</strong> user@taskman.com / User123!
           </div>
         </section>
       </main>

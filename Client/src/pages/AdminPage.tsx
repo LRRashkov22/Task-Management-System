@@ -100,7 +100,7 @@
       admin: 'Admin',
       dashboard: 'Dashboard',
       notifications: 'Notifications',
-      users: 'Users',
+      users: 'Employees',
       managers: 'Managers',
       archivedTasks: 'Archived Tasks',
       archivedTeams: 'Archived Teams',
@@ -122,7 +122,7 @@
       markAllAsRead: 'Mark as Read all',
       unread: (count: number) => `Unread (${count})`,
       read: (count: number) => `Read (${count})`,
-      createUser: 'Create User',
+      createUser: 'Create Employee',
       createManager: 'Create Manager',
       password: 'Password',
       selectManager: 'Select manager',
@@ -169,7 +169,7 @@
       admin: 'Администратор',
       dashboard: 'Табло',
       notifications: 'Известия',
-      users: 'Потребители',
+      users: 'Служители',
       managers: 'Мениджъри',
       logs: 'Логове',
       settings: 'Настройки',
@@ -181,7 +181,7 @@
       markAllAsRead: 'Маркирай всички като прочетени',
       unread: (count: number) => `Непрочетени (${count})`,
       read: (count: number) => `Прочетени (${count})`,
-      createUser: 'Създай потребител',
+      createUser: 'Създай служител',
       createManager: 'Създай мениджър',
       password: 'Парола',
       selectManager: 'Избери мениджър',
@@ -919,7 +919,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
     // USER MUST HAVE MANAGER
     if (createModal === 'user' && !createForm.managerId) {
       setMessage({
-        text: 'Select manager for the user.',
+        text: 'Select manager for the employee.',
         type: 'error',
       })
       return
