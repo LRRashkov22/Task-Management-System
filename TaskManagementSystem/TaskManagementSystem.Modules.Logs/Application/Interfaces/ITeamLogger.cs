@@ -20,7 +20,7 @@ public interface ITeamLogger
         Team team);
 
     Task LogTeamTransferred(
-        CreateLogDto createLogDto, 
+        CreateLogDto createLogDto,
         Team team,
         int oldManagerId,
         int newManagerId);
@@ -30,4 +30,9 @@ public interface ITeamLogger
         Team team,
         IEnumerable<int> removedUsers,
         IEnumerable<int> addedUsers);
+
+    Task LogTeamDeleted(
+        CreateLogDto createLogDto,
+        Team team
+        );
 }

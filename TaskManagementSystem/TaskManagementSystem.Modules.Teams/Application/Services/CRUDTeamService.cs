@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
+using TaskManagementSystem.Modules.Logs.Application.DTOs;
+using TaskManagementSystem.Modules.Logs.Application.Interfaces;
 using TaskManagementSystem.Modules.Notification.Application.Interfaces;
 using TaskManagementSystem.Modules.Notification.Application.Services;
 using TaskManagementSystem.Modules.Teams.Application.DTOs;
@@ -19,10 +21,16 @@ public class CRUDTeamService : ICRUDTeamService
 {
     private readonly TaskManagementDbContext context;
     private readonly ITeamNotificationService teamNotificationService;
-    public CRUDTeamService(TaskManagementDbContext context, ITeamNotificationService teamNotificationService)
+    private readonly ITeamLogger _teamLogger;
+    public CRUDTeamService(
+        TaskManagementDbContext context,
+        ITeamNotificationService teamNotificationService,
+        ITeamLogger teamLogger
+        )
     {
         this.context = context;
         this.teamNotificationService = teamNotificationService;
+        _teamLogger = teamLogger;
     }
 
     public async Task<(Team? team, string? error)> CreateTeamAsync(CreateTeamDto request, int userid)
@@ -62,6 +70,11 @@ public class CRUDTeamService : ICRUDTeamService
         context.Teams.Add(team);
         await context.SaveChangesAsync();
         await teamNotificationService.NotifyCreateTeamAsync(team, request.MemberIds, managerName);
+        await _teamLogger.LogCreateTeam(new CreateLogDto 
+        {
+            UserId = userid,
+            ActionType = ActionType.Create
+        },team, request.MemberIds, managerName);
         return (team, null);
     }
 
@@ -100,6 +113,11 @@ public class CRUDTeamService : ICRUDTeamService
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
             await teamNotificationService.NotifyTeamTransferredAsync(team, userid, request.NewManagerId);
+            await _teamLogger.LogTeamTransferred(new CreateLogDto
+            {
+                UserId = userid,
+                ActionType = ActionType.Modify
+            }, team, userid,request.NewManagerId);
 
             return (true, null);
         }
@@ -161,6 +179,11 @@ public class CRUDTeamService : ICRUDTeamService
              
             }
             await teamNotificationService.NotifyTeamEditedAsync(team, memebreToRemoveIds, membersToAdd);
+            await _teamLogger.LogTeamEdited(new CreateLogDto
+            {
+                UserId = userid,
+                ActionType = ActionType.Modify
+            }, team, membersToAdd, memebreToRemoveIds);
         }
 
         await context.SaveChangesAsync();
@@ -207,11 +230,16 @@ public class CRUDTeamService : ICRUDTeamService
             task.IsArchived = true;
         }
         await teamNotificationService.NotifyTeamArchivedAsync(team);
+        await _teamLogger.LogTeamArchived(new CreateLogDto
+        {
+            UserId = userid,
+            ActionType = ActionType.Modify
+        },team);
         await context.SaveChangesAsync();
 
         return (true, null);
     }
-    public async Task<bool> AdminRecoverTeam(RecoverOrArchiveDto request) {
+    public async Task<bool> AdminRecoverTeam(RecoverOrArchiveDto request, int userid) {
        
         var team = await context.Teams.Where(t => t.IsArchived)
             .Include(t => t.Tasks)
@@ -222,11 +250,16 @@ public class CRUDTeamService : ICRUDTeamService
         team.IsArchived = false;
         var savedChanges = await context.SaveChangesAsync();
         await teamNotificationService.NotifyTeamRecoveredAsync(team);
+        await _teamLogger.LogTeamRecovered(new CreateLogDto
+        {
+            UserId = userid,
+            ActionType = ActionType.Modify
+        },team);
         return savedChanges > 0;
     }
 
 
-    public async Task<(bool status, string? error)> DeleteArchivedTeamAsync(int teamId)
+    public async Task<(bool status, string? error)> DeleteArchivedTeamAsync(int teamId,int userid)
     {
         var team = await context.Teams
             .Include(t => t.Tasks)
@@ -243,6 +276,12 @@ public class CRUDTeamService : ICRUDTeamService
         context.Teams.Remove(team);
 
         await context.SaveChangesAsync();
+
+        await _teamLogger.LogTeamDeleted(new CreateLogDto
+        {
+            UserId = userid,
+            ActionType = ActionType.Modify
+        },team);
 
         return (true, null);
     }

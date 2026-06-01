@@ -102,4 +102,15 @@ public class TeamLogger : ITeamLogger
 
         await _logService.CreateLog(createLogDto);
     }
+
+    public async Task LogTeamDeleted(
+        CreateLogDto createLogDto,
+        Team team
+    )
+    {
+        createLogDto.Module = LogModule.Teams;
+        createLogDto.Action = $"Team '{team.Name}' was deleted.";
+
+        await _logService.CreateLog(createLogDto);
+    }
 }
