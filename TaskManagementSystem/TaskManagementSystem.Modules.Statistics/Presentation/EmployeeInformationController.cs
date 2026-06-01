@@ -26,4 +26,32 @@ public class EmployeeInformationController : ControllerBase
         var result = await employeeInformation.GetEmployeeDashboardAsync(userid);
         return Ok(result);
     }
+    [Authorize(Roles = "Employee")]
+    [HttpGet("TaskPreview")]
+    public async Task<IActionResult> GetTaskPreview()
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var result = await employeeInformation.GetEmployeeTasksPreviewAsync(userid);
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Employee")]
+    [HttpGet("TaskDetailed/{taskid}")]
+    public async Task<IActionResult> GetTaskDetailed(int taskid)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var result = await employeeInformation.GetEmployeeTaskDetailsAsync(taskid, userid);
+        return Ok(result);
+    }
+
+
+    [Authorize(Roles = "Employee")]
+    [HttpGet("CommentSearchEmployee/{taskid}")]
+    public async Task<IActionResult> GetCommentSearchEmployee(int taskid)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var result = await employeeInformation.GetEmployeeTaskDetailsAsync(taskid, userid);
+        return Ok(result);
+    }
+
 }

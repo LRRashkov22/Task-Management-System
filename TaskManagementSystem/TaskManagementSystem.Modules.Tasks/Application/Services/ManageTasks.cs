@@ -350,6 +350,10 @@ public class ManageTasks : IManageTasks
         if (!string.IsNullOrWhiteSpace(request.Description)) task.Description = request.Description;
 
         if (request.Deadline.HasValue) task.Deadline = request.Deadline.Value;
+        task.Title = request.Name ?? task.Title;
+        task.Description = request.Description ?? task.Description;
+        task.Deadline = request.Deadline ?? task.Deadline;
+
 
         if (request.Members != null)
         {

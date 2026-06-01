@@ -37,7 +37,7 @@ public class IdentityLogger : IIdentityLogger
         return await _context.Users
             .Where(x => x.Role == Role.Admin)
             .Select(x => x.Username)
-            .FirstOrDefaultAsync();
+            .FirstAsync();
     }
 
     public async Task UserCreatedLog(User user)

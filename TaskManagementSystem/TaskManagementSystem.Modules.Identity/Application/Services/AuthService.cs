@@ -113,7 +113,7 @@ public class AuthService : IAuthService
         return refreshToken;
     }
 
-    private async Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
+    private async Task<User?> ValidateRefreshTokenAsync(int userId, string refreshToken)
     {
         var user = await context.Users.FindAsync(userId);
         if (user is null || user.RefreshToken != refreshToken
