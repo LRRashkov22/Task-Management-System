@@ -291,9 +291,6 @@ public class TaskManagementDbContext : DbContext
 
             entity.Property(log => log.Action)
                 .IsRequired()
-                .HasMaxLength(100);
-
-            entity.Property(log => log.Data)
                 .HasMaxLength(4000);
 
             entity.Property(log => log.CreatedAt)
