@@ -18,7 +18,7 @@ public interface ITaskLogger
         TaskItem task);
     Task TaskArchivedLog(
         CreateLogDto createLogDto, 
-        TaskItem task, int userid);
+        TaskItem task);
     Task TaskTransferedLog(
         CreateLogDto createLogDto, 
         TaskItem task,

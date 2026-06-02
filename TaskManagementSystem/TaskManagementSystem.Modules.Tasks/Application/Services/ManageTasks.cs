@@ -6,20 +6,29 @@ using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
+using TaskManagementSystem.Modules.Logs.Application.DTOs;
+using TaskManagementSystem.Modules.Logs.Application.Interfaces;
 using TaskManagementSystem.Modules.Notification.Application.Interfaces;
 using TaskManagementSystem.Modules.Tasks.Application.DTOs;
-
 using TaskManagementSystem.Modules.Tasks.Application.Interfaces;
+
 namespace TaskManagementSystem.Modules.Tasks.Application.Services;
 
 public class ManageTasks : IManageTasks
 {
     private readonly TaskManagementDbContext context;
     private readonly ITaskNotificationService taskMotificationService;
-    public ManageTasks(TaskManagementDbContext context, ITaskNotificationService taskMotificationService)
+    private readonly ITaskLogger _taskLogger;
+
+    public ManageTasks(
+        TaskManagementDbContext context,
+        ITaskNotificationService taskMotificationService,
+        ITaskLogger taskLogger
+        )
     {
         this.context = context;
         this.taskMotificationService = taskMotificationService;
+        _taskLogger = taskLogger;
     }
     //get preview information for all task in kanban the section
     public async Task<List<TaskCardDto>> GetBoardTasks(int userid)
@@ -173,6 +182,11 @@ public class ManageTasks : IManageTasks
         .FirstAsync();
         //SignalR
         await taskMotificationService.NotifyTaskAssignedAsync(task, request.Assignments, managerName);
+        await _taskLogger.TaskAssignedLog(new CreateLogDto
+        {
+            UserId = userid,
+            ActionType = ActionType.Create
+        }, task, request.Assignments, managerName);
         return (request, null);
     }
     public async Task<(bool isDeleted, string? error)> ArchiveTask(RecoverOrArchiveDto request, int userid)
@@ -195,6 +209,11 @@ public class ManageTasks : IManageTasks
 
         //SignalR
         await taskMotificationService.NotifyTaskArchivedAsync(task, userid);
+        await _taskLogger.TaskArchivedLog(new CreateLogDto
+        {
+            UserId = userid,
+            ActionType = ActionType.Modify
+        }, task);
 
         return (true, null);
     }
@@ -273,7 +292,11 @@ public class ManageTasks : IManageTasks
 
             //SignalR
             await taskMotificationService.NotifyTaskTransferedAsync(task, oldAssignedUsers);
-
+            await _taskLogger.TaskTransferedLog(new CreateLogDto
+            {
+                UserId = userid,
+                ActionType = ActionType.Modify
+            }, task, oldAssignedUsers);
             return (true, null);
 
         }
@@ -287,7 +310,7 @@ public class ManageTasks : IManageTasks
     }
 
 
-    public async Task<(bool status, string? error)> AdminRecoverTask(RecoverOrArchiveDto request)
+    public async Task<(bool status, string? error)> AdminRecoverTask(RecoverOrArchiveDto request,int userid)
     {
         var task = await context.TaskItems
             .Include(t => t.Team)
@@ -298,6 +321,11 @@ public class ManageTasks : IManageTasks
         await context.SaveChangesAsync();
         //SignalR 
         await taskMotificationService.NotifyTaskRecoverAsync(task);
+        await _taskLogger.TaskRecoverLog(new CreateLogDto
+        {
+            UserId = userid,
+            ActionType = ActionType.Modify
+        }, task);
         return (true, null);
     }
 
@@ -388,6 +416,11 @@ public class ManageTasks : IManageTasks
             await context.SaveChangesAsync();
             //SignalR
             await taskMotificationService.NotifyTaskEditAsync(task, removedUsers, addedUsers);
+            await _taskLogger.TaskEditLog(new CreateLogDto
+            {
+                UserId = userid,
+                ActionType = ActionType.Modify
+            }, task, removedUsers, addedUsers);
         }
         else
         {

@@ -52,11 +52,10 @@ public class TaskLogger : ITaskLogger
 
     public async Task TaskArchivedLog(
     CreateLogDto createLogDto,
-    TaskItem task,
-    int userId)
+    TaskItem task)
     {
         var username = await _context.Users
-            .Where(x => x.Id == userId)
+            .Where(x => x.Id == createLogDto.UserId)
             .Select(x => x.Username)
             .FirstOrDefaultAsync();
 

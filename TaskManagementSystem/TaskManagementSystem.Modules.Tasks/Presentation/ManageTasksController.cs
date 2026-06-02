@@ -92,7 +92,8 @@ public class ManageTasksController : ControllerBase
     [HttpPatch("Recover-task")]
     public async Task<ActionResult> RecoverTask(RecoverOrArchiveDto request)
     {
-        var (status, error) = await task.AdminRecoverTask(request);
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.AdminRecoverTask(request, userid);
         if (error != null)
             return BadRequest(error);
         return Ok(status);
