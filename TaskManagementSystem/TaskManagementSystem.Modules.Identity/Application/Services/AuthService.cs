@@ -14,6 +14,8 @@ using TaskManagementSystem.Modules.Identity.Application.Interfaces;
 using TaskManagementSystem.Modules.Identity.Application.DTOs;
 using TaskManagementSystem.Data.Options;
 using Microsoft.Extensions.Options;
+using TaskManagementSystem.Modules.Logs.Application.Interfaces;
+using Microsoft.IdentityModel.Abstractions;
 
 namespace TaskManagementSystem.Modules.Identity.Application.Services;
 
@@ -21,10 +23,16 @@ public class AuthService : IAuthService
 {
     private readonly TaskManagementDbContext context;
     private readonly JwtOptions configuration;
-    public AuthService(TaskManagementDbContext context, IOptions<JwtOptions> configuration)
+    private readonly Logs.Application.Interfaces.IIdentityLogger _identityLogger;
+    public AuthService(
+        TaskManagementDbContext context, 
+        IOptions<JwtOptions> configuration,
+        Logs.Application.Interfaces.IIdentityLogger identityLogger
+        )
     {
         this.context = context;
         this.configuration = configuration.Value;
+        _identityLogger = identityLogger;
     }
     //Login---------------------------------------------------------------------------------
     public async Task<(TokenResponseDto? tokenRespone, string? error)> LoginAsync(UserDto request)
@@ -42,6 +50,8 @@ public class AuthService : IAuthService
             return (null, "User not found");
         }
         await context.SaveChangesAsync();
+
+        await _identityLogger.LoginLog(user);
         return (await CreateTokenResponse(user), null);
     }
     //--------------------------------------------------------------------------------------
@@ -67,6 +77,8 @@ public class AuthService : IAuthService
                  "\n must contain at least one uppercase, lowercase letter, digit and special character");
         user.PasswordHash = new PasswordHasher<User>().HashPassword(user, request.NewPassword);
         await context.SaveChangesAsync();
+        await _identityLogger.PasswordChangedLog(user);
+
         return (await CreateTokenResponse(user), null);
 
     }
