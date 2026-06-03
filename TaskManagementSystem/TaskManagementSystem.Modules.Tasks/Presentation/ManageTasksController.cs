@@ -76,7 +76,8 @@ public class ManageTasksController : ControllerBase
     public async Task<ActionResult<CreateTaskDto>> CreateTask(CreateTaskDto request)
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var result = await task.CreateTaskAsync(request, userid);
+        var (result, error) = await task.CreateTaskAsync(request, userid);
+        if (error != null) return BadRequest(error);
         return Ok(result);
     }
 

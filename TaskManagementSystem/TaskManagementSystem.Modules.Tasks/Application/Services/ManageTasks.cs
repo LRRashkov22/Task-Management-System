@@ -355,6 +355,12 @@ public class ManageTasks : IManageTasks
 
         if (task == null) return (null, "No task was found");
 
+        if (request.status != Status.InProgress)
+            return (false, "Manager can only move tasks to In Progress from this endpoint");
+
+        if (task.Status != Status.ToDo && task.Status != Status.Review)
+            return (false, "Only To Do or Review tasks can be moved to In Progress");
+
         task.Status = request.status;
 
         await context.SaveChangesAsync();

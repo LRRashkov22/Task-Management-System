@@ -70,8 +70,10 @@ public class AdminInformationController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpGet("search-employee")]
-    public async Task<ActionResult> SearchEmployee([FromQuery]string text,
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult> SearchEmployee(
+        [FromQuery] string? text = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
         var result = await adminInfo.GetSearchEmployees(text, page, pageSize);
         return Ok(result);

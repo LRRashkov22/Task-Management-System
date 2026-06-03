@@ -162,13 +162,18 @@ public class GetEmployeeInformation : IGetEmployeeInformation
             .FirstOrDefaultAsync();
     }
 
+    public Task<List<GetCommentMentionedNamesDto>> GetCommentMentionSearchAsync(
+        string? search,
+        int taskId) =>
+        GetSearchEmployees(search, taskId);
+
     public async Task<List<GetCommentMentionedNamesDto>> GetSearchEmployees(string? search, int taskId)
     {
         var query = context.Users
             .AsNoTracking()
-            .Where(u => u.Role == Role.Employee &&
-            u.TaskAssignments.Any(u => u.TaskId == taskId)
-            );
+            .Where(u =>
+                u.Role == Role.Employee &&
+                u.TaskAssignments.Any(a => a.TaskId == taskId));
 
         if (!string.IsNullOrWhiteSpace(search))
         {

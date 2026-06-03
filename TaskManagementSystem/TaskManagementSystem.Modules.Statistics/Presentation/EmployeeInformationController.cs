@@ -47,12 +47,13 @@ public class EmployeeInformationController : ControllerBase
     }
 
 
-    [Authorize(Roles = "Employee")]
+    [Authorize(Roles = "Employee,Manager")]
     [HttpGet("CommentSearchEmployee/{taskid}")]
-    public async Task<IActionResult> GetCommentSearchEmployee(int taskid)
+    public async Task<IActionResult> GetCommentSearchEmployee(
+        int taskid,
+        [FromQuery] string? search = null)
     {
-        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        var result = await employeeInformation.GetEmployeeTaskDetailsAsync(taskid, userid);
+        var result = await employeeInformation.GetCommentMentionSearchAsync(search, taskid);
         return Ok(result);
     }
 
