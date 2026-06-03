@@ -21,6 +21,9 @@ import {
 } from '../api/notificationApi'
 import { ChangePasswordModal } from '../components/ChangePasswordModal'
 import { NotificationsPanel } from '../components/NotificationsPanel'
+import { TaskCommentsPanel } from '../components/TaskCommentsPanel'
+import type { CommentDto } from '../api/commentsApi'
+import { getCommentsByTaskIdApi } from '../api/commentsApi'
 import { commonStyles, cx, managerStyles } from '../styles'
 import { getToken, getUsername } from '../utils/auth'
 
@@ -602,6 +605,9 @@ function EmployeeTaskDetailModal({
   onClose,
   onTabChange,
   onRequestComplete,
+  onCommentsChange,
+  onCommentError,
+  onTaskRefresh,
 }: {
   task: MyTask
   activeTab: TaskTab
@@ -609,6 +615,9 @@ function EmployeeTaskDetailModal({
   onClose: () => void
   onTabChange: (tab: TaskTab) => void
   onRequestComplete: () => void
+  onCommentsChange: (comments: CommentDto[]) => void
+  onCommentError: (message: string) => void
+  onTaskRefresh: () => Promise<void>
 }) {
   return (
     <div className={managerStyles.modalBackdrop} role="presentation">
@@ -701,36 +710,14 @@ function EmployeeTaskDetailModal({
           </div>
 
           {activeTab === 'comments' ? (
-            <section className={managerStyles.taskTabPanel}>
-              <textarea placeholder="Add Comment... Use @username to mention someone" />
-              <div className={managerStyles.commentActions}>
-                <span>
-                  Available:{' '}
-                  {task.assignees.length
-                    ? task.assignees.map((member) => `@${member.username.replace(/\s/g, '')}`).join(', ')
-                    : 'No assignees'}
-                </span>
-                <button type="button">Add Comment</button>
-              </div>
-              {task.comments.length ? (
-                <div className={managerStyles.commentList}>
-                  {task.comments.map((comment) => (
-                    <article key={comment.id}>
-                      <span className={commonStyles.avatar}>
-                        {initials(comment.username)}
-                      </span>
-                      <div>
-                        <strong>{comment.username}</strong>
-                        <time>{new Date(comment.createdAt).toLocaleString()}</time>
-                        <p>{comment.content}</p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[14px] text-[#6b7280]">No comments yet.</p>
-              )}
-            </section>
+            <TaskCommentsPanel
+              taskId={task.id}
+              comments={task.comments}
+              assignees={task.assignees}
+              onCommentsChange={onCommentsChange}
+              onTaskRefresh={onTaskRefresh}
+              onError={onCommentError}
+            />
           ) : null}
 
           {activeTab === 'time' ? (
@@ -775,7 +762,7 @@ function EmployeeTaskDetailModal({
               onClick={onRequestComplete}
             >
               <Icon name="check" />
-              {isRequesting ? 'Sending...' : 'Request Complete'}
+              {isRequesting ? 'Sending...' : 'Request Review'}
             </button>
           ) : (
             <span className="text-[14px] font-semibold text-[#6b7280]">
@@ -1133,8 +1120,14 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
     if (task.hasDetails) return
 
     try {
-      const details = await getEmployeeTaskDetailsApi(task.id)
-      const detailedTask = mergeTaskDetails(task, details)
+      const [details, comments] = await Promise.all([
+        getEmployeeTaskDetailsApi(task.id),
+        getCommentsByTaskIdApi(task.id),
+      ])
+      const detailedTask = mergeTaskDetails(task, {
+        ...details,
+        comments: comments.length ? comments : details.comments,
+      })
 
       setMyTasks((current) =>
         current.map((item) => (item.id === task.id ? detailedTask : item)),
@@ -1559,6 +1552,36 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
           onTabChange={setActiveTaskTab}
           onRequestComplete={() => {
             void handleRequestReview(selectedTask.id)
+          }}
+          onCommentsChange={(comments) => {
+            setMyTasks((current) =>
+              current.map((item) =>
+                item.id === selectedTask.id ? { ...item, comments } : item,
+              ),
+            )
+            setSelectedTask((current) =>
+              current ? { ...current, comments } : current,
+            )
+          }}
+          onCommentError={(text) => setTaskMessage(text)}
+          onTaskRefresh={async () => {
+            const [details, comments] = await Promise.all([
+              getEmployeeTaskDetailsApi(selectedTask.id),
+              getCommentsByTaskIdApi(selectedTask.id),
+            ])
+            const detailedTask = mergeTaskDetails(selectedTask, {
+              ...details,
+              comments: comments.length ? comments : details.comments,
+            })
+
+            setMyTasks((current) =>
+              current.map((item) =>
+                item.id === selectedTask.id ? detailedTask : item,
+              ),
+            )
+            setSelectedTask((current) =>
+              current?.id === selectedTask.id ? detailedTask : current,
+            )
           }}
         />
       ) : null}

@@ -41,6 +41,8 @@ import {
 } from '../api/notificationsApi'
 import { ChangePasswordModal } from '../components/ChangePasswordModal'
 import { NotificationsPanel } from '../components/NotificationsPanel'
+import { TaskCommentsPanel } from '../components/TaskCommentsPanel'
+import { getCommentsByTaskIdApi } from '../api/commentsApi'
 import AnalyticsDashboard from '../components/AnalyticsDashboard'
 import { commonStyles, managerStyles } from '../styles'
 import { getToken, getUserId, getUsername } from '../utils/auth'
@@ -1150,8 +1152,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     const updatedTasks = boardTasks.map((item) =>
       item.id === taskId ? { ...item, status: nextStatus } : item,
     )
+    const updatedTask = updatedTasks.find((item) => item.id === taskId) ?? null
 
     setBoardTasks(updatedTasks)
+    if (selectedTask?.id === taskId && updatedTask) {
+      setSelectedTask(updatedTask)
+    }
+    setSelectedTaskDetails((current) =>
+      current?.id === taskId ? { ...current, status: nextStatus } : current,
+    )
     setMessage(null)
 
     try {
@@ -1161,6 +1170,12 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       setMessage({ text: 'Task moved to In Progress.', type: 'success' })
     } catch (error) {
       setBoardTasks(previousTasks)
+      if (selectedTask?.id === taskId) {
+        setSelectedTask(previousTasks.find((item) => item.id === taskId) ?? null)
+      }
+      setSelectedTaskDetails((current) =>
+        current?.id === taskId ? { ...current, status: task.status } : current,
+      )
       setMessage({
         text:
           error instanceof Error
@@ -1176,8 +1191,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     const updatedTasks = boardTasks.map((task) =>
       task.id === taskId ? { ...task, status: 'Done' } : task,
     )
+    const updatedTask = updatedTasks.find((task) => task.id === taskId) ?? null
 
     setBoardTasks(updatedTasks)
+    if (selectedTask?.id === taskId && updatedTask) {
+      setSelectedTask(updatedTask)
+    }
+    setSelectedTaskDetails((current) =>
+      current?.id === taskId ? { ...current, status: 'Done' } : current,
+    )
     setMessage(null)
     setIsSaving(true)
 
@@ -1186,6 +1208,12 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       setMessage({ text: 'Task marked as done.', type: 'success' })
     } catch (error) {
       setBoardTasks(previousTasks)
+      if (selectedTask?.id === taskId) {
+        setSelectedTask(previousTasks.find((task) => task.id === taskId) ?? null)
+      }
+      setSelectedTaskDetails((current) =>
+        current?.id === taskId ? { ...current, status: 'Review' } : current,
+      )
       setMessage({
         text:
           error instanceof Error ? error.message : 'Could not mark task as done.',
@@ -1203,13 +1231,19 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     setActiveTaskTab('comments')
 
     try {
-      const details = await getManagerTaskDetailsApi(task.id)
+      const [details, comments] = await Promise.all([
+        getManagerTaskDetailsApi(task.id),
+        getCommentsByTaskIdApi(task.id),
+      ])
 
       if (!details || details.id !== task.id) {
         throw new Error('Task details endpoint returned invalid data.')
       }
 
-      setSelectedTaskDetails(details)
+      setSelectedTaskDetails({
+        ...details,
+        comments: comments.length ? comments : details.comments,
+      })
     } catch (error) {
       setTaskDetailsWarning(
         error instanceof Error
@@ -2243,53 +2277,31 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 </button>
               </div>
 
-              {activeTaskTab === 'comments' ? (
-                <section className={managerStyles.taskTabPanel}>
-                  <textarea
-                    placeholder="Add Comment... Use @username to mention someone"
-                  />
-                  <div className={managerStyles.commentActions}>
-                    <span>
-                      Available:{' '}
-                      {selectedTaskAssignedUsers.length
-                        ? selectedTaskAssignedUsers
-                            .map((member) => `@${member.username}`)
-                            .join(', ')
-                        : 'No assignees'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMessage({
-                          text: 'Backend endpoint for adding comments is missing.',
-                          type: 'error',
-                        })
-                      }
-                    >
-                      Add Comment
-                    </button>
-                  </div>
-                  {selectedTaskComments.length ? (
-                    <div className={managerStyles.commentList}>
-                      {selectedTaskComments.map((comment) => (
-                        <article key={comment.id}>
-                          <span className={commonStyles.avatar}>
-                            {initials(comment.username)}
-                          </span>
-                          <div>
-                            <strong>{comment.username}</strong>
-                            <time>{new Date(comment.createdAt).toLocaleString()}</time>
-                            <p>{comment.content}</p>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className={managerStyles.emptyText}>
-                      No comments loaded from backend.
-                    </p>
-                  )}
-                </section>
+              {activeTaskTab === 'comments' && selectedTask ? (
+                <TaskCommentsPanel
+                  taskId={selectedTask.id}
+                  comments={selectedTaskComments}
+                  assignees={selectedTaskAssignedUsers}
+                  onCommentsChange={(comments) => {
+                    setSelectedTaskDetails((current) =>
+                      current ? { ...current, comments } : current,
+                    )
+                  }}
+                  onTaskRefresh={async () => {
+                    const [details, comments] = await Promise.all([
+                      getManagerTaskDetailsApi(selectedTask.id),
+                      getCommentsByTaskIdApi(selectedTask.id),
+                    ])
+
+                    if (!details) return
+
+                    setSelectedTaskDetails({
+                      ...details,
+                      comments: comments.length ? comments : details.comments,
+                    })
+                  }}
+                  onError={(text) => setMessage({ text, type: 'error' })}
+                />
               ) : null}
 
               {activeTaskTab === 'time' ? (
