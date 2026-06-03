@@ -7,6 +7,7 @@ using TaskManagementSystem.Modules.Notification;
 using TaskManagementSystem.Modules.Statistics;
 using TaskManagementSystem.Modules.Tasks;
 using TaskManagementSystem.Modules.Teams;
+using TaskManagementSystem.Modules.Logs;
 using TaskManagementSystem.Modules.Comments;
 using TaskManagementSystem.Data.Options;
 using Microsoft.Extensions.Options;
@@ -38,6 +39,7 @@ namespace TaskManagementSystem.Api.Extensions
             services.AddTaskModule();
             services.AddCommentsModule();
             services.AddNotificationModule();
+            services.AddLogsModule();
         }
           
             //------------------------------------------------------------------------------------

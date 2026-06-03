@@ -73,15 +73,21 @@ namespace TaskManagementSystem.Modules.Comments.Application.Services
                 usernames.Add(matched.Groups[1].Value);
             }
 
-            var mentionedUserIds = await _context.Users
-                .Where(u => usernames.Contains(u.Username)
-                && task.Assignments.Any(a => a.UserId == u.Id))
-                .Select(u => u.Id)
-                .ToListAsync();
-
-            var assignedUsers = task.Assignments
-                .Select(t => t.UserId)
+            var assignedUserIds = task.Assignments
+                .Select(a => a.UserId)
                 .ToList();
+
+            var mentionedUserIds = usernames.Count == 0
+                ? new List<int>()
+                : await _context.Users
+                    .AsNoTracking()
+                    .Where(u =>
+                        usernames.Contains(u.Username) &&
+                        assignedUserIds.Contains(u.Id))
+                    .Select(u => u.Id)
+                    .ToListAsync();
+
+            var assignedUsers = assignedUserIds;
 
             // Fetch author's name for returning accurate DTO mapping
             var username = await _context.Set<User>()
@@ -89,11 +95,14 @@ namespace TaskManagementSystem.Modules.Comments.Application.Services
                 .Select(u => u.Username)
                 .FirstOrDefaultAsync() ?? "Unknown";
 
-         await Task.WhenAll(
-             notificationService.NotifyCommentMentionAsync(task, username, mentionedUserIds),
-             notificationService.NotifyCommentAddedAsync(task, assignedUsers, username)
-          );
-            
+            await notificationService.NotifyCommentMentionAsync(
+                task,
+                username,
+                mentionedUserIds);
+            await notificationService.NotifyCommentAddedAsync(
+                task,
+                assignedUsers,
+                username);
 
             return MapToDto(comment, username);
         }

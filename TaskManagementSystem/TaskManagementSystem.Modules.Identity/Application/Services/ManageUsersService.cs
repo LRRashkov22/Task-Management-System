@@ -63,10 +63,11 @@ public class ManageUsersService : IManageUsers
         if (employee == null)
             return (false, "Employee not found");
 
+        await _identityLogger.UserDeletedLog(employee);
+
         context.Users.Remove(employee);
 
         await context.SaveChangesAsync();
-        await _identityLogger.UserDeletedLog(employee);
 
         return (true, null);
     }
@@ -139,14 +140,13 @@ public class ManageUsersService : IManageUsers
                 task.CreatedById = request.NewManagerId;
             }
 
+            await _identityLogger.OwnershipTransferredLog(
+                currentManager,
+                newManager);
+
             await context.SaveChangesAsync();
 
             await transaction.CommitAsync();
-            await _identityLogger.OwnershipTransferredLog(
-                await context.Users
-                .Where(x => x.Id == request.CurrentManagerId)
-                .FirstAsync(),
-                 newManager);
 
             return (true, null);
         }
@@ -188,6 +188,8 @@ public class ManageUsersService : IManageUsers
                 .ToListAsync();
 
            
+            await _identityLogger.ManagerForceDeletedLog(manager);
+
             context.TaskItems.RemoveRange(tasks);
 
            
@@ -200,11 +202,6 @@ public class ManageUsersService : IManageUsers
             await context.SaveChangesAsync();
 
             await transaction.CommitAsync();
-
-            await _identityLogger.ManagerForceDeletedLog(
-                await context.Users
-                .Where(x => x.Id == managerId)
-                .FirstAsync());
 
             return (true, null);
         }

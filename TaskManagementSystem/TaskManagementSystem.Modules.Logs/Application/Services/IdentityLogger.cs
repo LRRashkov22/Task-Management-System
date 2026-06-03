@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Data.Persistance;
@@ -22,13 +20,14 @@ public class IdentityLogger : IIdentityLogger
         _context = context;
     }
 
-    private async Task CreateLog(string action, ActionType actionType)
+    private async Task CreateLog(User user, string action, ActionType actionType)
     {
         await _logService.CreateLog(new CreateLogDto
         {
             ActionType = actionType,
             Module = LogModule.Identity,
-            Action = action
+            Action = action,
+            UserId = user.Id
         });
     }
 
@@ -43,18 +42,21 @@ public class IdentityLogger : IIdentityLogger
     public async Task UserCreatedLog(User user)
     {
         await CreateLog(
+            user,
             $"User '{user.Username}' was created by {await GetAdminName()}.", ActionType.Create);
     }
 
     public async Task UserEditedLog(User user)
     {
         await CreateLog(
+            user,
             $"User '{user.Username}' was edited by {await GetAdminName()}.", ActionType.Modify);
     }
 
     public async Task UserDeletedLog(User user)
     {
         await CreateLog(
+            user,
             $"User '{user.Username}' was deleted by {await GetAdminName()}.", ActionType.Remove);
     }
 
@@ -63,6 +65,7 @@ public class IdentityLogger : IIdentityLogger
         User newManager)
     {
         await CreateLog(
+            oldManager,
             $"Ownership was transferred from '{oldManager.Username}' to '{newManager.Username}' by {await GetAdminName()}.", 
             ActionType.Modify);
     }
@@ -70,24 +73,28 @@ public class IdentityLogger : IIdentityLogger
     public async Task ManagerForceDeletedLog(User manager)
     {
         await CreateLog(
+            manager,
             $"Manager '{manager.Username}' was permanently deleted by {await GetAdminName()}.", ActionType.Remove);
     }
 
     public async Task PasswordChangedLog(User user)
     {
         await CreateLog(
+            user,
             $"User '{user.Username}' changed their password.", ActionType.Modify);
     }
 
     public async Task LoginLog(User user)
     {
         await CreateLog(
+            user,
             $"User '{user.Username}' logged in.", ActionType.Create);
     }
 
     public async Task LogoutLog(User user)
     {
         await CreateLog(
+            user,
             $"User '{user.Username}' logged out.", ActionType.Create);
     }
 }

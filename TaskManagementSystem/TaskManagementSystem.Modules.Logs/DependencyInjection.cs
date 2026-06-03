@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddControllers()
             .PartManager.ApplicationParts.Add(
                 new AssemblyPart(typeof(LogsController).Assembly));
+
         services.AddScoped<ICRUDLogService, CRUDLogService>();
         services.AddScoped<ITaskLogger, TaskLogger>();
         services.AddScoped<ITeamLogger, TeamLogger>();
