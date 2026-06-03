@@ -38,6 +38,20 @@ export type ArchivedTaskDto = {
   assignedEmployeesCount: number
 }
 
+export type AdminLogDto = {
+  id: number
+  module: number | string
+  actionType: number | string
+  action?: string | null
+  userId?: number | null
+  createdAt?: string | null
+  user?: {
+    id?: number
+    username?: string | null
+    role?: number | string
+  } | null
+}
+
 export type CreateUserRequest = {
   username: string
   password: string
@@ -54,6 +68,16 @@ export type EditUserRequest = {
 export type TransferManagerOwnershipRequest = {
   currentManagerId: number
   newManagerId: number
+}
+
+export type GetAdminLogsRequest = {
+  sortBy?: string
+  sortDirection?: 'asc' | 'desc'
+  page?: number
+  pageSize?: number
+  userId?: number
+  actionType?: number
+  module?: number
 }
 
 export function getAdminDashboardApi() {
@@ -76,12 +100,32 @@ export function getArchivedTasksApi() {
   return apiJson<ArchivedTaskDto[]>('/Task/get-archived-tasks')
 }
 
-export function searchEmployeesApi(text: string, page = 1, pageSize = 10) {
+export function getAdminLogsApi(request: GetAdminLogsRequest = {}) {
+  const searchParams = new URLSearchParams()
+
+  Object.entries(request).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.set(key, String(value))
+    }
+  })
+
+  const query = searchParams.toString()
+
+  return apiJson<AdminLogDto[]>(
+    `/logs/get-logs${query ? `?${query}` : ''}`,
+  )
+}
+
+export function searchEmployeesApi(text = '', page = 1, pageSize = 10) {
   const searchParams = new URLSearchParams({
-    text,
     page: String(page),
     pageSize: String(pageSize),
   })
+  const trimmedText = text.trim()
+
+  if (trimmedText) {
+    searchParams.set('text', trimmedText)
+  }
 
   return apiJson<AdminUserDto[]>(
     `/Statistics/Admin/search-employee?${searchParams.toString()}`,
@@ -99,6 +143,12 @@ export function editUserApi(request: EditUserRequest) {
   return apiJson<EditUserRequest>('/identity/edit-user', {
     method: 'PATCH',
     body: JSON.stringify(request),
+  })
+}
+
+export function deleteEmployeeApi(employeeId: number) {
+  return apiJson<boolean>(`/identity/delete-employee/${employeeId}`, {
+    method: 'DELETE',
   })
 }
 

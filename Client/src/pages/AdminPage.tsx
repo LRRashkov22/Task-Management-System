@@ -3,12 +3,14 @@
   import type { FormEvent } from 'react'
   import {
     createUserApi,
+    deleteEmployeeApi,
     deleteArchivedTaskApi,
     deleteArchivedTeamApi,
     editUserApi,
     forceDeleteManagerApi,
     getAdminDashboardApi,
     getAdminDeleteManagerPreviewApi,
+    getAdminLogsApi,
     getArchivedTasksApi,
     getArchivedTeamsApi,
     getEmployeesApi,
@@ -21,6 +23,7 @@
   import type {
     AdminDashboardDto,
     AdminDeleteManagerPreviewDto,
+    AdminLogDto,
     AdminUserDto,
     ArchivedTaskDto,
     ArchivedTeamDto,
@@ -39,6 +42,10 @@
   import { adminStyles, commonStyles } from '../styles'
   import { ChangePasswordModal } from '../components/ChangePasswordModal'
   import { getToken } from '../utils/auth'
+  import {
+    buildPaginationItems,
+    getPaginationRangeLabel,
+  } from '../utils/pagination'
 
   type IconName =
     | 'dashboard'
@@ -81,6 +88,7 @@
     | 'logs'
   type CreateModal = 'user' | 'manager' | null
   type DeleteManagerMode = 'transfer' | 'cascade'
+  type LogFilterValue = 'all' | '1' | '2' | '3' | '4'
 
   type CreateForm = {
     username: string
@@ -91,6 +99,94 @@
   type StatusMessage = {
     text: string
     type: 'error' | 'success'
+  }
+
+  const logModuleOptions = [
+    { value: 'all', label: 'All modules' },
+    { value: '1', label: 'Identity' },
+    { value: '2', label: 'Tasks' },
+    { value: '3', label: 'Teams' },
+  ] as const
+
+  const logActionOptions = [
+    { value: 'all', label: 'All actions' },
+    { value: '1', label: 'Create' },
+    { value: '2', label: 'Replace' },
+    { value: '3', label: 'Modify' },
+    { value: '4', label: 'Remove' },
+  ] as const
+
+  function getLogModuleLabel(module: AdminLogDto['module']) {
+    const value = String(module).toLowerCase()
+
+    if (value === '1' || value === 'identity') return 'Identity'
+    if (value === '2' || value === 'tasks') return 'Tasks'
+    if (value === '3' || value === 'teams') return 'Teams'
+
+    return 'Unknown'
+  }
+
+  function getLogActionLabel(actionType: AdminLogDto['actionType']) {
+    const value = String(actionType).toLowerCase()
+
+    if (value === '1' || value === 'create') return 'Create'
+    if (value === '2' || value === 'replace') return 'Replace'
+    if (value === '3' || value === 'modify') return 'Modify'
+    if (value === '4' || value === 'remove') return 'Remove'
+
+    return 'Activity'
+  }
+
+  function getLogActionBadge(actionType: AdminLogDto['actionType']) {
+    const label = getLogActionLabel(actionType)
+    const base =
+      'inline-flex min-h-7 items-center justify-center rounded-full px-3 text-[12px] font-extrabold'
+
+    if (label === 'Create') return `${base} bg-[#dcfce7] text-[#15803d]`
+    if (label === 'Replace') return `${base} bg-[#e0f2fe] text-[#0369a1]`
+    if (label === 'Modify') return `${base} bg-[#fef3c7] text-[#b45309]`
+    if (label === 'Remove') return `${base} bg-[#fee2e2] text-[#dc2626]`
+
+    return `${base} bg-[#f3f4f6] text-[#4b5563]`
+  }
+
+  function getLogModuleBadge(module: AdminLogDto['module']) {
+    const label = getLogModuleLabel(module)
+    const base =
+      'inline-flex min-h-7 items-center justify-center rounded-full px-3 text-[12px] font-extrabold'
+
+    if (label === 'Identity') return `${base} bg-[#eef5ff] text-[#315af2]`
+    if (label === 'Tasks') return `${base} bg-[#ecfdf5] text-[#047857]`
+    if (label === 'Teams') return `${base} bg-[#fff7ed] text-[#c2410c]`
+
+    return `${base} bg-[#f3f4f6] text-[#4b5563]`
+  }
+
+  function getLogActionText(log: AdminLogDto) {
+    if (log.action?.trim()) {
+      return log.action.trim()
+    }
+
+    return `${getLogActionLabel(log.actionType)} event in ${getLogModuleLabel(
+      log.module,
+    )}`
+  }
+
+  function formatLogDate(value?: string | null) {
+    if (!value) return '-'
+
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+      return value
+    }
+
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date)
   }
 
   const translations = {
@@ -394,16 +490,29 @@
     const [isDeletePreviewLoading, setIsDeletePreviewLoading] = useState(false)
     const [createForm, setCreateForm] = useState<CreateForm>(emptyCreateForm)
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-    const [logFilter, setLogFilter] = useState('All')
+    const [logModuleFilter, setLogModuleFilter] =
+      useState<LogFilterValue>('all')
+    const [logActionFilter, setLogActionFilter] =
+      useState<LogFilterValue>('all')
+    const [logPage, setLogPage] = useState(1)
+    const [logPageSize, setLogPageSize] = useState(20)
     const [dashboard, setDashboard] =
       useState<AdminDashboardDto>(emptyDashboard)
     const [employees, setEmployees] = useState<AdminUserDto[]>([])
+    const [displayedEmployees, setDisplayedEmployees] = useState<AdminUserDto[]>([])
+    const [employeePage, setEmployeePage] = useState(1)
+    const [employeePageSize] = useState(10)
+    const [employeeTotalCount, setEmployeeTotalCount] = useState(0)
+    const [isEmployeesLoading, setIsEmployeesLoading] = useState(false)
+    const [deleteEmployee, setDeleteEmployee] = useState<AdminUserDto | null>(null)
     const [managers, setManagers] = useState<AdminUserDto[]>([])
     const [archivedTasks, setArchivedTasks] = useState<ArchivedTaskDto[]>([])
     const [archivedTeams, setArchivedTeams] = useState<ArchivedTeamDto[]>([])
+    const [logs, setLogs] = useState<AdminLogDto[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [isArchiveLoading, setIsArchiveLoading] = useState(false)
+    const [isLogsLoading, setIsLogsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [pendingArchiveAction, setPendingArchiveAction] = useState<
       string | null
@@ -423,6 +532,9 @@
 
         setDashboard(dashboardData)
         setEmployees(employeeData)
+        setEmployeeTotalCount(
+          dashboardData.firstEntity || employeeData.length,
+        )
         setManagers(managerData)
       } catch (error) {
         setMessage({
@@ -463,6 +575,72 @@
         setIsArchiveLoading(false)
       }
     }, [t.apiError])
+
+    const loadLogs = useCallback(async () => {
+      setIsLogsLoading(true)
+
+      try {
+        setLogs(
+          await getAdminLogsApi({
+            sortBy: 'createdAt',
+            sortDirection: 'desc',
+            page: logPage,
+            pageSize: logPageSize,
+            module:
+              logModuleFilter === 'all' ? undefined : Number(logModuleFilter),
+            actionType:
+              logActionFilter === 'all' ? undefined : Number(logActionFilter),
+          }),
+        )
+      } catch (error) {
+        setLogs([])
+        setMessage({
+          text: error instanceof Error ? error.message : t.apiError,
+          type: 'error',
+        })
+      } finally {
+        setIsLogsLoading(false)
+      }
+    }, [
+      logActionFilter,
+      logModuleFilter,
+      logPage,
+      logPageSize,
+      t.apiError,
+    ])
+
+    const loadEmployeesPage = useCallback(async () => {
+      setIsEmployeesLoading(true)
+
+      try {
+        const pageData = await searchEmployeesApi(
+          searchQuery.trim(),
+          employeePage,
+          employeePageSize,
+        )
+        setDisplayedEmployees(pageData)
+
+        if (searchQuery.trim()) {
+          if (pageData.length < employeePageSize) {
+            setEmployeeTotalCount(
+              (employeePage - 1) * employeePageSize + pageData.length,
+            )
+          } else if (employeePage === 1) {
+            setEmployeeTotalCount((current) =>
+              current > employeePageSize ? current : employeePageSize + 1,
+            )
+          }
+        }
+      } catch (error) {
+        setDisplayedEmployees([])
+        setMessage({
+          text: error instanceof Error ? error.message : t.apiError,
+          type: 'error',
+        })
+      } finally {
+        setIsEmployeesLoading(false)
+      }
+    }, [employeePage, employeePageSize, searchQuery, t.apiError])
 
     const handleMarkAsRead = useCallback(
       async (notificationId: number) => {
@@ -544,6 +722,30 @@ useEffect(() => {
 
   return () => window.clearTimeout(timeoutId)
 }, [activeView, loadArchivedTasks, loadArchivedTeams])
+
+useEffect(() => {
+  if (activeView !== 'logs') {
+    return
+  }
+
+  const timeoutId = window.setTimeout(() => {
+    void loadLogs()
+  }, 0)
+
+  return () => window.clearTimeout(timeoutId)
+}, [activeView, loadLogs])
+
+useEffect(() => {
+  if (activeView !== 'users') {
+    return
+  }
+
+  const timeoutId = window.setTimeout(() => {
+    void loadEmployeesPage()
+  }, 0)
+
+  return () => window.clearTimeout(timeoutId)
+}, [activeView, loadEmployeesPage])
 
 useEffect(() => {
   let cancelled = false
@@ -735,31 +937,51 @@ async function refreshAdminData() {
     ])
 
   setEmployees(updatedEmployees)
+  setEmployeeTotalCount(
+    updatedDashboard.firstEntity || updatedEmployees.length,
+  )
   setManagers(updatedManagers)
   setDashboard(updatedDashboard)
 }
 
 async function handleSearch(value: string) {
   setSearchQuery(value)
+  setEmployeePage(1)
+
+  if (!value.trim()) {
+    setEmployeeTotalCount(dashboard.firstEntity || employees.length)
+  }
+}
+
+async function handleDeleteEmployeeSubmit(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault()
+
+  if (!deleteEmployee) return
+
+  setIsSaving(true)
+  setMessage(null)
 
   try {
-    if (!value.trim()) {
-      const employeeData = await getEmployeesApi()
-      setEmployees(employeeData)
-      return
+    await deleteEmployeeApi(deleteEmployee.id)
+    await refreshAdminData()
+    if (activeView === 'users') {
+      await loadEmployeesPage()
     }
-
-    const employeeData = await searchEmployeesApi(value.trim())
-    setEmployees(employeeData)
+    setEmployeePage(1)
+    setDeleteEmployee(null)
+    setMessage({ text: 'Employee deleted successfully.', type: 'success' })
   } catch (error) {
     setMessage({
-      text:
-        error instanceof Error
-          ? error.message
-          : t.apiError,
+      text: error instanceof Error ? error.message : t.apiError,
       type: 'error',
     })
+  } finally {
+    setIsSaving(false)
   }
+}
+
+function closeDeleteEmployeeModal() {
+  setDeleteEmployee(null)
 }
 
 async function refreshDashboardSummary() {
@@ -950,8 +1172,10 @@ try {
     })
   }
 
-  // ТУК refresh-ваш списъците
   await refreshAdminData()
+  if (activeView === 'users') {
+    await loadEmployeesPage()
+  }
 
   // reset
   setCreateModal(null)
@@ -1016,6 +1240,31 @@ try {
     const availableTransferManagers = deleteManager
       ? managers.filter((manager) => manager.id !== deleteManager.id)
       : managers
+    const logUsersById = new Map(
+      [...employees, ...managers].map((user) => [user.id, user]),
+    )
+    const identityLogCount = logs.filter(
+      (log) => getLogModuleLabel(log.module) === 'Identity',
+    ).length
+    const taskLogCount = logs.filter(
+      (log) => getLogModuleLabel(log.module) === 'Tasks',
+    ).length
+    const teamLogCount = logs.filter(
+      (log) => getLogModuleLabel(log.module) === 'Teams',
+    ).length
+    const canGoToNextLogPage = logs.length === logPageSize
+    const latestLogDate = logs[0]?.createdAt
+    const employeeTotalPages = Math.max(
+      1,
+      Math.ceil(employeeTotalCount / employeePageSize),
+    )
+    const employeePaginationItems = buildPaginationItems(
+      employeePage,
+      employeeTotalPages,
+    )
+    const canGoToNextEmployeePage =
+      displayedEmployees.length === employeePageSize
+    const isEmployeesTableLoading = isLoading || isEmployeesLoading
 
     return (
       <main className={adminStyles.shell(isSidebarOpen)}>
@@ -1147,12 +1396,12 @@ try {
                     <span role="columnheader">{t.username.toUpperCase()}</span>
                     <span role="columnheader">ID</span>
                     <span role="columnheader">{t.manager.toUpperCase()}</span>
-                    <span role="columnheader">{t.edit.toUpperCase()}</span>
+                    <span role="columnheader">{t.actions.toUpperCase()}</span>
                   </div>
-                  {isLoading ? (
+                  {isEmployeesTableLoading ? (
                     <div className={adminStyles.tableEmpty}>{t.loading}</div>
-                  ) : employees.length ? (
-                    employees.map((employee) => (
+                  ) : displayedEmployees.length ? (
+                    displayedEmployees.map((employee) => (
                       <div
                         className={adminStyles.bodyRow('users')}
                         role="row"
@@ -1161,13 +1410,24 @@ try {
                         <span role="cell">{employee.username}</span>
                         <span role="cell">{employee.id}</span>
                         <span role="cell">{employee.managerName || '-'}</span>
-                        <span role="cell">
+                        <span className={adminStyles.archiveActions} role="cell">
                           <button
-                            className={adminStyles.tableAction}
+                            className={adminStyles.iconAction('edit')}
                             type="button"
+                            aria-label={`${t.edit}: ${employee.username}`}
+                            title={t.edit}
                             onClick={() => openEditModal(employee, 'user')}
                           >
-                            {t.edit}
+                            <Icon name="edit" />
+                          </button>
+                          <button
+                            className={adminStyles.iconAction('delete')}
+                            type="button"
+                            aria-label={`Delete employee: ${employee.username}`}
+                            title="Delete employee"
+                            onClick={() => setDeleteEmployee(employee)}
+                          >
+                            <Icon name="trash" />
                           </button>
                         </span>
                       </div>
@@ -1175,6 +1435,64 @@ try {
                   ) : (
                     <div className={adminStyles.tableEmpty}>{t.empty}</div>
                   )}
+                </div>
+
+                <div className="flex min-h-[58px] flex-wrap items-center justify-between gap-4 border-t border-[#edf0f4] px-6 py-3 max-[760px]:flex-col max-[760px]:items-stretch">
+                  <p className="text-[13px] font-bold text-[#64748b]">
+                    {getPaginationRangeLabel(
+                      employeePage,
+                      employeePageSize,
+                      employeeTotalCount,
+                    )}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      className="min-h-9 cursor-pointer rounded-lg border border-[#cfd6e0] bg-white px-4 text-[13px] font-extrabold text-[#111827] hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
+                      type="button"
+                      disabled={isEmployeesTableLoading || employeePage === 1}
+                      onClick={() =>
+                        setEmployeePage((current) => Math.max(1, current - 1))
+                      }
+                    >
+                      Previous
+                    </button>
+                    {employeePaginationItems.map((item, index) =>
+                      item === 'ellipsis' ? (
+                        <span
+                          className="min-h-9 px-2 text-[13px] font-extrabold text-[#64748b]"
+                          key={`ellipsis-${index}`}
+                        >
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          className={
+                            item === employeePage
+                              ? 'min-h-9 min-w-9 cursor-pointer rounded-lg border border-[#315af2] bg-[#315af2] px-3 text-[13px] font-extrabold text-white'
+                              : 'min-h-9 min-w-9 cursor-pointer rounded-lg border border-[#cfd6e0] bg-white px-3 text-[13px] font-extrabold text-[#111827] hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50'
+                          }
+                          type="button"
+                          disabled={isEmployeesTableLoading}
+                          key={item}
+                          onClick={() => setEmployeePage(item)}
+                        >
+                          {item}
+                        </button>
+                      ),
+                    )}
+                    <button
+                      className="min-h-9 cursor-pointer rounded-lg border border-[#315af2] bg-[#315af2] px-4 text-[13px] font-extrabold text-white hover:bg-[#254be0] disabled:cursor-not-allowed disabled:opacity-50"
+                      type="button"
+                      disabled={
+                        isEmployeesTableLoading || !canGoToNextEmployeePage
+                      }
+                      onClick={() =>
+                        setEmployeePage((current) => current + 1)
+                      }
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
               </section>
             ) : activeView === 'managers' ? (
@@ -1340,29 +1658,227 @@ try {
                 </div>
               </section>
             ) : activeView === 'logs' ? (
-              <section className={adminStyles.logsPanel} aria-label={t.logs}>
-                <div className={adminStyles.tableCard}>
-                  <div className={adminStyles.table('logs')} role="table">
-                    <div className={`${adminStyles.head('logs')} min-h-[46px]`} role="row">
-                      <span role="columnheader">ACTION</span>
-                      <span role="columnheader">USER</span>
-                      <span role="columnheader">TASK ID</span>
-                      <span role="columnheader">TIME</span>
+              <section className="grid gap-5" aria-label={t.logs}>
+                <div className="rounded-xl border border-[#dbe7ff] bg-white p-5 shadow-[0_8px_24px_rgba(17,24,39,0.08)]">
+                  <div className="mb-5 flex items-start justify-between gap-5 max-[760px]:flex-col">
+                    <div>
+                      <p className="mb-2 text-[12px] font-extrabold tracking-[0.08em] text-[#315af2] uppercase">
+                        Admin activity
+                      </p>
                     </div>
+
+                    <button
+                      className="min-h-10 cursor-pointer rounded-lg border border-[#c7d2fe] bg-[#eef5ff] px-4 text-[14px] font-extrabold text-[#315af2] hover:bg-[#dfeaff] disabled:cursor-not-allowed disabled:opacity-70"
+                      type="button"
+                      disabled={isLogsLoading}
+                      onClick={() => {
+                        void loadLogs()
+                      }}
+                    >
+                      {isLogsLoading ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_1fr_0.7fr] gap-3 max-[900px]:grid-cols-1 [&_label]:grid [&_label]:gap-2 [&_label_span]:text-[12px] [&_label_span]:font-extrabold [&_label_span]:tracking-[0.04em] [&_label_span]:text-[#64748b] [&_label_span]:uppercase [&_select]:min-h-11 [&_select]:rounded-lg [&_select]:border [&_select]:border-[#cfd6e0] [&_select]:bg-white [&_select]:px-3.5 [&_select]:text-[15px] [&_select]:font-bold [&_select]:text-[#111827] [&_select]:focus:border-[#aeb8ce] [&_select]:focus:outline-[3px] [&_select]:focus:outline-[rgba(49,90,242,0.14)]">
+                    <label>
+                      <span>Module</span>
+                      <select
+                        value={logModuleFilter}
+                        onChange={(event) => {
+                          setLogPage(1)
+                          setLogModuleFilter(
+                            event.target.value as LogFilterValue,
+                          )
+                        }}
+                      >
+                        {logModuleOptions.map((option) => (
+                          <option value={option.value} key={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>Action type</span>
+                      <select
+                        value={logActionFilter}
+                        onChange={(event) => {
+                          setLogPage(1)
+                          setLogActionFilter(
+                            event.target.value as LogFilterValue,
+                          )
+                        }}
+                      >
+                        {logActionOptions.map((option) => (
+                          <option value={option.value} key={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>Page size</span>
+                      <select
+                        value={logPageSize}
+                        onChange={(event) => {
+                          setLogPage(1)
+                          setLogPageSize(Number(event.target.value))
+                        }}
+                      >
+                        <option value={10}>10 rows</option>
+                        <option value={20}>20 rows</option>
+                        <option value={50}>50 rows</option>
+                      </select>
+                    </label>
                   </div>
                 </div>
 
-                <select
-                  className={adminStyles.logsFilter}
-                  aria-label="Log filter"
-                  value={logFilter}
-                  onChange={(event) => setLogFilter(event.target.value)}
-                >
-                  <option>All</option>
-                  <option>Created</option>
-                  <option>Status Changed</option>
-                  <option>Assigned</option>
-                </select>
+                <div className="grid grid-cols-4 gap-4 max-[1180px]:grid-cols-2 max-[760px]:grid-cols-1">
+                  <article className="rounded-xl border border-[#edf0f4] bg-white p-5 shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
+                    <p className="mb-3 text-[13px] font-extrabold text-[#64748b]">
+                      Loaded rows
+                    </p>
+                    <strong className="block text-[30px] leading-none font-extrabold text-[#0f172a]">
+                      {isLogsLoading ? '-' : logs.length}
+                    </strong>
+                    <span className="mt-3 block text-[12px] font-bold text-[#64748b]">
+                      Latest: {formatLogDate(latestLogDate)}
+                    </span>
+                  </article>
+                  <article className="rounded-xl border border-[#dbeafe] bg-[#f8fbff] p-5 shadow-[0_3px_7px_rgba(17,24,39,0.06)]">
+                    <p className="mb-3 text-[13px] font-extrabold text-[#315af2]">
+                      Identity
+                    </p>
+                    <strong className="block text-[30px] leading-none font-extrabold text-[#0f172a]">
+                      {identityLogCount}
+                    </strong>
+                  </article>
+                  <article className="rounded-xl border border-[#bbf7d0] bg-[#f7fef9] p-5 shadow-[0_3px_7px_rgba(17,24,39,0.06)]">
+                    <p className="mb-3 text-[13px] font-extrabold text-[#047857]">
+                      Tasks
+                    </p>
+                    <strong className="block text-[30px] leading-none font-extrabold text-[#0f172a]">
+                      {taskLogCount}
+                    </strong>
+                  </article>
+                  <article className="rounded-xl border border-[#fed7aa] bg-[#fffaf5] p-5 shadow-[0_3px_7px_rgba(17,24,39,0.06)]">
+                    <p className="mb-3 text-[13px] font-extrabold text-[#c2410c]">
+                      Teams
+                    </p>
+                    <strong className="block text-[30px] leading-none font-extrabold text-[#0f172a]">
+                      {teamLogCount}
+                    </strong>
+                  </article>
+                </div>
+
+                <div className="overflow-hidden rounded-xl border border-[#edf0f4] bg-white shadow-[0_8px_24px_rgba(17,24,39,0.08)]">
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[940px]" role="table">
+                      <div
+                        className="grid min-h-12 grid-cols-[1.45fr_0.85fr_0.7fr_0.65fr_0.85fr] items-center gap-4 border-b border-[#edf0f4] bg-[#f8fafc] px-6 text-[12px] font-extrabold tracking-[0.06em] text-[#64748b] uppercase"
+                        role="row"
+                      >
+                        <span role="columnheader">Event</span>
+                        <span role="columnheader">User</span>
+                        <span role="columnheader">Module</span>
+                        <span role="columnheader">Type</span>
+                        <span className="text-right" role="columnheader">
+                          Time
+                        </span>
+                      </div>
+
+                      {isLogsLoading ? (
+                        <div className="grid gap-3 px-6 py-6">
+                          {Array.from({ length: 5 }, (_, index) => (
+                            <div
+                              className="h-[54px] animate-pulse rounded-lg bg-[#f1f5f9]"
+                              key={index}
+                            />
+                          ))}
+                        </div>
+                      ) : logs.length ? (
+                        logs.map((log) => {
+                          const userName =
+                            log.user?.username ||
+                            logUsersById.get(log.userId ?? -1)?.username ||
+                            (log.userId ? `User #${log.userId}` : 'System')
+
+                          return (
+                            <div
+                              className="grid min-h-[68px] grid-cols-[1.45fr_0.85fr_0.7fr_0.65fr_0.85fr] items-center gap-4 border-b border-[#edf0f4] px-6 text-[14px] font-semibold text-[#111827] last:border-b-0"
+                              role="row"
+                              key={log.id}
+                            >
+                              <span className="min-w-0" role="cell">
+                                <strong className="block overflow-hidden text-ellipsis whitespace-nowrap text-[15px] font-extrabold text-[#0f172a]">
+                                  {getLogActionText(log)}
+                                </strong>
+                                <span className="mt-1 block text-[12px] font-bold text-[#94a3b8]">
+                                  Log #{log.id}
+                                </span>
+                              </span>
+                              <span
+                                className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+                                role="cell"
+                              >
+                                {userName}
+                              </span>
+                              <span role="cell">
+                                <span className={getLogModuleBadge(log.module)}>
+                                  {getLogModuleLabel(log.module)}
+                                </span>
+                              </span>
+                              <span role="cell">
+                                <span
+                                  className={getLogActionBadge(log.actionType)}
+                                >
+                                  {getLogActionLabel(log.actionType)}
+                                </span>
+                              </span>
+                              <span className="text-right" role="cell">
+                                <time dateTime={log.createdAt ?? undefined}>
+                                  {formatLogDate(log.createdAt)}
+                                </time>
+                              </span>
+                            </div>
+                          )
+                        })
+                      ) : (
+                        <div className={adminStyles.tableEmpty}>
+                          {t.empty}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-[58px] items-center justify-between gap-4 border-t border-[#edf0f4] px-6 py-3 max-[760px]:flex-col max-[760px]:items-stretch">
+                    <p className="text-[13px] font-bold text-[#64748b]">
+                      Showing page {logPage} with {logs.length} loaded rows.
+                    </p>
+                    <div className="flex gap-2 max-[760px]:grid max-[760px]:grid-cols-2">
+                      <button
+                        className="min-h-9 cursor-pointer rounded-lg border border-[#cfd6e0] bg-white px-4 text-[13px] font-extrabold text-[#111827] hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        disabled={isLogsLoading || logPage === 1}
+                        onClick={() =>
+                          setLogPage((current) => Math.max(1, current - 1))
+                        }
+                      >
+                        Previous
+                      </button>
+                      <button
+                        className="min-h-9 cursor-pointer rounded-lg border border-[#315af2] bg-[#315af2] px-4 text-[13px] font-extrabold text-white hover:bg-[#254be0] disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        disabled={isLogsLoading || !canGoToNextLogPage}
+                        onClick={() => setLogPage((current) => current + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </section>
             ) : (
               <div className={adminStyles.statsGrid(isSidebarOpen)}>
@@ -1589,6 +2105,40 @@ try {
                   }
                 >
                   {isSaving ? 'Deleting...' : 'Delete Manager'}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
+
+        {deleteEmployee ? (
+          <div className={adminStyles.modalBackdrop} role="presentation">
+            <form
+              className={adminStyles.modal}
+              aria-label={`Delete employee ${deleteEmployee.username}`}
+              onSubmit={(event) => void handleDeleteEmployeeSubmit(event)}
+            >
+              <h2 className="text-[#dc2626]">
+                Delete Employee: {deleteEmployee.username}
+              </h2>
+              <p className="text-[15px] font-semibold text-[#4b5563]">
+                This action permanently removes the employee account.
+              </p>
+              <div className={adminStyles.modalActions}>
+                <button
+                  className={adminStyles.modalCancel}
+                  type="button"
+                  disabled={isSaving}
+                  onClick={closeDeleteEmployeeModal}
+                >
+                  {t.cancel}
+                </button>
+                <button
+                  className={adminStyles.modalSave}
+                  type="submit"
+                  disabled={isSaving}
+                >
+                  {isSaving ? t.loading : 'Delete'}
                 </button>
               </div>
             </form>
