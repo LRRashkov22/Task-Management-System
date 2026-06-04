@@ -1556,6 +1556,20 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const selectedTaskComments = selectedTaskDetails?.comments ?? []
   const selectedTaskWorkSessions = selectedTaskDetails?.workSessions ?? []
   const selectedTaskHistory = selectedTaskDetails?.history ?? []
+  const combinedSelectedHistory = useMemo(() => {
+    const historyItems = (selectedTaskHistory || []).map((h) => ({ ...h }))
+    const sessionItems = (selectedTaskWorkSessions || []).map((ws) => ({
+      id: `ws-${ws.id}`,
+      action: `Work session (${ws.hours}h)`,
+      changedByUsername: ws.username,
+      createdAt: ws.date,
+      description: ws.description ?? '',
+    }))
+
+    const combined = [...historyItems, ...sessionItems]
+    combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    return combined
+  }, [selectedTaskHistory, selectedTaskWorkSessions])
 
   return (
     <main className={managerStyles.shell(isSidebarOpen)}>
@@ -2312,6 +2326,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                         <strong>{session.username}</strong>
                         <span>{session.hours}h</span>
                         <time>{formatDate(session.date)}</time>
+                        {session.description ? (
+                          <p className="text-sm text-[#6b7280] mt-1">{session.description}</p>
+                        ) : null}
                       </article>
                     ))
                   ) : (
@@ -2324,12 +2341,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
 
               {activeTaskTab === 'history' ? (
                 <section className={managerStyles.taskTabPanel}>
-                  {selectedTaskHistory.length ? (
-                    selectedTaskHistory.map((item) => (
+                  {combinedSelectedHistory.length ? (
+                    combinedSelectedHistory.map((item) => (
                       <article className={managerStyles.taskRecord} key={item.id}>
                         <strong>{item.action}</strong>
                         <span>{item.changedByUsername}</span>
                         <time>{new Date(item.createdAt).toLocaleString()}</time>
+                        {(item as any).description ? (
+                          <p className="text-sm text-[#6b7280] mt-1">{(item as any).description}</p>
+                        ) : null}
                       </article>
                     ))
                   ) : (

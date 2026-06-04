@@ -24,6 +24,7 @@ export type TaskWorkSessionDto = {
   hours: number
   username: string
   date: string
+  description?: string | null
 }
 
 export type TaskHistoryDto = {

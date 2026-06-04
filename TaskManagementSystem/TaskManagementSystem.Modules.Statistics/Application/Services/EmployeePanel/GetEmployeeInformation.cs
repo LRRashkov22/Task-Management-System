@@ -23,6 +23,7 @@ public class GetEmployeeInformation : IGetEmployeeInformation
         var tasks = await context.TaskItems
             .AsNoTracking()
             .Include(t => t.Assignments)
+            .Include(t => t.WorkSessions)
             .Where(t =>
                 !t.IsArchived &&
                 t.Assignments.Any(a => a.UserId == userid))
@@ -55,12 +56,14 @@ public class GetEmployeeInformation : IGetEmployeeInformation
                 t.Deadline < DateTime.UtcNow &&
                 t.Status != Status.Done),
 
-            TotalHoursLogged = 0,
+            TotalHoursLogged = tasks.Sum(t => t.WorkSessions.Sum(w => w.Hours)),
 
             TasksCompleted = tasks.Count(t =>
                 t.Status == Status.Done),
 
-            AvgTimePerTask = 0,
+            AvgTimePerTask = tasks.Any()
+                ? (int)Math.Round(tasks.Average(t => t.WorkSessions.Sum(w => w.Hours)))
+                : 0,
 
             RecentTasks = recentTasks
         };
@@ -136,6 +139,7 @@ public class GetEmployeeInformation : IGetEmployeeInformation
                         Id = w.Id,
                         Hours = w.Hours,
                         Username = w.User != null ? w.User.Username : "Deleted User",
+                        Description = w.Description ?? string.Empty,
 
                         Date = w.Date
                     })
@@ -190,3 +194,4 @@ public class GetEmployeeInformation : IGetEmployeeInformation
             .ToListAsync();
     }
 }
+

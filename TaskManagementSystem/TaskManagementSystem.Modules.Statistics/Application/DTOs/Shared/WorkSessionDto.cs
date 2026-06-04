@@ -12,5 +12,7 @@ public class WorkSessionDto
 
         public string Username { get; set; } = string.Empty;
 
+        public string Description { get; set; } = string.Empty;
+
         public DateTime Date { get; set; }
     }

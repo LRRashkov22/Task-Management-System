@@ -87,6 +87,7 @@ public class ManageTasks : IManageTasks
                         Id = w.Id,
                         Hours = w.Hours,
                         Username = w.User != null ? w.User.Username : "Deleted User",
+                        Description = w.Description ?? string.Empty,
                         Date = w.Date
                     })
                     .ToList(),

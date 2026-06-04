@@ -21,6 +21,6 @@ namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.EmployeeDto
 
         public int AvgTimePerTask { get; set; }
 
-        public List<EmployeeRecentTaskDto> RecentTasks { get; set; } = [];
+        public List<EmployeeRecentTaskDto> RecentTasks { get; set; } = new();
     }
 }

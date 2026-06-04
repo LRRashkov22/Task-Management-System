@@ -46,6 +46,7 @@ export type EmployeeTaskWorkSessionDto = {
   hours: number
   username: string
   date: string
+  description?: string
 }
 
 export type EmployeeTaskHistoryDto = {

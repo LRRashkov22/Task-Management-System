@@ -24,6 +24,7 @@ import { NotificationsPanel } from '../components/NotificationsPanel'
 import { TaskCommentsPanel } from '../components/TaskCommentsPanel'
 import type { CommentDto } from '../api/commentsApi'
 import { getCommentsByTaskIdApi } from '../api/commentsApi'
+import { createWorkSessionApi } from '../api/workSessionApi'
 import { commonStyles, cx, managerStyles } from '../styles'
 import { getToken, getUsername } from '../utils/auth'
 
@@ -68,6 +69,7 @@ type TaskWorkSession = {
   username: string
   hours: number
   date: string
+  description?: string
 }
 
 type TaskHistoryItem = {
@@ -598,6 +600,96 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+function EmployeeTimeTrackingPanel({
+  taskId,
+  onTaskRefresh,
+}: {
+  taskId: number
+  onTaskRefresh: () => Promise<void>
+}) {
+  const [hours, setHours] = useState('')
+  const [description, setDescription] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (!hours || parseFloat(hours) <= 0 || parseFloat(hours) > 24) {
+      setError('Hours must be between 0.1 and 24')
+      return
+    }
+
+    if (!description.trim()) {
+      setError('Description is required')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await createWorkSessionApi({
+        taskId,
+        hours: parseFloat(hours),
+        description,
+      })
+
+      setHours('')
+      setDescription('')
+      await onTaskRefresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create work session')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <section className={managerStyles.taskTabPanel}>
+      <form onSubmit={handleSubmit} className="mb-6 space-y-3 border-b border-[#e5e7eb] pb-6">
+        <div>
+          <label className="block text-sm font-medium text-[#374151] mb-1">
+            Hours
+          </label>
+          <input
+            type="number"
+            min="0.1"
+            max="24"
+            step="0.5"
+            value={hours}
+            onChange={(e) => setHours(e.target.value)}
+            placeholder="e.g., 2.5"
+            className="w-full px-3 py-2 border border-[#d1d5db] rounded-md text-sm"
+            disabled={isSubmitting}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-[#374151] mb-1">
+            Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What did you work on?"
+            className="w-full px-3 py-2 border border-[#d1d5db] rounded-md text-sm"
+            rows={2}
+            disabled={isSubmitting}
+          />
+        </div>
+        {error && <p className="text-sm text-[#ef1d32]">{error}</p>}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 rounded-[10px] border-0 bg-[#315af2] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? 'Adding...' : 'Add Time'}
+        </button>
+      </form>
+    </section>
+  )
+}
+
 function EmployeeTaskDetailModal({
   task,
   activeTab,
@@ -619,6 +711,21 @@ function EmployeeTaskDetailModal({
   onCommentError: (message: string) => void
   onTaskRefresh: () => Promise<void>
 }) {
+  const combinedHistory = useMemo(() => {
+    const historyItems = (task.history || []).map((h) => ({ ...h }))
+    const sessionItems = (task.workSessions || []).map((ws) => ({
+      id: `ws-${ws.id}`,
+      action: `Work session (${ws.hours}h)`,
+      changedByUsername: ws.username,
+      createdAt: ws.date,
+      description: (ws as any).description ?? '',
+    }))
+
+    const combined = [...historyItems, ...sessionItems]
+    combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    return combined
+  }, [task.history, task.workSessions])
+
   return (
     <div className={managerStyles.modalBackdrop} role="presentation">
       <section
@@ -721,29 +828,23 @@ function EmployeeTaskDetailModal({
           ) : null}
 
           {activeTab === 'time' ? (
-            <section className={managerStyles.taskTabPanel}>
-              {task.workSessions.length ? (
-                task.workSessions.map((session) => (
-                  <article className={managerStyles.taskRecord} key={session.id}>
-                    <strong>{session.username}</strong>
-                    <span>{session.hours}h</span>
-                    <time>{formatDate(session.date)}</time>
-                  </article>
-                ))
-              ) : (
-                <p className="text-[14px] text-[#6b7280]">No time sessions yet.</p>
-              )}
-            </section>
+            <EmployeeTimeTrackingPanel
+              taskId={task.id}
+              onTaskRefresh={onTaskRefresh}
+            />
           ) : null}
 
           {activeTab === 'history' ? (
             <section className={managerStyles.taskTabPanel}>
-              {task.history.length ? (
-                task.history.map((item) => (
+              {combinedHistory.length ? (
+                combinedHistory.map((item) => (
                   <article className={managerStyles.taskRecord} key={item.id}>
                     <strong>{item.action}</strong>
                     <span>{item.changedByUsername}</span>
                     <time>{new Date(item.createdAt).toLocaleString()}</time>
+                    {(item as any).description ? (
+                      <p className="text-sm text-[#6b7280] mt-1">{(item as any).description}</p>
+                    ) : null}
                   </article>
                 ))
               ) : (
@@ -1010,75 +1111,68 @@ function MyTasksView({
 }: {
   tasks: MyTask[]
   taskMessage: string | null
-  onSelectTask: (task: MyTask) => Promise<void>
+  onSelectTask: (task: MyTask) => void
 }) {
   return (
-    <section aria-labelledby="employee-page-title">
-      <div className="mb-7 flex items-center justify-between gap-6">
-        <h2
-          className="text-[25px] leading-none font-extrabold text-[#050505]"
-          id="employee-page-title"
-        >
-          My Tasks
-        </h2>
-
-        <select
-          className="h-8 w-[130px] rounded-md border border-[#d0d5dd] bg-white px-3 text-[15px] leading-none font-medium text-[#111827]"
-          defaultValue="all"
-          aria-label="Task status filter"
-        >
-          <option value="all">All</option>
-          <option value="todo">To Do</option>
-          <option value="inprogress">In Progress</option>
-          <option value="review">Review</option>
-        </select>
-      </div>
-
-      {taskMessage ? (
-        <p className="mb-4 text-[15px] font-medium text-[#315af2]">{taskMessage}</p>
-      ) : null}
-
-      <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
-        <div className="grid min-h-[44px] grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085] max-[1000px]:min-w-[820px]">
-          <span>TITLE</span>
-          <span>STATUS</span>
-          <span>PRIORITY</span>
-          <span>DEADLINE</span>
-          <span>TIME</span>
+    <section className="space-y-6">
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-[25px] leading-none font-extrabold text-[#050505]">
+            My Tasks
+          </h2>
+          {taskMessage ? (
+            <p className="mt-2 text-[15px] font-medium text-[#315af2]">
+              {taskMessage}
+            </p>
+          ) : null}
         </div>
-
-        {tasks.map((task) => (
-          <article
-            className="grid min-h-[62px] cursor-pointer grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] transition hover:bg-[#f8fafc] max-[1000px]:min-w-[820px]"
-            key={task.id}
-            onClick={() => {
-              void onSelectTask(task)
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                void onSelectTask(task)
-              }
-            }}
-            role="button"
-            tabIndex={0}
-          >
-            <span>{task.title}</span>
-            <span>
-              <TaskBadge tone={statusTone(task.status)}>
-                {statusLabel(task.status)}
-              </TaskBadge>
-            </span>
-            <span>
-              <TaskBadge tone={priorityTone(task.priority) === 'high' ? 'high' : 'urgent'}>
-                {task.priority.toUpperCase()}
-              </TaskBadge>
-            </span>
-            <span className="text-[#475467]">{task.dueDate || '-'}</span>
-            <span className="text-[#475467]">{task.timeLogged}</span>
-          </article>
-        ))}
       </div>
+
+      {tasks.length ? (
+        <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
+          <div className="grid min-h-[44px] grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085]">
+            <span>TITLE</span>
+            <span>STATUS</span>
+            <span>PRIORITY</span>
+            <span>DEADLINE</span>
+            <span>TIME</span>
+          </div>
+
+          {tasks.map((task) => (
+            <article
+              className="grid min-h-[62px] cursor-pointer grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] transition hover:bg-[#f8fafc]"
+              key={task.id}
+              onClick={() => void onSelectTask(task)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  void onSelectTask(task)
+                }
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              <span>{task.title}</span>
+              <span>
+                <TaskBadge tone={statusTone(task.status)}>
+                  {statusLabel(task.status)}
+                </TaskBadge>
+              </span>
+              <span>
+                <TaskBadge tone={priorityTone(task.priority) === 'high' ? 'high' : 'urgent'}>
+                  {task.priority.toUpperCase()}
+                </TaskBadge>
+              </span>
+              <span className="text-[#475467]">{task.dueDate || '-'}</span>
+              <span className="text-[#475467]">{task.timeLogged}</span>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-xl border border-[#e5e7eb] bg-white px-6 py-8 text-[15px] text-[#6b7280] shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
+          No tasks available.
+        </p>
+      )}
     </section>
   )
 }

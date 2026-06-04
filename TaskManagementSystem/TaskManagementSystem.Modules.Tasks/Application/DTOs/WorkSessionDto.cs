@@ -12,6 +12,8 @@ namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
 
         public string Username { get; set; } = string.Empty;
 
+        public string Description { get; set; } = string.Empty;
+
         public DateTime Date { get; set; }
     }
 }
