@@ -1253,7 +1253,14 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         ])
         if (cancelled) return
 
-        setDashboard(data)
+        console.log('[EmployeePage] raw dashboard API response:', data)
+        const coerced = {
+          ...data,
+          totalHoursLogged: Number((data as any).totalHoursLogged ?? 0),
+          avgTimePerTask: Number((data as any).avgTimePerTask ?? 0),
+        }
+        setDashboard(coerced)
+        console.log('[EmployeePage] setDashboard called with (coerced):', coerced)
 
         if (taskPreviews.length) {
           setMyTasks(taskPreviews.map(mapPreviewTaskToMyTask))
@@ -1283,6 +1290,22 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    console.log('[EmployeePage] dashboard state changed:', dashboard)
+  }, [dashboard])
+
+  const displayTotalHours = isEmployeeDataLoading ? '' : `${dashboard.totalHoursLogged}h`
+  const displayAvgTime = isEmployeeDataLoading ? '' : `${dashboard.avgTimePerTask}h`
+
+  useEffect(() => {
+    console.log('[EmployeePage] display values:', {
+      isEmployeeDataLoading,
+      displayTotalHours,
+      displayAvgTime,
+      raw: dashboard,
+    })
+  }, [isEmployeeDataLoading, displayTotalHours, displayAvgTime, dashboard])
 
   useEffect(() => {
     let cancelled = false
