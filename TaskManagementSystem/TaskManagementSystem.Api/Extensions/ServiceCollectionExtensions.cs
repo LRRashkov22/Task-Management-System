@@ -11,6 +11,7 @@ using TaskManagementSystem.Modules.Logs;
 using TaskManagementSystem.Modules.Comments;
 using TaskManagementSystem.Data.Options;
 using Microsoft.Extensions.Options;
+using TaskManagementSystem.Modules.WorkSessions;
 
 namespace TaskManagementSystem.Api.Extensions
 {
@@ -40,6 +41,7 @@ namespace TaskManagementSystem.Api.Extensions
             services.AddCommentsModule();
             services.AddNotificationModule();
             services.AddLogsModule();
+            services.AddWorkSessionsModule();
         }
           
             //------------------------------------------------------------------------------------
