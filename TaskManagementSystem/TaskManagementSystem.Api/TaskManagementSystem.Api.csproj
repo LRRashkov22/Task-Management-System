@@ -32,6 +32,7 @@
 		<ProjectReference Include="..\TaskManagementSystem.Modules.Statistics\TaskManagementSystem.Modules.Statistics.csproj" />
 		<ProjectReference Include="..\TaskManagementSystem.Modules.Tasks\TaskManagementSystem.Modules.Tasks.csproj" />
 		<ProjectReference Include="..\TaskManagementSystem.Modules.Teams\TaskManagementSystem.Modules.Teams.csproj" />
+		<ProjectReference Include="..\TaskManagementSystem.Modules.WorkSession\TaskManagementSystem.Modules.WorkSessions.csproj" />
 	</ItemGroup>
 
 </Project>

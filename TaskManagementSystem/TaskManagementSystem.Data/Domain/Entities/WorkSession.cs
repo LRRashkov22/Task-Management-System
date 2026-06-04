@@ -17,4 +17,6 @@ public class WorkSession
     public int Hours { get; set; }
 
     public DateTime Date { get; set; } = DateTime.UtcNow;
+
+    public string? Description { get; set; }
 }

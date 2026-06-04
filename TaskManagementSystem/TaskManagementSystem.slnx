@@ -8,5 +8,7 @@
   <Project Path="TaskManagementSystem.Modules.Tasks/TaskManagementSystem.Modules.Tasks.csproj" Id="3bb4ca89-775a-4ae2-bed5-47b743c911cb" />
   <Project Path="TaskManagementSystem.Modules.Teams/TaskManagementSystem.Modules.Teams.csproj" />
   <Project Path="TaskManagementSystem.Modules.Logs/TaskManagementSystem.Modules.Logs.csproj" />
+  <Project Path="TaskManagementSystem.Modules.WorkSession/TaskManagementSystem.Modules.WorkSessions.csproj" />
+  <Project Path="TaskManagementSystem.Tests/TaskManagementSystem.Tests.csproj" Id="1897da50-9335-4db1-961d-f166271f2dd7" />
 </Solution>
 
