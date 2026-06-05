@@ -3,9 +3,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskManagementSystem.Data;
 using TaskManagementSystem.Modules.Identity;
+using TaskManagementSystem.Modules.Notification;
 using TaskManagementSystem.Modules.Statistics;
 using TaskManagementSystem.Modules.Tasks;
 using TaskManagementSystem.Modules.Teams;
+using TaskManagementSystem.Modules.Logs;
+using TaskManagementSystem.Modules.Comments;
+using TaskManagementSystem.Data.Options;
+using Microsoft.Extensions.Options;
+using TaskManagementSystem.Modules.WorkSessions;
 
 namespace TaskManagementSystem.Api.Extensions
 {
@@ -13,25 +19,65 @@ namespace TaskManagementSystem.Api.Extensions
     {
         public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
         {
-            //services.AddControllers()
-            //    .AddApplicationPart(
-            //        typeof(TaskManagementSystem.Modules.Identity.Presentation.IdentityController).Assembly);
-            services.AddOpenApi();
-
-            //Adding Modules (Controllers And DI)-------------------------------------------------
             services.AddControllers();
+            services.AddOpenApi();
+            services.AddSignalR();
+
+            services.ConfigureDatabase(configuration);
+            services.ConfigureJwtAuthentication(configuration);
+            services.ConfigureCorsPolicies(configuration);
+
+            services.ConfigureApplicationModules();
+
+            return services;
+        }
+
+        private static void ConfigureApplicationModules(this IServiceCollection services)
+        {
             services.AddIdentityModule();
             services.AddTeamsModule();
             services.AddStasticsModule();
             services.AddTaskModule();
+            services.AddCommentsModule();
+            services.AddNotificationModule();
+            services.AddLogsModule();
+            services.AddWorkSessionsModule();
+        }
+          
             //------------------------------------------------------------------------------------
 
-            services.AddData(configuration);
+        private static void ConfigureDatabase(this IServiceCollection services, IConfiguration configuration)
+        {
+            // Register the section so components can inject IOptions<DatabaseOptions> via DI
+            services.Configure<DatabaseOptions>(configuration.GetSection("ConnectionStrings"));
 
-            //services.AddDbContext<TMSDbContext>(options =>
-            //    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            // Build a temporary service provider to resolve the IOptions container immediately
+            using var serviceProvider = services.BuildServiceProvider();
+            var dbOptionsAccessor = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>();
 
-            //JWT Authentication configuration-----------------------------------------------------
+            // Validation check against the underlying values inside the resolved wrapper
+            if (dbOptionsAccessor.Value == null || string.IsNullOrEmpty(dbOptionsAccessor.Value.DefaultConnection))
+            {
+                throw new InvalidOperationException("Startup Failure: Database connection string is missing inside IOptions configuration wrapper.");
+            }
+
+            services.AddData(dbOptionsAccessor);
+        }
+
+        private static void ConfigureJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+        {
+            var section = configuration.GetSection("JwtSettings");
+
+            // Register the section so components can inject IOptions<JwtOptions>
+            services.Configure<JwtOptions>(section);
+
+            // Extract values directly for the JwtBearer middleware setup
+            var jwtOptions = section.Get<JwtOptions>() ?? new JwtOptions();
+
+            if (string.IsNullOrEmpty(jwtOptions.Key))
+            {
+                throw new InvalidOperationException("Startup Failure: 'JwtSettings:Key' environment variable is missing or empty.");
+            }
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -42,23 +88,78 @@ namespace TaskManagementSystem.Api.Extensions
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = configuration["AppSettings:Issuer"],
-                        ValidAudience = configuration["AppSettings:Audience"],
+                        ValidIssuer = jwtOptions.Issuer,
+                        ValidAudience = jwtOptions.Audience,
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(configuration["AppSettings:Token"]!))
+                            Encoding.UTF8.GetBytes(jwtOptions.Key))
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/hubs/notifications"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken =
+                                context.Request.Query["access_token"];
+
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/hubs/notifications"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
                     };
                 });
+        }
 
-            //--------------------------------------------------------------------------------------
+        private static void ConfigureCorsPolicies(this IServiceCollection services, IConfiguration configuration)
+        {
+            var section = configuration.GetSection("CorsSettings");
+
+            // Register the section so components can inject IOptions<CorsOptions>
+            services.Configure<CorsOptions>(section);
+
+            var corsOptions = section.Get<CorsOptions>() ?? new CorsOptions();
+            string policyName = string.IsNullOrEmpty(corsOptions.PolicyName) ? "CorsPolicy" : corsOptions.PolicyName;
+
             services.AddCors(options =>
             {
-                options.AddPolicy("frontend",
-                    policy => policy
-                        .WithOrigins("http://localhost:5173")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+                options.AddPolicy(policyName, policy =>
+                {
+                    if (corsOptions.AllowedOrigins != null && corsOptions.AllowedOrigins.Length > 0)
+                    {
+                        policy.WithOrigins(corsOptions.AllowedOrigins);
+                    }
+                    else
+                    {
+                        policy.WithOrigins("http://localhost:5173");
+                    }
+
+                    policy.AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
             });
-            return services;
         }
     }
 }

@@ -9,6 +9,7 @@ using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.AdminDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
 namespace TaskManagementSystem.Modules.Statistics.Application.Services.AdminPanel;
 
 public class GetAdminInformation : IGetAdminInformation {
@@ -17,6 +18,20 @@ public class GetAdminInformation : IGetAdminInformation {
     public GetAdminInformation(TaskManagementDbContext context)
     {
         this.context = context;
+    }
+    //Get Notifications for current user
+    public async Task<List<GetNotificationsListDto>> GetNotificationsAsync(int userid) {
+
+       return await context.Notifications
+            .AsNoTracking()
+            .Where(n => n.UserId == userid)
+            .Select(n => new GetNotificationsListDto
+            {
+               Id = n.Id,
+               Message = n.Message,
+               IsRead = n.IsRead,
+               CreatedAt = n.CreatedAt,
+            }).ToListAsync();  
     }
 
     public async Task<(GetPreviewOnDeletingManagerDto?, string?)>  GetPreviewOnDeletingManager(int managerid)
@@ -122,9 +137,7 @@ public class GetAdminInformation : IGetAdminInformation {
             {
                 Id = u.Id,
                 Username = u.Username,
-                ManagerName = u.Manager != null
-                    ? u.Manager.Username
-                    : string.Empty
+                ManagerName = u.Manager != null ? u.Manager.Username : string.Empty
             })
             .ToListAsync();
     }

@@ -2,6 +2,7 @@
 using TaskManagementSystem.Data.Persistance;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
+using TaskManagementSystem.Modules.Statistics.Application.DTOs.Shared;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
 namespace TaskManagementSystem.Modules.Statistics.Application.Services.ManagerPanel;
 
@@ -12,6 +13,7 @@ public class GetManagerInformation : IGetManagerInformation
     {
         this.context = context;
     }
+
     //shows list of names of teams of the current manager
     public async Task<List<ManagerTeamDropdownDto>> GetManagerDropdownTeamsAsync(int userid)
     {

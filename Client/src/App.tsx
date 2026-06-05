@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { loginApi, logoutApi } from './api/authApi'
 import AdminPage from './pages/AdminPage'
+import EmployeePage from './pages/EmployeePage'
 import ManagerPage from './pages/ManagerPage'
 import { commonStyles, loginStyles } from './styles'
 import { getRole, logout, saveAuth } from './utils/auth'
 
-  type Message = {
+type Message = {
     text: string
     type: 'error' | 'success'
   }
@@ -75,6 +76,11 @@ import { getRole, logout, saveAuth } from './utils/auth'
           return
         }
 
+        if (role === 'Employee' || role === 'User') {
+          navigate('/employee')
+          return
+        }
+
         setMessage({
           text: 'Login successful.',
           type: 'success',
@@ -105,14 +111,18 @@ import { getRole, logout, saveAuth } from './utils/auth'
     }
 
     if (path === '/manager' && getRole() === 'Manager') {
-      return (
-        <ManagerPage
-          onLogout={() => {
-            logout()
-            navigate('/')
-          }}
-        />
-      )
+      return <ManagerPage onLogout={handleLogout} />
+    }
+
+    if ((path === '/home' || path === '/employee') && ['User', 'Employee'].includes(getRole() ?? '')) {
+      return <EmployeePage onLogout={handleLogout} />
+    }
+
+    if (
+      (path === '/home' || path === '/employee') &&
+      ['Employee', 'User'].includes(getRole() ?? '')
+    ) {
+      return <EmployeePage onLogout={handleLogout} />
     }
 
     return (
@@ -169,7 +179,7 @@ import { getRole, logout, saveAuth } from './utils/auth'
             <br />
             <strong>Manager:</strong> manager@taskman.com / Manager123!
             <br />
-            <strong>User:</strong> user@taskman.com / User123!
+            <strong>Employee:</strong> user@taskman.com / User123!
           </div>
         </section>
       </main>

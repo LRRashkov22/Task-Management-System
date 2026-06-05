@@ -268,27 +268,45 @@ export const managerStyles = {
   missing: 'text-[#ef1d32]',
   calendarPanel:
     panel +
-    ' rounded-[10px] p-[28px_24px_24px]',
-  calendarHeader: 'mb-5 flex items-center justify-between gap-4',
-  calendarLabel: 'mb-1.5 text-[12px] font-normal tracking-[0.08em] text-[#4f5b72] uppercase',
-  calendarActions: 'flex flex-wrap gap-2.5',
-  calendarNav: 'min-h-9 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3.5 text-[13px] leading-none font-bold text-[#1f2937]',
+    ' rounded-[10px] p-[18px_18px_16px] [&_h3]:text-[19px] [&_h3]:leading-none [&_h3]:font-extrabold',
+  calendarHeader: 'mb-5 flex items-center justify-between gap-4 max-[760px]:items-start max-[760px]:flex-col',
+  calendarLabel: 'mb-1 text-[11px] font-normal tracking-[0.08em] text-[#4f5b72] uppercase',
+  calendarActions: 'flex flex-wrap gap-2',
+  calendarNav: 'min-h-8 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3 text-[12px] leading-none font-bold text-[#1f2937]',
   calendarToggle: (active = false) =>
-    cx('min-h-9 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3.5 text-[13px] leading-none font-bold text-[#1f2937]', active && 'border-[#315af2] bg-[#315af2] text-white'),
-  calendarGrid: 'grid grid-cols-7 gap-2.5',
-  calendarWeekday: 'border-b border-[#e5e7eb] px-3 py-2.5 text-[13px] font-bold text-[#4b5563] uppercase',
+    cx('min-h-8 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3 text-[12px] leading-none font-bold text-[#1f2937]', active && 'border-[#315af2] bg-[#315af2] text-white'),
+  calendarGrid: 'grid grid-cols-7 overflow-hidden rounded border border-[#e5e7eb] bg-white',
+  calendarWeekday: 'border-r border-b border-[#edf0f4] px-2 py-2 text-center text-[10px] font-bold text-[#6b7280] uppercase last:border-r-0',
+  calendarWeekRow: 'col-span-7 grid min-h-[118px] border-b border-[#edf0f4] last:border-b-0',
+  calendarWeekDays: 'col-start-1 row-start-1 grid grid-cols-7',
+  calendarBars: 'pointer-events-none col-start-1 row-start-1 grid grid-cols-7 auto-rows-[24px] content-start gap-y-1 px-0 pt-[38px]',
   calendarDay: (outside: boolean, today: boolean) =>
-    cx('flex min-h-[110px] flex-col gap-2.5 rounded-xl border border-[#edf0f4] bg-white p-3', outside && 'bg-[#f8fafc] opacity-55', today && 'border-[#315af2] shadow-[0_0_0_1px_rgba(49,90,242,0.12)]'),
-  calendarDayNumber: 'font-bold text-[#0f172a]',
-  calendarDayTasks: 'grid gap-1.5',
+    cx('min-h-[118px] border-r border-[#edf0f4] bg-white p-2 last:border-r-0 max-[760px]:min-h-[92px] max-[760px]:p-1.5', outside && 'bg-[#f8fafc] text-[#9ca3af]', today && 'bg-[#eff6ff]'),
+  calendarDayNumber: 'inline-grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] leading-none font-bold text-[#0f172a]',
+  calendarDayTasks: 'grid gap-1',
   calendarTaskPill: (more = false) =>
-    cx('block overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-2 py-1.5 text-[12px] font-bold', more ? 'bg-[#e2e8f0] text-[#475569]' : 'bg-[#eff6ff] text-[#1d4ed8]'),
+    cx('block overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-[10px] leading-none font-bold', more ? 'bg-[#e2e8f0] text-[#475569]' : 'bg-[#eff6ff] text-[#1d4ed8]'),
+  calendarRangeBar: (index: number) =>
+    cx(
+      'pointer-events-auto relative mx-0 flex h-6 cursor-pointer items-center overflow-hidden rounded-full border-0 px-2 text-left shadow-[0_1px_3px_rgba(17,24,39,0.22)] hover:brightness-95 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[rgba(49,90,242,0.3)]',
+      index % 6 === 0 && 'bg-[#6326ff]',
+      index % 6 === 1 && 'bg-[#0ea5e9]',
+      index % 6 === 2 && 'bg-[#10b981]',
+      index % 6 === 3 && 'bg-[#f59e0b]',
+      index % 6 === 4 && 'bg-[#ef4444]',
+      index % 6 === 5 && 'bg-[#14b8a6]',
+    ),
+  calendarRangeName:
+    'block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] leading-none font-extrabold text-white',
+  calendarTaskInfo:
+    'mb-6 grid grid-cols-[0.65fr_1fr] gap-x-4 gap-y-3 rounded-lg bg-[#f8fafc] p-4 text-[14px] [&_span]:font-bold [&_span]:text-[#64748b] [&_strong]:font-extrabold [&_strong]:text-[#111827]',
   teamsPanel: 'grid gap-3.5',
   teamCard:
     panel +
     ' rounded-[10px] p-[28px_24px]',
   teamCardMain: 'flex min-h-[58px] items-center justify-between gap-5 max-[760px]:flex-col max-[760px]:items-start [&_h3]:mb-2.5 [&_h3]:text-[18px] [&_h3]:leading-[1.2] [&_h3]:font-extrabold [&_h3]:text-[#050505] [&_p]:text-[14px] [&_p]:leading-[1.35] [&_p]:font-medium [&_p]:text-[#25324a]',
   teamActions: iconSvg + ' flex flex-wrap justify-end gap-2.5 max-[760px]:justify-start [&_button]:inline-flex [&_button]:min-h-[30px] [&_button]:cursor-pointer [&_button]:items-center [&_button]:gap-1 [&_button]:border-0 [&_button]:bg-transparent [&_button]:p-0 [&_button]:text-[14px] [&_button]:leading-none [&_button]:font-bold [&_button]:text-[#315af2] [&_button:hover]:underline [&_svg]:h-[15px] [&_svg]:w-[15px]',
+  teamDangerAction: '!text-[#ef1d32] hover:!text-[#d11028]',
   teamDetails: 'mt-[18px] border-t border-[#edf0f4] pt-6',
   detailSection: iconSvg + ' mb-6 grid gap-3.5 last:mb-0 [&_h4]:mb-2.5 [&_h4]:inline-flex [&_h4]:items-center [&_h4]:gap-2 [&_h4]:text-[15px] [&_h4]:font-extrabold [&_h4]:text-[#050505] [&_h4_svg]:h-[18px] [&_h4_svg]:w-[18px] [&_p]:text-[13px] [&_p]:leading-[1.35] [&_p]:text-[#25324a]',
   memberGrid: 'grid grid-cols-3 gap-3 max-[760px]:grid-cols-1',
@@ -301,20 +319,29 @@ export const managerStyles = {
   modalBackdrop:
     'fixed inset-0 z-30 grid place-items-center overflow-y-auto bg-black/96 p-[22px_28px] max-[760px]:p-5',
   modal:
-    'box-border w-[min(100%,672px)] rounded-lg bg-white p-[28px_24px_24px] max-[760px]:p-[26px_22px] [&_h2]:mb-[22px] [&_h2]:text-[21px] [&_h2]:leading-[1.2] [&_h2]:font-extrabold [&_h2]:text-[#050505] [&_label]:mb-[18px] [&_label]:grid [&_label]:gap-2 [&_label_span]:text-[14px] [&_label_span]:leading-[1.2] [&_label_span]:font-extrabold [&_label_span]:text-[#050505] [&_input]:box-border [&_input]:min-h-[42px] [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border [&_input]:border-[#cfd6e0] [&_input]:bg-white [&_input]:px-4 [&_input]:text-[16px] [&_input]:leading-[1.2] [&_input]:text-[#111827] [&_input:focus]:border-[#aeb8ce] [&_input:focus]:outline-[3px] [&_input:focus]:outline-[rgba(49,90,242,0.14)] [&_select]:box-border [&_select]:min-h-[42px] [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border [&_select]:border-[#cfd6e0] [&_select]:bg-white [&_select]:px-4 [&_select]:text-[16px] [&_select]:leading-[1.2] [&_select]:text-[#111827] [&_select:focus]:border-[#aeb8ce] [&_select:focus]:outline-[3px] [&_select:focus]:outline-[rgba(49,90,242,0.14)] [&_textarea]:w-full [&_textarea]:box-border [&_textarea]:min-h-[114px] [&_textarea]:resize-y [&_textarea]:rounded-[10px] [&_textarea]:border [&_textarea]:border-[#cfd6e0] [&_textarea]:bg-white [&_textarea]:px-4 [&_textarea]:py-3 [&_textarea]:text-[16px] [&_textarea]:leading-[1.2] [&_textarea]:text-[#111827] [&_textarea:focus]:border-[#aeb8ce] [&_textarea:focus]:outline-[3px] [&_textarea:focus]:outline-[rgba(49,90,242,0.14)]',
+    'box-border w-[min(100%,672px)] rounded-xl bg-white p-[32px_28px_28px] shadow-[0_20px_40px_rgba(0,0,0,0.16)] max-[760px]:p-[26px_22px] [&_h2]:mb-6 [&_h2]:text-[24px] [&_h2]:leading-[1.3] [&_h2]:font-extrabold [&_h2]:text-[#050505] [&_p]:text-[15px] [&_p]:leading-[1.4] [&_p]:text-[#374151] [&_label]:mb-5 [&_label]:grid [&_label]:gap-2.5 [&_label_span]:text-[15px] [&_label_span]:leading-[1.2] [&_label_span]:font-extrabold [&_label_span]:text-[#111827] [&_fieldset]:border-0 [&_fieldset]:p-0 [&_fieldset]:m-0 [&_legend]:mb-4 [&_legend]:text-[15px] [&_legend]:leading-[1.2] [&_legend]:font-extrabold [&_legend]:text-[#111827] [&_legend]:p-0 [&_input]:box-border [&_input]:min-h-[44px] [&_input]:w-full [&_input]:rounded-[10px] [&_input]:border [&_input]:border-[#d1d5db] [&_input]:bg-white [&_input]:px-4 [&_input]:text-[16px] [&_input]:leading-[1.2] [&_input]:text-[#111827] [&_input]:transition-all [&_input]:duration-200 [&_input:focus]:border-[#3b82f6] [&_input:focus]:outline-[3px] [&_input:focus]:outline-[rgba(59,130,246,0.1)] [&_input:focus]:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] [&_select]:box-border [&_select]:min-h-[44px] [&_select]:w-full [&_select]:rounded-[10px] [&_select]:border [&_select]:border-[#d1d5db] [&_select]:bg-white [&_select]:px-4 [&_select]:text-[16px] [&_select]:leading-[1.2] [&_select]:text-[#111827] [&_select]:transition-all [&_select]:duration-200 [&_select:focus]:border-[#3b82f6] [&_select:focus]:outline-[3px] [&_select:focus]:outline-[rgba(59,130,246,0.1)] [&_select:focus]:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] [&_textarea]:w-full [&_textarea]:box-border [&_textarea]:min-h-[114px] [&_textarea]:resize-y [&_textarea]:rounded-[10px] [&_textarea]:border [&_textarea]:border-[#d1d5db] [&_textarea]:bg-white [&_textarea]:px-4 [&_textarea]:py-3 [&_textarea]:text-[16px] [&_textarea]:leading-[1.2] [&_textarea]:text-[#111827] [&_textarea]:transition-all [&_textarea]:duration-200 [&_textarea:focus]:border-[#3b82f6] [&_textarea:focus]:outline-[3px] [&_textarea:focus]:outline-[rgba(59,130,246,0.1)] [&_textarea:focus]:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]',
   modalActions:
-    'grid grid-cols-2 gap-3 max-[760px]:grid-cols-1 [&_button]:min-h-[42px] [&_button]:cursor-pointer [&_button]:rounded-[9px] [&_button]:text-[16px] [&_button]:leading-none [&_button]:font-extrabold [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-72',
-  modalCancel: 'border border-[#cfd6e0] bg-white text-[#050505]',
-  modalSave: 'border border-[#315af2] bg-[#315af2] text-white hover:bg-[#254be0]',
-  modalDanger: 'border border-[#ef1d32] bg-[#ef1d32] text-white hover:not-disabled:bg-[#dc1025]',
+    'grid grid-cols-2 gap-3 max-[760px]:grid-cols-1 [&_button]:min-h-[44px] [&_button]:cursor-pointer [&_button]:rounded-[10px] [&_button]:text-[16px] [&_button]:leading-none [&_button]:font-extrabold [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-72 [&_button]:transition-all [&_button]:duration-200',
+  modalCancel: 'border border-[#d1d5db] bg-white text-[#050505] hover:bg-[#f9fafb] hover:border-[#9ca3af]',
+  modalSave: 'border border-[#315af2] bg-[#315af2] text-white hover:bg-[#254be0] hover:shadow-[0_4px_12px_rgba(49,90,242,0.24)] active:scale-[0.98]',
+  modalDanger: 'border border-[#ef1d32] bg-[#ef1d32] text-white hover:not-disabled:bg-[#dc1025] hover:not-disabled:shadow-[0_4px_12px_rgba(239,29,50,0.24)] active:not-disabled:scale-[0.98]',
   modalGrid: 'grid grid-cols-2 gap-4 max-[760px]:grid-cols-1',
   checkboxPanel:
-    'mb-4 rounded-[14px] border border-[#dfe4ec] bg-[#f8fafc] p-4',
-  checkboxGrid: 'grid grid-cols-2 gap-3 max-[760px]:grid-cols-1',
+    'mb-4 rounded-[14px] border border-[#e5e7eb] bg-gradient-to-b from-white to-[#f9fafb] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)]',
+  checkboxGrid: 'grid grid-cols-2 gap-4 max-[760px]:grid-cols-1',
   checkboxOption:
     'grid gap-3 rounded-[14px] border border-[#dfe4ec] bg-white p-4 transition duration-200 hover:border-[#315af2] focus-within:border-[#315af2] [&_input]:mt-1 [&_span]:text-[15px] [&_span]:font-semibold [&_span]:text-[#111827]',
   checkboxOptionSelected: 'border-[#315af2] bg-[#eef5ff]',
   checkboxPanelTall: 'max-h-60',
+  taskAssignPanel:
+    'mb-4 max-h-[176px] overflow-y-auto rounded-[10px] border border-[#dfe4ec] bg-white px-5 py-3',
+  taskAssignLabel: 'mb-3 text-[15px] leading-none font-extrabold text-[#050505]',
+  memberListPanel:
+    'mb-[22px] rounded-[10px] border border-[#dfe4ec] bg-white px-7 py-[18px]',
+  memberListLabel: 'mb-3 text-[16px] leading-none font-extrabold text-[#050505]',
+  memberList: 'grid gap-0.5',
+  memberListOption:
+    '!mb-0 !flex min-h-9 cursor-pointer !grid-cols-none !flex-row items-center !gap-3 text-[15px] leading-none font-extrabold text-[#111827] hover:text-[#315af2] [&_input]:!h-[13px] [&_input]:!min-h-[13px] [&_input]:!w-[13px] [&_input]:!appearance-auto [&_input]:!rounded-none [&_input]:!border-[#111827] [&_input]:!p-0 [&>span]:!text-[15px] [&>span]:!font-extrabold',
   taskDetailModal:
     'grid max-h-[74svh] w-[min(100%,896px)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 max-[760px]:max-h-[90svh]',
   taskDetailHead:

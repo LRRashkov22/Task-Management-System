@@ -76,7 +76,8 @@ public class ManageTasksController : ControllerBase
     public async Task<ActionResult<CreateTaskDto>> CreateTask(CreateTaskDto request)
     {
         var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var result = await task.CreateTaskAsync(request, userid);
+        var (result, error) = await task.CreateTaskAsync(request, userid);
+        if (error != null) return BadRequest(error);
         return Ok(result);
     }
 
@@ -92,7 +93,8 @@ public class ManageTasksController : ControllerBase
     [HttpPatch("Recover-task")]
     public async Task<ActionResult> RecoverTask(RecoverOrArchiveDto request)
     {
-        var (status, error) = await task.AdminRecoverTask(request);
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.AdminRecoverTask(request, userid);
         if (error != null)
             return BadRequest(error);
         return Ok(status);
@@ -108,5 +110,36 @@ public class ManageTasksController : ControllerBase
         return Ok(status);
     }
 
+    [Authorize(Roles = "Manager")]
+    [HttpPatch("Edit-Task/{taskId}")]
+    public async Task<ActionResult> EditTask(int taskId, EditTaskDto request)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.EditTaskAsync(userid, taskId, request);
+
+        if (error != null) return BadRequest(error);
+
+        return Ok(status);
+    }
+
+    [Authorize(Roles = "Manager")]
+    [HttpPatch("Mark-AsDone/{taskId}")]
+    public async Task<ActionResult> MarkAsDoneTask(int taskId)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.MarkAsDone(userid, taskId);
+        if (error != null) return BadRequest(error);
+        return Ok(status);
+    }
+
+    [Authorize(Roles = "Employee")]
+    [HttpPatch("Request-Review/{taskId}")]
+    public async Task<ActionResult> RequestForReview(int taskId)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var (status, error) = await task.RequestReviewTaskAsync(userid, taskId);
+        if (error != null) return BadRequest(error);
+        return Ok(status);
+    }
 
 }

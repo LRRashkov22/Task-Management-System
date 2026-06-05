@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TaskManagementSystem.Data.Domain.Entities;
 using TaskManagementSystem.Modules.Teams.Application.DTOs;
 using TaskManagementSystem.Modules.Teams.Application.Interfaces;
 
@@ -64,7 +65,8 @@ private readonly ICRUDTeamService teamService;
     [Authorize(Roles = "Admin")]
     [HttpPatch("recover-team")]
     public async Task<ActionResult> RecoverTeam(RecoverOrArchiveDto request) {
-    var team = await teamService.AdminRecoverTeam(request);
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var team = await teamService.AdminRecoverTeam(request, userid);
         return Ok(team);
     }
 
@@ -72,7 +74,8 @@ private readonly ICRUDTeamService teamService;
     [HttpDelete("force-delete-team/{teamId}")]
     public async Task<ActionResult> ForceDeleteTeam(int teamId)
     {
-        var (status, error) = await teamService.DeleteArchivedTeamAsync(teamId);
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var (status, error) = await teamService.DeleteArchivedTeamAsync(teamId,userid);
 
         if (error != null) return BadRequest(error);
 

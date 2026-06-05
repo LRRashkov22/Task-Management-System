@@ -4,7 +4,9 @@ using System.Text;
 
 namespace TaskManagementSystem.Data.Domain.Enums;
 
-public enum NotificationType
+public enum LogModule
 {
-
+    Identity = 1,
+    Tasks = 2,
+    Teams = 3,
 }

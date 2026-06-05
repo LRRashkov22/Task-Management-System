@@ -4,9 +4,13 @@ using System.Text;
 
 namespace TaskManagementSystem.Modules.Statistics.Application.DTOs.ManagersDto;
 
-public class MemberDto
+public class UserProductivityDto
 {
-    public int Id { get; set; }
+    public int UserId { get; set; }
 
     public string Username { get; set; } = string.Empty;
+
+    public int CompletedTasks { get; set; }
+
+    public int HoursLogged { get; set; }
 }

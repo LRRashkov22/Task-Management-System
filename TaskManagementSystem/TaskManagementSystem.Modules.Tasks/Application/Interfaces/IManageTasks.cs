@@ -15,8 +15,11 @@ namespace TaskManagementSystem.Modules.Tasks.Application.Interfaces
         Task<(bool?, string?)> ChangeStausOnTaskAsync(int userid, int taskid, ChangeStatusOnTaskDto request);
         Task<(CreateTaskDto?, string?)> CreateTaskAsync(CreateTaskDto request, int userid);
         Task<(bool isDeleted, string? error)> ArchiveTask(RecoverOrArchiveDto request, int userid);
-        Task<(bool status, string? error)> AdminRecoverTask(RecoverOrArchiveDto request);
+        Task<(bool status, string? error)> AdminRecoverTask(RecoverOrArchiveDto request,int userid);
         Task<(bool? status, string? error)> TransferTaskAsync(TransferTaskDto request, int userid, bool isAdmin);
         Task<(bool status, string? error)> DeleteArchivedTaskAsync(int taskId);
+        Task<(bool?, string?)> EditTaskAsync(int userid, int taskid, EditTaskDto request);
+        Task<(bool?, string?)> RequestReviewTaskAsync(int userid, int taskid);
+        Task<(bool?, string?)> MarkAsDone(int userid, int taskid);
     }
 }

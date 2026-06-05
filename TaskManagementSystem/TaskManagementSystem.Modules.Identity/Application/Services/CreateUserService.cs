@@ -15,9 +15,15 @@ namespace TaskManagementSystem.Modules.Identity.Application.Services;
 public class CreateUserService : ICreateUser
 {
     private readonly TaskManagementDbContext context;
-    public CreateUserService(TaskManagementDbContext context)
+    private readonly Logs.Application.Interfaces.IIdentityLogger _identityLogger;
+
+    public CreateUserService(
+        TaskManagementDbContext context,
+        Logs.Application.Interfaces.IIdentityLogger identityLogger
+        )
    {
         this.context = context;
+        _identityLogger = identityLogger;
     }
     public async Task<(User? user, string? error)> RegisterUser(CreateUserDto request)
     {
@@ -52,6 +58,8 @@ public class CreateUserService : ICreateUser
         }
         context.Users.Add(user);
         await context.SaveChangesAsync();
+        await _identityLogger.UserCreatedLog(user);
+
         return (user, null);
     }
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TaskManagementSystem.Data.Domain.Enums;
 using TaskManagementSystem.Modules.Statistics.Application.DTOs.AdminDto;
 using TaskManagementSystem.Modules.Statistics.Application.Interfaces;
@@ -13,6 +14,15 @@ public class AdminInformationController : ControllerBase
     public AdminInformationController(IGetAdminInformation adminInfo)
     {
         this.adminInfo = adminInfo;
+    }
+
+    [Authorize]
+    [HttpGet("get-Notifications-List")]
+    public async Task<ActionResult> GetNotifications()
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var result = await adminInfo.GetNotificationsAsync(userid);
+        return Ok(result);
     }
 
     [Authorize(Roles = "Admin")]
@@ -60,8 +70,10 @@ public class AdminInformationController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpGet("search-employee")]
-    public async Task<ActionResult> SearchEmployee([FromQuery]string text,
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult> SearchEmployee(
+        [FromQuery] string? text = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
         var result = await adminInfo.GetSearchEmployees(text, page, pageSize);
         return Ok(result);

@@ -12,9 +12,14 @@ namespace TaskManagementSystem.Modules.Identity.Application.Services;
 public class ManageUsersService : IManageUsers
 {
     private readonly TaskManagementDbContext context;
-    public ManageUsersService(TaskManagementDbContext context)
+    private readonly Logs.Application.Interfaces.IIdentityLogger _identityLogger;
+    public ManageUsersService(
+        TaskManagementDbContext context,
+         Logs.Application.Interfaces.IIdentityLogger identityLogger
+        )
     {
         this.context = context;
+        _identityLogger = identityLogger;
     }
 
 
@@ -44,6 +49,8 @@ public class ManageUsersService : IManageUsers
         user.Username = request.Username ?? user.Username;
         user.ManagerId = request.ManagerId ?? user.ManagerId;
         await context.SaveChangesAsync();
+        await _identityLogger.UserEditedLog(user);
+
         return new EditUserDto { ManagerId = user.ManagerId, Username = user.Username };
     }
     public async Task<(bool status, string? error)> DeleteEmployeeAsync(int employeeId)
@@ -55,6 +62,8 @@ public class ManageUsersService : IManageUsers
 
         if (employee == null)
             return (false, "Employee not found");
+
+        await _identityLogger.UserDeletedLog(employee);
 
         context.Users.Remove(employee);
 
@@ -71,6 +80,7 @@ public class ManageUsersService : IManageUsers
             user.RefreshToken = null;
             user.RefreshTokenExpiryTime = null;
             await context.SaveChangesAsync();
+            await _identityLogger.LogoutLog(user);
         }
     }
 
@@ -130,6 +140,10 @@ public class ManageUsersService : IManageUsers
                 task.CreatedById = request.NewManagerId;
             }
 
+            await _identityLogger.OwnershipTransferredLog(
+                currentManager,
+                newManager);
+
             await context.SaveChangesAsync();
 
             await transaction.CommitAsync();
@@ -174,6 +188,8 @@ public class ManageUsersService : IManageUsers
                 .ToListAsync();
 
            
+            await _identityLogger.ManagerForceDeletedLog(manager);
+
             context.TaskItems.RemoveRange(tasks);
 
            

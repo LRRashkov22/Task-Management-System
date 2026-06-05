@@ -24,6 +24,7 @@ export type TaskWorkSessionDto = {
   hours: number
   username: string
   date: string
+  description?: string | null
 }
 
 export type TaskHistoryDto = {
@@ -75,6 +76,21 @@ export type ManagerTeamDto = {
 export type ManagerTeamDropdownDto = {
   id: number
   name: string
+}
+
+export type ManagerCalendarTaskDto = {
+  taskName: string
+  teamName: string
+  status: string | number
+  deadline: string
+  startDate: string
+}
+
+export type EditManagerTaskRequest = {
+  name?: string
+  description?: string
+  deadline?: string
+  members?: number[]
 }
 
 export type TransferTeamPreviewDto = {
@@ -150,6 +166,12 @@ export function getManagerEmployeesApi() {
   return apiJson<ManagerMemberDto[]>('/Statistics/Manager/get-manager-employees')
 }
 
+export function getManagerCalendarInformationApi() {
+  return apiJson<ManagerCalendarTaskDto[]>(
+    '/Statistics/Manager/get-calendar-information',
+  )
+}
+
 export function getManagersForTransferApi() {
   return apiJson<ManagerUserDto[]>('/Statistics/Admin/get-managers')
 }
@@ -173,8 +195,14 @@ export function changeManagerTaskStatusApi(
   request: ChangeManagerTaskStatusRequest,
 ) {
   return apiJson<void>(`/Task/Change-task-status/${taskId}`, {
-    method: 'POST',
+    method: 'PATCH',
     body: JSON.stringify(request),
+  })
+}
+
+export function markManagerTaskAsDoneApi(taskId: number) {
+  return apiJson<boolean>(`/Task/Mark-AsDone/${taskId}`, {
+    method: 'PATCH',
   })
 }
 
@@ -189,6 +217,16 @@ export function archiveManagerTaskApi(id: number) {
   return apiJson<unknown>('/Task/Remove-task', {
     method: 'PATCH',
     body: JSON.stringify({ id }),
+  })
+}
+
+export function editManagerTaskApi(
+  taskId: number,
+  request: EditManagerTaskRequest,
+) {
+  return apiJson<boolean>(`/Task/Edit-Task/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(request),
   })
 }
 
