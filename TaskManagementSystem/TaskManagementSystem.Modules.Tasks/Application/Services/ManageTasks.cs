@@ -149,7 +149,10 @@ public class ManageTasks : IManageTasks
             .CountAsync(tm =>
                 tm.TeamId == request.TeamId &&
                 request.Assignments.Contains(tm.UserId));
-
+        if (request.EstimatedHours <= 0)
+        {
+            return (null, "Estimated hours must be greater than zero");
+        }
         if (validAssignmentsCount != request.Assignments.Count)
         {
             return (null, "Some assigned users are not part of the team");
@@ -163,11 +166,18 @@ public class ManageTasks : IManageTasks
             Status = Data.Domain.Enums.Status.ToDo,
             CreatedAt = DateTime.UtcNow,
             Deadline = request.Deadline,
+            EstimatedHours = request.EstimatedHours,
             TeamId = request.TeamId,
             CreatedById = userid
         };
         foreach (var memberId in request.Assignments)
         {
+            var workload = await GetEmployeeWorkloadAsync(memberId);
+
+            if (workload + request.EstimatedHours > 40)
+            {
+                return (null, $"Employee {memberId} exceeds weekly capacity");
+            }
             task.Assignments.Add(new TaskAssignment
             {
                 UserId = memberId
@@ -221,8 +231,7 @@ public class ManageTasks : IManageTasks
 
     public async Task<(bool? status, string? error)> TransferTaskAsync(TransferTaskDto request, int userid, bool isAdmin)
     {
-        using var transaction =
-            await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             var task = await context.TaskItems
@@ -253,6 +262,22 @@ public class ManageTasks : IManageTasks
                 return (false, "You can transfer only to your own teams");
 
             var assignments = request.Assignments.Distinct().ToList();
+            foreach (var userId in assignments)
+            {
+                var workload = await context.TaskAssignments
+                .Where(a =>
+                    a.UserId == userId &&
+                    a.TaskId != task.Id &&
+                    !a.TaskItem.IsArchived &&
+                    a.TaskItem.Status != Status.Done)
+                .SumAsync(a => a.TaskItem.EstimatedHours);
+
+                if (workload + task.EstimatedHours > 40)
+                {
+                    return (false,
+                        $"Employee {userId} exceeds weekly capacity");
+                }
+            }
             var validAssignmentsCount = await context.TeamMemberships
                 .CountAsync(tm =>
                     tm.TeamId == request.NewTeamId &&
@@ -270,7 +295,7 @@ public class ManageTasks : IManageTasks
             context.TaskAssignments.RemoveRange(task.Assignments);
             task.Assignments.Clear();
 
-            foreach (var userId in request.Assignments)
+            foreach (var userId in assignments)
             {
                 task.Assignments.Add(new TaskAssignment
                 {
@@ -382,16 +407,56 @@ public class ManageTasks : IManageTasks
 
         if (!string.IsNullOrWhiteSpace(request.Name)) task.Title = request.Name;
 
+        if (request.EstimatedHours.HasValue && request.EstimatedHours <= 0) return (false, "Estimated hours must be greater than zero");
+        
         if (!string.IsNullOrWhiteSpace(request.Description)) task.Description = request.Description;
 
         if (request.Deadline.HasValue) task.Deadline = request.Deadline.Value;
-        task.Title = request.Name ?? task.Title;
-        task.Description = request.Description ?? task.Description;
-        task.Deadline = request.Deadline ?? task.Deadline;
 
+        var estimatedHours = request.EstimatedHours ?? task.EstimatedHours;
+
+        if (request.EstimatedHours.HasValue && request.Members == null)
+        {
+            var assignedUsers = task.Assignments
+                .Select(a => a.UserId)
+                .Distinct()
+                .ToList();
+
+            foreach (var userId in assignedUsers)
+            {
+                var workload =
+                    await GetEmployeeWorkloadWithoutCurrentTaskAsync(
+                        userId,
+                        task.Id);
+
+                if (workload + estimatedHours > 40)
+                {
+                    return (false,
+                        $"Employee {userId} exceeds weekly capacity");
+                }
+            }
+        }
+        if (request.EstimatedHours.HasValue)
+        {
+            task.EstimatedHours = request.EstimatedHours.Value;
+        }
 
         if (request.Members != null)
         {
+
+            foreach (var userId in request.Members.Distinct())
+            {
+                var workload = await GetEmployeeWorkloadWithoutCurrentTaskAsync(
+                    userId,
+                        task.Id);
+
+                if (workload + estimatedHours > 40)
+                {
+                    return (false,
+                        $"Employee {userId} exceeds weekly capacity");
+                }
+            }
+
             var oldAssignedUserIds = task.Assignments
                   .Select(a => a.UserId)
                   .ToList();
@@ -454,7 +519,7 @@ public class ManageTasks : IManageTasks
     public async Task<(bool?, string?)> RequestReviewTaskAsync(int userid, int taskid)
     {
         var task = await context.TaskItems
-            .Include(t => t.Assignments)
+            .Include(t => t.Assignments)    
             .FirstOrDefaultAsync(t =>
                 t.Id == taskid &&
                 !t.IsArchived &&
@@ -464,5 +529,26 @@ public class ManageTasks : IManageTasks
         task.Status = Data.Domain.Enums.Status.Review;
         await context.SaveChangesAsync();
         return (true, null);
+    }
+
+    //Helpers
+    private async Task<int> GetEmployeeWorkloadAsync(int userId)
+    {
+        return await context.TaskAssignments
+            .Where(a =>
+                a.UserId == userId &&
+                !a.TaskItem.IsArchived &&
+                a.TaskItem.Status != Status.Done)
+            .SumAsync(a => a.TaskItem.EstimatedHours);
+    }
+    private async Task<int> GetEmployeeWorkloadWithoutCurrentTaskAsync(int userId, int currentTaskId)
+    {
+        return await context.TaskAssignments
+            .Where(a =>
+                a.UserId == userId &&
+                a.TaskId != currentTaskId &&
+                !a.TaskItem.IsArchived &&
+                a.TaskItem.Status != Status.Done)
+            .SumAsync(a => a.TaskItem.EstimatedHours);
     }
 }

@@ -7,6 +7,7 @@ namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
     public class TaskCardDto
     {
         public int Id { get; set; }
+        public int EstimatedHours { get; set; }
 
         public string Title { get; set; } = string.Empty;
 

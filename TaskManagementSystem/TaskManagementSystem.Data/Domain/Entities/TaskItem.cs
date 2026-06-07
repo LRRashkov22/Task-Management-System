@@ -12,8 +12,8 @@ public class TaskItem
 
     public string? Description { get; set; }
 
+    public int EstimatedHours { get; set; }
     public Priority Priority { get; set; }
-
     public bool IsArchived { get; set; } = false;
 
     public Status Status { get; set; } = Status.InProgress;
