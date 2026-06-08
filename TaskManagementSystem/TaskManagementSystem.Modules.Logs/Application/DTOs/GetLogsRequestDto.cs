@@ -17,4 +17,8 @@ public class GetLogsRequestDto
     public ActionType? ActionType { get; set; } = null;
 
     public LogModule? Module { get; set; } = null;
+
+    public DateTime? FromDate { get; set; }
+
+    public DateTime? ToDate { get; set; }
 }
