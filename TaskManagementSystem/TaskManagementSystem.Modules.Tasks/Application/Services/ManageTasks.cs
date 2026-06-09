@@ -39,6 +39,7 @@ public class ManageTasks : IManageTasks
             .Select(t => new TaskCardDto
             {
                 Id = t.Id,
+                EstimatedHours = t.EstimatedHours,
                 Title = t.Title,
                 Description = t.Description,
                 Priority = t.Priority.ToString(),
@@ -59,6 +60,7 @@ public class ManageTasks : IManageTasks
             .Select(t => new TaskDetailsDto
             {
                 Id = t.Id,
+                EstimatedHours = t.EstimatedHours,
                 Title = t.Title,
                 Description = t.Description,
                 Priority = t.Priority.ToString(),
@@ -142,18 +144,19 @@ public class ManageTasks : IManageTasks
             .AnyAsync(m => m.Id == request.TeamId && m.ManagerId == userid);
         if (!managerOwnership) return (null, "You do not own this team");
 
-        if (request.Assignments.Count == 0)
+        var assignments = request.Assignments?
+            .Distinct()
+            .ToList() ?? new List<int>();
+
+        if (assignments.Count == 0)
             return (null, "At least one assignment is required");
 
-        var validAssignmentsCount = await context.TeamMemberships.AsNoTracking()
-            .CountAsync(tm =>
-                tm.TeamId == request.TeamId &&
-                request.Assignments.Contains(tm.UserId));
         if (request.EstimatedHours <= 0)
         {
             return (null, "Estimated hours must be greater than zero");
         }
-        if (validAssignmentsCount != request.Assignments.Count)
+
+        if (!await AreUsersTeamMembersAsync(request.TeamId, assignments))
         {
             return (null, "Some assigned users are not part of the team");
         }
@@ -170,7 +173,7 @@ public class ManageTasks : IManageTasks
             TeamId = request.TeamId,
             CreatedById = userid
         };
-        foreach (var memberId in request.Assignments)
+        foreach (var memberId in assignments)
         {
             var workload = await GetEmployeeWorkloadAsync(memberId);
 
@@ -183,6 +186,8 @@ public class ManageTasks : IManageTasks
                 UserId = memberId
             });
         }
+        request.Assignments = assignments;
+
         context.TaskItems.Add(task);
         await context.SaveChangesAsync();
 
@@ -192,12 +197,12 @@ public class ManageTasks : IManageTasks
         .Select(u => u.Username)
         .FirstAsync();
         //SignalR
-        await taskMotificationService.NotifyTaskAssignedAsync(task, request.Assignments, managerName);
+        await taskMotificationService.NotifyTaskAssignedAsync(task, assignments, managerName);
         await _taskLogger.TaskAssignedLog(new CreateLogDto
         {
             UserId = userid,
             ActionType = ActionType.Create
-        }, task, request.Assignments, managerName);
+        }, task, assignments, managerName);
         return (request, null);
     }
     public async Task<(bool isDeleted, string? error)> ArchiveTask(RecoverOrArchiveDto request, int userid)
@@ -261,7 +266,20 @@ public class ManageTasks : IManageTasks
             if (!isAdmin && newTeam.ManagerId != userid)
                 return (false, "You can transfer only to your own teams");
 
-            var assignments = request.Assignments.Distinct().ToList();
+            var assignments = request.Assignments?
+                .Distinct()
+                .ToList() ?? new List<int>();
+
+            if (assignments.Count == 0)
+            {
+                return (false, "At least one assignment is required");
+            }
+
+            if (!await AreUsersTeamMembersAsync(request.NewTeamId, assignments))
+            {
+                return (false, "Some users are not part of the new team");
+            }
+
             foreach (var userId in assignments)
             {
                 var workload = await context.TaskAssignments
@@ -278,24 +296,25 @@ public class ManageTasks : IManageTasks
                         $"Employee {userId} exceeds weekly capacity");
                 }
             }
-            var validAssignmentsCount = await context.TeamMemberships
-                .CountAsync(tm =>
-                    tm.TeamId == request.NewTeamId &&
-                    assignments.Contains(tm.UserId));
-
-            if (validAssignmentsCount != assignments.Count)
-            {
-                return (false, "Some users are not part of the new team");
-            }
             var oldAssignedUsers = task.Assignments.Select(a => a.UserId).ToList();
+            var removedUsers = oldAssignedUsers
+                .Except(assignments)
+                .ToList();
+
+            var addedUsers = assignments
+                .Except(oldAssignedUsers)
+                .ToList();
 
             var oldTeamId = task.TeamId;
 
             task.TeamId = request.NewTeamId;
-            context.TaskAssignments.RemoveRange(task.Assignments);
-            task.Assignments.Clear();
+            var assignmentsToRemove = task.Assignments
+                .Where(a => removedUsers.Contains(a.UserId))
+                .ToList();
 
-            foreach (var userId in assignments)
+            context.TaskAssignments.RemoveRange(assignmentsToRemove);
+
+            foreach (var userId in addedUsers)
             {
                 task.Assignments.Add(new TaskAssignment
                 {
@@ -317,12 +336,12 @@ public class ManageTasks : IManageTasks
             await transaction.CommitAsync();
 
             //SignalR
-            await taskMotificationService.NotifyTaskTransferedAsync(task, oldAssignedUsers);
+            await taskMotificationService.NotifyTaskTransferedAsync(task, removedUsers);
             await _taskLogger.TaskTransferedLog(new CreateLogDto
             {
                 UserId = userid,
                 ActionType = ActionType.Modify
-            }, task, oldAssignedUsers);
+            }, task, removedUsers);
             return (true, null);
 
         }
@@ -411,7 +430,15 @@ public class ManageTasks : IManageTasks
         
         if (!string.IsNullOrWhiteSpace(request.Description)) task.Description = request.Description;
 
-        if (request.Deadline.HasValue) task.Deadline = request.Deadline.Value;
+        if (request.Deadline.HasValue)
+        {
+            if (request.Deadline.Value < DateTime.UtcNow)
+            {
+                return (false, "Deadline cannot be in the past");
+            }
+
+            task.Deadline = request.Deadline.Value;
+        }
 
         var estimatedHours = request.EstimatedHours ?? task.EstimatedHours;
 
@@ -443,8 +470,21 @@ public class ManageTasks : IManageTasks
 
         if (request.Members != null)
         {
+            var newAssignedUserIds = request.Members
+                .Distinct()
+                .ToList();
 
-            foreach (var userId in request.Members.Distinct())
+            if (newAssignedUserIds.Count == 0)
+            {
+                return (false, "At least one assignment is required");
+            }
+
+            if (!await AreUsersTeamMembersAsync(task.TeamId, newAssignedUserIds))
+            {
+                return (false, "Some assigned users are not part of the team");
+            }
+
+            foreach (var userId in newAssignedUserIds)
             {
                 var workload = await GetEmployeeWorkloadWithoutCurrentTaskAsync(
                     userId,
@@ -461,10 +501,6 @@ public class ManageTasks : IManageTasks
                   .Select(a => a.UserId)
                   .ToList();
 
-            var newAssignedUserIds = request.Members
-                .Distinct()
-                .ToList();
-
             var removedUsers = oldAssignedUserIds
                 .Except(newAssignedUserIds)
                 .ToList();
@@ -473,11 +509,13 @@ public class ManageTasks : IManageTasks
                 .Except(oldAssignedUserIds)
                 .ToList();
 
-            context.TaskAssignments.RemoveRange(task.Assignments);
+            var assignmentsToRemove = task.Assignments
+                .Where(a => removedUsers.Contains(a.UserId))
+                .ToList();
 
-            task.Assignments.Clear();
+            context.TaskAssignments.RemoveRange(assignmentsToRemove);
 
-            foreach (var memberId in newAssignedUserIds)
+            foreach (var memberId in addedUsers)
             {
                 task.Assignments.Add(new TaskAssignment
                 {
@@ -550,5 +588,16 @@ public class ManageTasks : IManageTasks
                 !a.TaskItem.IsArchived &&
                 a.TaskItem.Status != Status.Done)
             .SumAsync(a => a.TaskItem.EstimatedHours);
+    }
+
+    private async Task<bool> AreUsersTeamMembersAsync(int teamId, IReadOnlyCollection<int> userIds)
+    {
+        var validAssignmentsCount = await context.TeamMemberships
+            .AsNoTracking()
+            .CountAsync(tm =>
+                tm.TeamId == teamId &&
+                userIds.Contains(tm.UserId));
+
+        return validAssignmentsCount == userIds.Count;
     }
 }
