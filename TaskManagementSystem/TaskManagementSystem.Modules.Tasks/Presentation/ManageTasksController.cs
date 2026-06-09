@@ -142,4 +142,58 @@ public class ManageTasksController : ControllerBase
         return Ok(status);
     }
 
+
+
+    [Authorize(Roles = "Employee")]
+    [HttpGet("personal-board")]
+    public async Task<ActionResult<List<PersonalTaskCardDto>>> GetPersonalBoard()
+    {
+        // Extracts the logged-in User ID from the JWT token claims
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var tasks = await task.GetPersonalTasksAsync(userid);
+        return Ok(tasks);
+    }
+
+    [Authorize(Roles = "Employee")]
+    [HttpPost("create-personal")]
+    public async Task<ActionResult<PersonalTaskCardDto>> CreatePersonalTask(CreatePersonalTaskDto request)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var (result, error) = await task.CreatePersonalTaskAsync(request, userid);
+
+        if (error != null)
+            return BadRequest(error);
+
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Employee")]
+    [HttpPatch("personal-status/{taskId}")]
+    public async Task<ActionResult> UpdatePersonalStatus(int taskId, [FromBody] Status status)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var (success, error) = await task.ChangePersonalTaskStatusAsync(userid, taskId, status);
+
+        if (error != null)
+            return BadRequest(error);
+
+        return Ok(success);
+    }
+
+    [Authorize(Roles = "Employee")]
+    [HttpDelete("delete-personal/{taskId}")]
+    public async Task<ActionResult> DeletePersonal(int taskId)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var (success, error) = await task.DeletePersonalTaskAsync(userid, taskId);
+
+        if (error != null)
+            return BadRequest(error);
+
+        return Ok(success);
+    }
 }
