@@ -28,5 +28,7 @@ namespace TaskManagementSystem.Modules.Tasks.Application.Interfaces
         Task<(PersonalTaskCardDto?, string?)> CreatePersonalTaskAsync(CreatePersonalTaskDto request, int userid);
         Task<(bool status, string? error)> ChangePersonalTaskStatusAsync(int userid, int taskid, Status newStatus);
         Task<(bool status, string? error)> DeletePersonalTaskAsync(int userid, int taskid);
+
+        Task<PersonalTaskCardDto?> GetPersonalTaskDetailsAsync(int taskId, int userid);
     }
 }

@@ -196,4 +196,18 @@ public class ManageTasksController : ControllerBase
 
         return Ok(success);
     }
+
+    [Authorize(Roles = "Employee")]
+    [HttpGet("personal-task/{taskId}")]
+    public async Task<ActionResult<PersonalTaskCardDto>> GetPersonalTaskDetails(int taskId)
+    {
+        var userid = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var taskDetail = await task.GetPersonalTaskDetailsAsync(taskId, userid);
+
+        if (taskDetail == null)
+            return NotFound("Personal task not found.");
+
+        return Ok(taskDetail);
+    }
 }

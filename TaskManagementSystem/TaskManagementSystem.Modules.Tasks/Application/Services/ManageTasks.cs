@@ -692,4 +692,21 @@ public class ManageTasks : IManageTasks
 
         return (true, null);
     }
+
+    public async Task<PersonalTaskCardDto?> GetPersonalTaskDetailsAsync(int taskId, int userid)
+    {
+        return await context.TaskItems
+            .Where(t => t.Id == taskId && t.CreatedById == userid && t.TeamId == null && !t.IsArchived)
+            .Select(t => new PersonalTaskCardDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                Priority = t.Priority.ToString(),
+                Status = t.Status.ToString(),
+                Deadline = t.Deadline,
+                WorkHours = t.WorkSessions.Sum(w => w.Hours)
+            })
+            .FirstOrDefaultAsync();
+    }
 }
