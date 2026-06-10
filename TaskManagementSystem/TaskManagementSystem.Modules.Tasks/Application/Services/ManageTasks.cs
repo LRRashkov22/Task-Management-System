@@ -175,17 +175,17 @@ public class ManageTasks : IManageTasks
         };
         foreach (var memberId in assignments)
         {
-            var workload = await GetEmployeeWorkloadAsync(memberId);
+            var hasCapacity = await HasCapacityAsync(
+                memberId,
+                request.EstimatedHours,
+                request.Deadline);
 
-            if (workload + request.EstimatedHours > 40)
+            if (!hasCapacity)
             {
-                return (null, $"Employee {memberId} exceeds weekly capacity");
+                return (null,
+                    $"Employee {memberId} exceeds capacity before deadline");
             }
-            task.Assignments.Add(new TaskAssignment
-            {
-                UserId = memberId
-            });
-        }
+        }   
         request.Assignments = assignments;
 
         context.TaskItems.Add(task);
@@ -448,20 +448,19 @@ public class ManageTasks : IManageTasks
                 .Select(a => a.UserId)
                 .Distinct()
                 .ToList();
+            //foreach (var memberId in assignments)
+            //{
+            //    var hasCapacity = await HasCapacityAsync(
+            //        memberId,
+            //        request.EstimatedHours,
+            //        request.Deadline);
 
-            foreach (var userId in assignedUsers)
-            {
-                var workload =
-                    await GetEmployeeWorkloadWithoutCurrentTaskAsync(
-                        userId,
-                        task.Id);
-
-                if (workload + estimatedHours > 40)
-                {
-                    return (false,
-                        $"Employee {userId} exceeds weekly capacity");
-                }
-            }
+            //    if (!hasCapacity)
+            //    {
+            //        return (null,
+            //            $"Employee {memberId} exceeds capacity before deadline");
+            //    }
+            //}
         }
         if (request.EstimatedHours.HasValue)
         {
@@ -484,18 +483,18 @@ public class ManageTasks : IManageTasks
                 return (false, "Some assigned users are not part of the team");
             }
 
-            foreach (var userId in newAssignedUserIds)
-            {
-                var workload = await GetEmployeeWorkloadWithoutCurrentTaskAsync(
-                    userId,
-                        task.Id);
+            //foreach (var userId in newAssignedUserIds)
+            //{
+            //    var workload = await GetEmployeeWorkloadWithoutCurrentTaskAsync(
+            //        userId,
+            //            task.Id);
 
-                if (workload + estimatedHours > 40)
-                {
-                    return (false,
-                        $"Employee {userId} exceeds weekly capacity");
-                }
-            }
+            //    if (workload + estimatedHours > 40)
+            //    {
+            //        return (false,
+            //            $"Employee {userId} exceeds weekly capacity");
+            //    }
+            //}
 
             var oldAssignedUserIds = task.Assignments
                   .Select(a => a.UserId)
@@ -570,24 +569,53 @@ public class ManageTasks : IManageTasks
     }
 
     //Helpers
-    private async Task<int> GetEmployeeWorkloadAsync(int userId)
+    private static int GetWorkingDays(
+        DateTime startDate,
+        DateTime endDate)
     {
-        return await context.TaskAssignments
-            .Where(a =>
-                a.UserId == userId &&
-                !a.TaskItem.IsArchived &&
-                a.TaskItem.Status != Status.Done)
-            .SumAsync(a => a.TaskItem.EstimatedHours);
+        int workingDays = 0;
+
+        for (var date = startDate.Date;
+             date < endDate.Date;
+             date = date.AddDays(1))
+        {
+            if (date.DayOfWeek != DayOfWeek.Saturday &&
+                date.DayOfWeek != DayOfWeek.Sunday)
+            {
+                workingDays++;
+            }
+        }
+
+        return Math.Max(1, workingDays);
     }
-    private async Task<int> GetEmployeeWorkloadWithoutCurrentTaskAsync(int userId, int currentTaskId)
+    private async Task<bool> HasCapacityAsync(
+    int userId,
+    int estimatedHours,
+    DateTime deadline,
+    int? excludeTaskId = null)
     {
-        return await context.TaskAssignments
+        var availableHours =
+            GetWorkingDays(
+                DateTime.UtcNow.Date,
+                deadline.Date) * 8;
+
+        var query = context.TaskAssignments
             .Where(a =>
                 a.UserId == userId &&
-                a.TaskId != currentTaskId &&
                 !a.TaskItem.IsArchived &&
-                a.TaskItem.Status != Status.Done)
+                a.TaskItem.Status != Status.Done &&
+                a.TaskItem.Deadline <= deadline);
+
+        if (excludeTaskId.HasValue)
+        {
+            query = query.Where(a =>
+                a.TaskId != excludeTaskId.Value);
+        }
+
+        var workload = await query
             .SumAsync(a => a.TaskItem.EstimatedHours);
+
+        return workload + estimatedHours <= availableHours;
     }
 
     private async Task<bool> AreUsersTeamMembersAsync(int teamId, IReadOnlyCollection<int> userIds)
