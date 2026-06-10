@@ -21,12 +21,14 @@ namespace TaskManagementSystem.Api.Extensions
 
                 if (files.Any())
                 {
-                    foreach (var file in files)
-                    {
-                        Console.WriteLine($"[ENV SUCCESS] Found and loading env file: {file.FullName}");
-                        DotNetEnv.Env.Load(file.FullName);
-                        fileFound = true;
-                    }
+                    var file = files.First();
+
+                    Console.WriteLine($"[ENV SUCCESS] Found and loading env file: {file.FullName}");
+                    DotNetEnv.Env.Load(file.FullName);
+
+                    fileFound = true;
+
+                    break;
                 }
 
                 currentDir = currentDir.Parent;

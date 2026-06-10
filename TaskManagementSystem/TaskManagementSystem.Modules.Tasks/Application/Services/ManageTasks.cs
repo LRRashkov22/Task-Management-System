@@ -618,14 +618,123 @@ public class ManageTasks : IManageTasks
         return workload + estimatedHours <= availableHours;
     }
 
-    private async Task<bool> AreUsersTeamMembersAsync(int teamId, IReadOnlyCollection<int> userIds)
+    private async Task<bool> AreUsersTeamMembersAsync(int? teamId, IReadOnlyCollection<int> userIds)
     {
+        if (!teamId.HasValue) return false;
+
         var validAssignmentsCount = await context.TeamMemberships
             .AsNoTracking()
             .CountAsync(tm =>
-                tm.TeamId == teamId &&
+                tm.TeamId == teamId.Value &&
                 userIds.Contains(tm.UserId));
 
         return validAssignmentsCount == userIds.Count;
+    }
+
+    public async Task<List<PersonalTaskCardDto>> GetPersonalTasksAsync(int userid)
+    {
+        return await context.TaskItems
+            .Where(t => t.CreatedById == userid && t.TeamId == null && !t.IsArchived)
+            .Select(t => new PersonalTaskCardDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                Priority = t.Priority.ToString(),
+                Status = t.Status.ToString(),
+                Deadline = t.Deadline,
+                WorkHours = t.WorkSessions.Sum(w => w.Hours)
+            })
+            .ToListAsync();
+    }
+
+    public async Task<(PersonalTaskCardDto?, string?)> CreatePersonalTaskAsync(CreatePersonalTaskDto request, int userid)
+    {
+        var utcDeadline = DateTime.SpecifyKind(request.Deadline, DateTimeKind.Utc);
+
+        if (string.IsNullOrWhiteSpace(request.Title) || utcDeadline < DateTime.UtcNow)
+        {
+            return (null, "Title is required and Deadline cannot be in the past.");
+        }
+
+        var task = new TaskItem
+        {
+            Title = request.Title,
+            Description = request.Description,
+            Priority = request.Priority,
+            Status = Status.ToDo,
+            CreatedAt = DateTime.UtcNow,
+
+            Deadline = utcDeadline,
+
+            EstimatedHours = request.EstimatedHours,
+            TeamId = null,
+            CreatedById = userid       
+        };
+
+        task.Assignments.Add(new TaskAssignment { UserId = userid });
+
+        context.TaskItems.Add(task);
+        await context.SaveChangesAsync();
+
+        var response = new PersonalTaskCardDto
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            Priority = task.Priority.ToString(),
+            Status = task.Status.ToString(),
+            Deadline = task.Deadline,
+            WorkHours = 0
+        };
+
+        return (response, null);
+    }
+
+    public async Task<(bool status, string? error)> ChangePersonalTaskStatusAsync(int userid, int taskid, Status newStatus)
+    {
+        var task = await context.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == taskid && t.CreatedById == userid && t.TeamId == null);
+
+        if (task == null) return (false, "Personal task not found");
+
+        if (Enum.IsDefined<Status>(newStatus) == false) return (false, "Status not valid");
+
+        // Personal tasks don't need a manager's "Review" loop; they can go directly to Done
+        task.Status = newStatus;
+        await context.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool status, string? error)> DeletePersonalTaskAsync(int userid, int taskid)
+    {
+        var task = await context.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == taskid && t.CreatedById == userid && t.TeamId == null);
+
+        if (task == null) return (false, "Personal task not found");
+
+        // Direct deletion or simple archiving since it doesn't affect team history
+        context.TaskItems.Remove(task);
+        await context.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<PersonalTaskCardDto?> GetPersonalTaskDetailsAsync(int taskId, int userid)
+    {
+        return await context.TaskItems
+            .Where(t => t.Id == taskId && t.CreatedById == userid && t.TeamId == null && !t.IsArchived)
+            .Select(t => new PersonalTaskCardDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                Priority = t.Priority.ToString(),
+                Status = t.Status.ToString(),
+                Deadline = t.Deadline,
+                WorkHours = t.WorkSessions.Sum(w => w.Hours)
+            })
+            .FirstOrDefaultAsync();
     }
 }
