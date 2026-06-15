@@ -89,6 +89,7 @@
   type CreateModal = 'user' | 'manager' | null
   type DeleteManagerMode = 'transfer' | 'cascade'
   type LogFilterValue = 'all' | '1' | '2' | '3' | '4'
+  type LogSortValue = 'createdAt-desc' | 'createdAt-asc' | 'userRole-asc' | 'userRole-desc'
 
   type CreateForm = {
     username: string
@@ -114,6 +115,13 @@
     { value: '2', label: 'Replace' },
     { value: '3', label: 'Modify' },
     { value: '4', label: 'Remove' },
+  ] as const
+
+  const logSortOptions = [
+    { value: 'createdAt-desc', label: 'Newest first' },
+    { value: 'createdAt-asc', label: 'Oldest first' },
+    { value: 'userRole-asc', label: 'Role A-Z' },
+    { value: 'userRole-desc', label: 'Role Z-A' },
   ] as const
 
   function getLogModuleLabel(module: AdminLogDto['module']) {
@@ -494,6 +502,9 @@
       useState<LogFilterValue>('all')
     const [logActionFilter, setLogActionFilter] =
       useState<LogFilterValue>('all')
+    const [logSort, setLogSort] = useState<LogSortValue>('createdAt-desc')
+    const [logFromDate, setLogFromDate] = useState('')
+    const [logToDate, setLogToDate] = useState('')
     const [logPage, setLogPage] = useState(1)
     const [logPageSize, setLogPageSize] = useState(20)
     const [dashboard, setDashboard] =
@@ -518,6 +529,7 @@
       string | null
     >(null)
     const [message, setMessage] = useState<StatusMessage | null>(null)
+    const [modalMessage, setModalMessage] = useState<StatusMessage | null>(null)
     const [notifications, setNotifications] = useState<NotificationDto[]>([])
     const [isNotificationsLoading, setIsNotificationsLoading] = useState(false)
     const t = translations[language]
@@ -578,18 +590,24 @@
 
     const loadLogs = useCallback(async () => {
       setIsLogsLoading(true)
+      const [sortBy, sortDirection] = logSort.split('-') as [
+        'createdAt' | 'userRole',
+        'asc' | 'desc',
+      ]
 
       try {
         setLogs(
           await getAdminLogsApi({
-            sortBy: 'createdAt',
-            sortDirection: 'desc',
+            sortBy,
+            sortDirection,
             page: logPage,
             pageSize: logPageSize,
             module:
               logModuleFilter === 'all' ? undefined : Number(logModuleFilter),
             actionType:
               logActionFilter === 'all' ? undefined : Number(logActionFilter),
+            fromDate: logFromDate || undefined,
+            toDate: logToDate || undefined,
           }),
         )
       } catch (error) {
@@ -603,9 +621,12 @@
       }
     }, [
       logActionFilter,
+      logFromDate,
       logModuleFilter,
       logPage,
       logPageSize,
+      logSort,
+      logToDate,
       t.apiError,
     ])
 
@@ -878,7 +899,7 @@ useEffect(() => {
     function openCreateModal(modal: Exclude<CreateModal, null>) {
       setEditingUser(null)
       setCreateForm(emptyCreateForm)
-      setMessage(null)
+      setModalMessage(null)
       setCreateModal(modal)
     }
 
@@ -893,7 +914,7 @@ useEffect(() => {
         password: '',
         managerId: manager ? String(manager.id) : '',
       })
-      setMessage(null)
+      setModalMessage(null)
       setCreateModal(modal)
     }
 
@@ -902,7 +923,7 @@ useEffect(() => {
       setDeleteManagerPreview(null)
       setDeleteManagerMode('transfer')
       setDeleteTransferManagerId('')
-      setMessage(null)
+      setModalMessage(null)
       setIsDeletePreviewLoading(true)
 
       try {
@@ -1070,7 +1091,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
   if (!deleteManager) return
 
   if (deleteManagerMode === 'transfer' && !deleteTransferManagerId) {
-    setMessage({
+    setModalMessage({
       text: 'Select manager for transfer.',
       type: 'error',
     })
@@ -1078,7 +1099,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
   }
 
   setIsSaving(true)
-  setMessage(null)
+  setModalMessage(null)
 
   try {
     if (deleteManagerMode === 'transfer') {
@@ -1091,9 +1112,10 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
     await forceDeleteManagerApi(deleteManager.id)
     await refreshAdminData()
     closeDeleteManagerModal()
+    setModalMessage(null)
     setMessage({ text: 'Manager deleted successfully.', type: 'success' })
   } catch (error) {
-    setMessage({
+    setModalMessage({
       text: error instanceof Error ? error.message : t.apiError,
       type: 'error',
     })
@@ -1111,7 +1133,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
 
     // USERNAME VALIDATION
     if (!usernameRegex.test(username)) {
-      setMessage({
+      setModalMessage({
         text:
           'Username must be at least 4 letters and cannot contain numbers or special symbols.',
         type: 'error',
@@ -1121,7 +1143,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
 
     // PASSWORD VALIDATION
     if (!editingUser && !passwordRegex.test(createForm.password)) {
-      setMessage({
+      setModalMessage({
         text:
           'Password must contain uppercase, lowercase, number and special symbol.',
         type: 'error',
@@ -1131,7 +1153,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
 
     // EMPTY FIELDS VALIDATION
     if (!username || (!editingUser && !createForm.password)) {
-      setMessage({
+      setModalMessage({
         text: 'Username and password are required.',
         type: 'error',
       })
@@ -1140,7 +1162,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
 
     // USER MUST HAVE MANAGER
     if (createModal === 'user' && !createForm.managerId) {
-      setMessage({
+      setModalMessage({
         text: 'Select manager for the employee.',
         type: 'error',
       })
@@ -1148,7 +1170,7 @@ async function handleDeleteManagerSubmit(event: FormEvent<HTMLFormElement>) {
     }
 
     setIsSaving(true)
-    setMessage(null)
+    setModalMessage(null)
 
 try {
   if (editingUser) {
@@ -1182,13 +1204,14 @@ try {
   setEditingUser(null)
   setCreateForm(emptyCreateForm)
   setSearchQuery('')
+  setModalMessage(null)
 
   setMessage({
     text: editingUser ? t.updated : t.created,
     type: 'success',
   })
 } catch (error) {
-  setMessage({
+  setModalMessage({
     text: error instanceof Error
       ? error.message
       : t.apiError,
@@ -1679,7 +1702,7 @@ try {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-[1fr_1fr_0.7fr] gap-3 max-[900px]:grid-cols-1 [&_label]:grid [&_label]:gap-2 [&_label_span]:text-[12px] [&_label_span]:font-extrabold [&_label_span]:tracking-[0.04em] [&_label_span]:text-[#64748b] [&_label_span]:uppercase [&_select]:min-h-11 [&_select]:rounded-lg [&_select]:border [&_select]:border-[#cfd6e0] [&_select]:bg-white [&_select]:px-3.5 [&_select]:text-[15px] [&_select]:font-bold [&_select]:text-[#111827] [&_select]:focus:border-[#aeb8ce] [&_select]:focus:outline-[3px] [&_select]:focus:outline-[rgba(49,90,242,0.14)]">
+                  <div className="grid grid-cols-[1fr_1fr_0.9fr_0.8fr_0.8fr_0.7fr] gap-3 max-[1180px]:grid-cols-3 max-[900px]:grid-cols-1 [&_label]:grid [&_label]:gap-2 [&_label_span]:text-[12px] [&_label_span]:font-extrabold [&_label_span]:tracking-[0.04em] [&_label_span]:text-[#64748b] [&_label_span]:uppercase [&_input]:min-h-11 [&_input]:rounded-lg [&_input]:border [&_input]:border-[#cfd6e0] [&_input]:bg-white [&_input]:px-3.5 [&_input]:text-[15px] [&_input]:font-bold [&_input]:text-[#111827] [&_select]:min-h-11 [&_select]:rounded-lg [&_select]:border [&_select]:border-[#cfd6e0] [&_select]:bg-white [&_select]:px-3.5 [&_select]:text-[15px] [&_select]:font-bold [&_select]:text-[#111827] [&_input:focus]:border-[#aeb8ce] [&_input:focus]:outline-[3px] [&_input:focus]:outline-[rgba(49,90,242,0.14)] [&_select:focus]:border-[#aeb8ce] [&_select:focus]:outline-[3px] [&_select:focus]:outline-[rgba(49,90,242,0.14)]">
                     <label>
                       <span>Module</span>
                       <select
@@ -1716,6 +1739,47 @@ try {
                           </option>
                         ))}
                       </select>
+                    </label>
+
+                    <label>
+                      <span>Sort</span>
+                      <select
+                        value={logSort}
+                        onChange={(event) => {
+                          setLogPage(1)
+                          setLogSort(event.target.value as LogSortValue)
+                        }}
+                      >
+                        {logSortOptions.map((option) => (
+                          <option value={option.value} key={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>From date</span>
+                      <input
+                        type="date"
+                        value={logFromDate}
+                        onChange={(event) => {
+                          setLogPage(1)
+                          setLogFromDate(event.target.value)
+                        }}
+                      />
+                    </label>
+
+                    <label>
+                      <span>To date</span>
+                      <input
+                        type="date"
+                        value={logToDate}
+                        onChange={(event) => {
+                          setLogPage(1)
+                          setLogToDate(event.target.value)
+                        }}
+                      />
                     </label>
 
                     <label>
@@ -1938,6 +2002,15 @@ try {
                     : t.createManager}
               </h2>
 
+              {modalMessage ? (
+                <p
+                  className={`${adminStyles.message} ${commonStyles.message(modalMessage.type)}`}
+                  role="alert"
+                >
+                  {modalMessage.text}
+                </p>
+              ) : null}
+
               <label>
                 <span>{t.username}</span>
                 <input
@@ -2021,6 +2094,15 @@ try {
               <h2 className="mb-6 text-[24px] leading-[1.2] font-extrabold text-[#dc2626]">
                 Delete Manager: {deleteManagerPreview?.managerName || deleteManager.username}
               </h2>
+
+              {modalMessage ? (
+                <p
+                  className={`${adminStyles.message} mb-4 ${commonStyles.message(modalMessage.type)}`}
+                  role="alert"
+                >
+                  {modalMessage.text}
+                </p>
+              ) : null}
 
               <section className="mb-6 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-5 py-4 text-[#171717]">
                 <p className="mb-3 text-[16px] font-bold">This manager owns:</p>
