@@ -86,6 +86,7 @@ type TaskForm = {
   deadline: string
   teamId: string
   assignments: string[]
+  estimatedHours: string
 }
 
 type EditTaskForm = {
@@ -93,6 +94,7 @@ type EditTaskForm = {
   description: string
   deadline: string
   members: string[]
+  estimatedHours: string
 }
 
 type TeamForm = {
@@ -119,6 +121,7 @@ const emptyTaskForm: TaskForm = {
   deadline: '',
   teamId: '',
   assignments: [],
+  estimatedHours: '',
 }
 
 const emptyEditTaskForm: EditTaskForm = {
@@ -126,6 +129,15 @@ const emptyEditTaskForm: EditTaskForm = {
   description: '',
   deadline: '',
   members: [],
+  estimatedHours: '',
+}
+
+function taskSortKey(task: { id: number; createdAt?: string }) {
+  if (task.createdAt) {
+    return new Date(task.createdAt).getTime()
+  }
+
+  return task.id
 }
 
 const emptyTeamForm: TeamForm = {
@@ -515,14 +527,6 @@ function dateInputValue(value?: string | null) {
   return getDayKey(date)
 }
 
-function daysBetween(start: Date, end: Date) {
-  const oneDay = 24 * 60 * 60 * 1000
-  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())
-  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate())
-
-  return Math.round((endUtc - startUtc) / oneDay)
-}
-
 function calendarStatusLabel(status: string | number) {
   const value = String(status).toLowerCase()
 
@@ -534,6 +538,16 @@ function calendarStatusLabel(status: string | number) {
   }
 
   return String(status)
+}
+
+function calendarStatusTone(status: string | number) {
+  const label = calendarStatusLabel(status).toLowerCase().replace(/\s/g, '')
+
+  if (label === 'done') return 'done'
+  if (label === 'inprogress') return 'inprogress'
+  if (label === 'review') return 'review'
+
+  return 'todo'
 }
 
 function isSameDay(dateA: Date, dateB: Date) {
@@ -558,6 +572,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState<StatusMessage | null>(null)
+  const [modalMessage, setModalMessage] = useState<StatusMessage | null>(null)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false)
   const [archiveCandidate, setArchiveCandidate] =
@@ -584,6 +599,11 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
   const [calendarTasks, setCalendarTasks] = useState<ManagerCalendarTaskDto[]>([])
   const [selectedCalendarTask, setSelectedCalendarTask] =
     useState<CalendarItem | null>(null)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    return date
+  })
   const [isCalendarLoading, setIsCalendarLoading] = useState(false)
   const [editingTeam, setEditingTeam] = useState<ManagerTeamDto | null>(null)
   const [editingTask, setEditingTask] = useState<BoardTask | null>(null)
@@ -932,6 +952,17 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     return weeks
   }, [calendarDays])
 
+  const selectedCalendarDayTasks = useMemo(
+    () =>
+      calendarItems
+        .filter(
+          (task) =>
+            selectedCalendarDate >= task.start && selectedCalendarDate <= task.end,
+        )
+        .sort((taskA, taskB) => taskA.end.getTime() - taskB.end.getTime()),
+    [calendarItems, selectedCalendarDate],
+  )
+
   const filteredTasks = useMemo(
     () =>
       boardTasks.filter((task) => {
@@ -990,14 +1021,14 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
 
   function openCreateTaskModal() {
     setTaskForm(emptyTaskForm)
-    setMessage(null)
+    setModalMessage(null)
     setIsTaskModalOpen(true)
   }
 
   function openCreateTeamModal() {
     setEditingTeam(null)
     setTeamForm(emptyTeamForm)
-    setMessage(null)
+    setModalMessage(null)
     setIsTeamModalOpen(true)
   }
 
@@ -1011,8 +1042,11 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
         selectedTaskDetails?.description ?? selectedTask.description ?? '',
       deadline: dateInputValue(selectedTaskDetails?.deadline ?? selectedTask.deadline),
       members: selectedTaskAssignedUsers.map((member) => String(member.id)),
+      estimatedHours: String(
+        selectedTaskDetails?.estimatedHours ?? selectedTask.estimatedHours ?? '',
+      ),
     })
-    setMessage(null)
+    setModalMessage(null)
   }
 
   function openTransferTaskModal() {
@@ -1290,15 +1324,24 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       !taskForm.teamId ||
       taskForm.assignments.length === 0
     ) {
-      setMessage({
+      setModalMessage({
         text: 'Title, description, deadline, team and assignment are required.',
         type: 'error',
       })
       return
     }
 
+    const estimatedHours = Number(taskForm.estimatedHours)
+    if (!estimatedHours || estimatedHours <= 0) {
+      setModalMessage({
+        text: 'Estimated hours must be greater than zero.',
+        type: 'error',
+      })
+      return
+    }
+
     setIsSaving(true)
-    setMessage(null)
+    setModalMessage(null)
 
     try {
       // Client-side deadline validation (compare dates only)
@@ -1308,14 +1351,14 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       today.setHours(0, 0, 0, 0)
 
       if (!parsedDeadline || Number.isNaN(parsedDeadline.getTime())) {
-        setMessage({ text: 'Invalid deadline.', type: 'error' })
+        setModalMessage({ text: 'Invalid deadline.', type: 'error' })
         return
       }
 
       parsedDeadline.setHours(0, 0, 0, 0)
 
       if (parsedDeadline.getTime() < today.getTime()) {
-        setMessage({ text: 'Deadline cannot be in the past.', type: 'error' })
+        setModalMessage({ text: 'Deadline cannot be in the past.', type: 'error' })
         return
       }
 
@@ -1328,6 +1371,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
         deadline: new Date(`${deadlineInput}T00:00:00Z`).toISOString(),
         teamId: Number(taskForm.teamId),
         assignments: taskForm.assignments.map(Number),
+        estimatedHours,
       }
 
       await createManagerTaskApi(payload)
@@ -1335,9 +1379,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       setCalendarTasks(await getManagerCalendarInformationApi())
       setTaskForm(emptyTaskForm)
       setIsTaskModalOpen(false)
+      setModalMessage(null)
       setMessage({ text: 'Task created successfully.', type: 'success' })
     } catch (error) {
-      setMessage({
+      setModalMessage({
         text:
           error instanceof Error ? error.message : 'Could not create task.',
         type: 'error',
@@ -1351,7 +1396,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     event.preventDefault()
 
     if ((!editingTeam && !teamForm.name.trim()) || teamForm.memberIds.length === 0) {
-      setMessage({
+      setModalMessage({
         text: 'Team name and at least one member are required.',
         type: 'error',
       })
@@ -1359,7 +1404,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     }
 
     setIsSaving(true)
-    setMessage(null)
+    setModalMessage(null)
 
     try {
       if (editingTeam) {
@@ -1380,6 +1425,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       setTeamForm(emptyTeamForm)
       setEditingTeam(null)
       setIsTeamModalOpen(false)
+      setModalMessage(null)
       setMessage({
         text: editingTeam
           ? 'Team updated successfully.'
@@ -1387,7 +1433,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
         type: 'success',
       })
     } catch (error) {
-      setMessage({
+      setModalMessage({
         text: error instanceof Error ? error.message : 'Could not save team.',
         type: 'error',
       })
@@ -1453,15 +1499,24 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       !editTaskForm.deadline ||
       editTaskForm.members.length === 0
     ) {
-      setMessage({
+      setModalMessage({
         text: 'Title, description, deadline and employees are required.',
         type: 'error',
       })
       return
     }
 
+    const estimatedHours = Number(editTaskForm.estimatedHours)
+    if (!estimatedHours || estimatedHours <= 0) {
+      setModalMessage({
+        text: 'Estimated hours must be greater than zero.',
+        type: 'error',
+      })
+      return
+    }
+
     setIsSaving(true)
-    setMessage(null)
+    setModalMessage(null)
 
     try {
       await editManagerTaskApi(editingTask.id, {
@@ -1469,6 +1524,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
         description: editTaskForm.description.trim(),
         deadline: new Date(`${editTaskForm.deadline}T00:00:00Z`).toISOString(),
         members: editTaskForm.members.map(Number),
+        estimatedHours,
       })
 
       await loadManagerData()
@@ -1478,9 +1534,10 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
       setEditTaskForm(emptyEditTaskForm)
       setSelectedTask(null)
       setSelectedTaskDetails(null)
+      setModalMessage(null)
       setMessage({ text: 'Task updated successfully.', type: 'success' })
     } catch (error) {
-      setMessage({
+      setModalMessage({
         text: error instanceof Error ? error.message : 'Could not update task.',
         type: 'error',
       })
@@ -1763,9 +1820,16 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
 
               <div className={managerStyles.kanban}>
                 {boardColumns.map((column) => {
-                  const columnTasks = filteredTasks.filter(
+                  let columnTasks = filteredTasks.filter(
                     (task) => statusColumn(task.status) === column.id,
                   )
+                  
+                  // Sort: newest at bottom for active columns, newest at top for done
+                  columnTasks = columnTasks.sort((a, b) => {
+                    const diff = taskSortKey(a) - taskSortKey(b)
+                    return column.id === 'done' ? -diff : diff
+                  })
+                  
                   const isDropTarget = isDropTargetColumn(column.id)
 
                   return (
@@ -1942,65 +2006,108 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               {isCalendarLoading ? (
                 <p className={managerStyles.emptyText}>Loading...</p>
               ) : null}
-              <div className={managerStyles.calendarGrid}>
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className={managerStyles.calendarWeekday}>
-                    {day}
-                  </div>
-                ))}
-                {calendarWeeks.map((week) => {
-                  const weekStart = week[0]
-                  const weekEnd = week[6]
-                  const weekTasks = calendarItems.filter(
-                    (task) => task.start <= weekEnd && task.end >= weekStart,
-                  )
-
-                  return (
-                    <div className={managerStyles.calendarWeekRow} key={getDayKey(weekStart)}>
-                      <div className={managerStyles.calendarWeekDays}>
-                        {week.map((day) => (
-                          <article
-                            key={getDayKey(day)}
-                            className={managerStyles.calendarDay(
-                              calendarView === 'monthly' &&
-                                day.getMonth() !== calendarDate.getMonth(),
-                              isSameDay(day, new Date()),
-                            )}
-                          >
-                            <div className={managerStyles.calendarDayNumber}>
-                              {day.getDate()}
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                      <div className={managerStyles.calendarBars}>
-                        {weekTasks.map((task) => {
-                          const barStart = task.start < weekStart ? weekStart : task.start
-                          const barEnd = task.end > weekEnd ? weekEnd : task.end
-                          const columnStart = daysBetween(weekStart, barStart) + 1
-                          const columnEnd = daysBetween(weekStart, barEnd) + 2
-
-                          return (
-                            <button
-                              type="button"
-                              className={managerStyles.calendarRangeBar(task.colorIndex)}
-                              key={task.id}
-                              style={{
-                                gridColumn: `${columnStart} / ${columnEnd}`,
-                              }}
-                              title={`${task.taskName} - ${task.teamName}`}
-                              onClick={() => setSelectedCalendarTask(task)}
-                            >
-                              <span className={managerStyles.calendarRangeName}>
-                                {task.taskName}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
+              <div className={managerStyles.calendarLayout}>
+                <div className={managerStyles.calendarGrid}>
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <div key={day} className={managerStyles.calendarWeekday}>
+                      {day}
                     </div>
-                  )
-                })}
+                  ))}
+                  {calendarWeeks.flatMap((week) =>
+                    week.map((day) => {
+                      const dayTasks = calendarItems.filter(
+                        (task) => day >= task.start && day <= task.end,
+                      )
+                      const previewTask = dayTasks[0]
+                      const visibleDots = dayTasks.slice(0, 4)
+
+                      return (
+                        <button
+                          type="button"
+                          key={getDayKey(day)}
+                          className={managerStyles.calendarDayButton(
+                            calendarView === 'monthly' &&
+                              day.getMonth() !== calendarDate.getMonth(),
+                            isSameDay(day, new Date()),
+                            isSameDay(day, selectedCalendarDate),
+                          )}
+                          onClick={() => setSelectedCalendarDate(day)}
+                        >
+                          <span className={managerStyles.calendarDayTop}>
+                            <span className={managerStyles.calendarDayNumber}>
+                              {day.getDate()}
+                            </span>
+                            {dayTasks.length ? (
+                              <span className={managerStyles.calendarDayCount}>
+                                {dayTasks.length}
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className={managerStyles.calendarDayDots}>
+                            {visibleDots.map((task) => (
+                              <span
+                                className={managerStyles.calendarStatusDot(
+                                  calendarStatusTone(task.status),
+                                )}
+                                key={task.id}
+                              />
+                            ))}
+                          </span>
+                          {previewTask ? (
+                            <span className={managerStyles.calendarDayPreview}>
+                              {previewTask.taskName}
+                              {dayTasks.length > 1
+                                ? ` +${dayTasks.length - 1} more`
+                                : ''}
+                            </span>
+                          ) : null}
+                        </button>
+                      )
+                    }),
+                  )}
+                </div>
+
+                <aside className={managerStyles.calendarAgenda}>
+                  <div className={managerStyles.calendarAgendaHeader}>
+                    <div>
+                      <p>Selected day</p>
+                      <strong>
+                        {selectedCalendarDate.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </strong>
+                    </div>
+                    <span className={managerStyles.calendarAgendaCount}>
+                      {selectedCalendarDayTasks.length} tasks
+                    </span>
+                  </div>
+
+                  {selectedCalendarDayTasks.length ? (
+                    <div className={managerStyles.calendarAgendaList}>
+                      {selectedCalendarDayTasks.map((task) => (
+                        <button
+                          type="button"
+                          className={managerStyles.calendarAgendaItem}
+                          key={task.id}
+                          onClick={() => setSelectedCalendarTask(task)}
+                        >
+                          <strong>{task.taskName}</strong>
+                          <span>
+                            {task.teamName} - {calendarStatusLabel(task.status)}
+                          </span>
+                          <span>
+                            {formatDate(task.startDate)} - {formatDate(task.deadline)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className={managerStyles.calendarAgendaEmpty}>
+                      No tasks for this day.
+                    </p>
+                  )}
+                </aside>
               </div>
             </section>
           ) : activeView === 'teams' ? (
@@ -2234,6 +2341,14 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     Total Time:{' '}
                     {selectedTaskDetails?.workHours ?? selectedTask.workHours}h
                   </span>
+                  <span>
+                    <Icon name="clock" />
+                    Estimated:{' '}
+                    {selectedTaskDetails?.estimatedHours ??
+                      selectedTask.estimatedHours ??
+                      0}
+                    h
+                  </span>
                 </div>
               </section>
 
@@ -2331,11 +2446,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                         ) : null}
                       </article>
                     ))
-                  ) : (
-                    <p className={managerStyles.emptyText}>
-                      No time sessions loaded from backend.
-                    </p>
-                  )}
+                  ) : null}
                 </section>
               ) : null}
 
@@ -2352,11 +2463,7 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                         ) : null}
                       </article>
                     ))
-                  ) : (
-                    <p className={managerStyles.emptyText}>
-                      No history loaded from backend.
-                    </p>
-                  )}
+                  ) : null}
                 </section>
               ) : null}
             </div>
@@ -2415,6 +2522,12 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               <strong>{formatDate(selectedCalendarTask.startDate)}</strong>
               <span>Deadline</span>
               <strong>{formatDate(selectedCalendarTask.deadline)}</strong>
+              {selectedCalendarTask.estimatedHours ? (
+                <>
+                  <span>Estimate</span>
+                  <strong>{selectedCalendarTask.estimatedHours}h</strong>
+                </>
+              ) : null}
             </div>
             <div className={managerStyles.modalActions}>
               <button
@@ -2445,6 +2558,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
           >
             <h2>Edit Task</h2>
 
+            {modalMessage && editingTask ? (
+              <p
+                className={`${managerStyles.message} ${commonStyles.message(modalMessage.type)}`}
+                role="alert"
+              >
+                {modalMessage.text}
+              </p>
+            ) : null}
+
             <label>
               <span>Title</span>
               <input
@@ -2471,19 +2593,37 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
               />
             </label>
 
-            <label>
-              <span>Deadline</span>
-              <input
-                type="date"
-                value={editTaskForm.deadline}
-                onChange={(event) =>
-                  setEditTaskForm((current) => ({
-                    ...current,
-                    deadline: event.target.value,
-                  }))
-                }
-              />
-            </label>
+            <div className={managerStyles.modalGrid}>
+              <label>
+                <span>Deadline</span>
+                <input
+                  type="date"
+                  value={editTaskForm.deadline}
+                  onChange={(event) =>
+                    setEditTaskForm((current) => ({
+                      ...current,
+                      deadline: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Estimated Hours</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={editTaskForm.estimatedHours}
+                  onChange={(event) =>
+                    setEditTaskForm((current) => ({
+                      ...current,
+                      estimatedHours: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
 
             <div className={managerStyles.taskAssignLabel}>Employees</div>
             <fieldset className={managerStyles.taskAssignPanel}>
@@ -2538,6 +2678,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
             onSubmit={handleCreateTask}
           >
             <h2>Create Task</h2>
+
+            {modalMessage && isTaskModalOpen ? (
+              <p
+                className={managerStyles.modalAlert(modalMessage.type)}
+                role="alert"
+              >
+                {modalMessage.text}
+              </p>
+            ) : null}
 
             <label>
               <span>Title</span>
@@ -2594,6 +2743,23 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                     setTaskForm((current) => ({
                       ...current,
                       deadline: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Estimated Hours</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="1"
+                  value={taskForm.estimatedHours}
+                  onChange={(event) =>
+                    setTaskForm((current) => ({
+                      ...current,
+                      estimatedHours: event.target.value,
                     }))
                   }
                 />
@@ -2675,6 +2841,15 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
                 ? `Edit Team Members - ${editingTeam.name}`
                 : 'Create Team'}
             </h2>
+
+            {modalMessage && isTeamModalOpen ? (
+              <p
+                className={`${managerStyles.message} ${commonStyles.message(modalMessage.type)}`}
+                role="alert"
+              >
+                {modalMessage.text}
+              </p>
+            ) : null}
 
             {editingTeam ? null : (
               <label>
