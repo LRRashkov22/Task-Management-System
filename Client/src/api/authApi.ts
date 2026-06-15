@@ -18,7 +18,7 @@ type TokenResponseApiDto = {
   RefreshToken?: string
 }
 
-function mapTokenResponse(dto: TokenResponseApiDto): TokenResponse {
+export function mapTokenResponse(dto: TokenResponseApiDto): TokenResponse {
   return {
     accessToken: dto.accessToken ?? dto.AccessToken ?? '',
     refreshToken: dto.refreshToken ?? dto.RefreshToken,
