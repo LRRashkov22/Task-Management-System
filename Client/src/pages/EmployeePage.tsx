@@ -90,6 +90,7 @@ type MyTask = {
   dueDate: string
   timeLogged: string
   workHours: number
+  estimatedHours?: number | null
   assignees: TaskAssignee[]
   comments: TaskComment[]
   workSessions: TaskWorkSession[]
@@ -411,14 +412,6 @@ function parseCalendarDate(value?: string | null) {
   return date
 }
 
-function daysBetween(start: Date, end: Date) {
-  const oneDay = 24 * 60 * 60 * 1000
-  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())
-  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate())
-
-  return Math.round((endUtc - startUtc) / oneDay)
-}
-
 function isSameDay(dateA: Date, dateB: Date) {
   return (
     dateA.getFullYear() === dateB.getFullYear() &&
@@ -483,6 +476,7 @@ function mapRecentTaskToMyTask(task: EmployeeDashboardDto['recentTasks'][number]
     dueDate: formatDate(task.deadline),
     timeLogged: '0h',
     workHours: 0,
+    estimatedHours: null,
     assignees: [],
     comments: [],
     workSessions: [],
@@ -502,6 +496,7 @@ function mapPreviewTaskToMyTask(task: EmployeeTaskPreviewDto): MyTask {
     dueDate: formatDate(task.deadline),
     timeLogged: `${task.workHours}h`,
     workHours: task.workHours,
+    estimatedHours: task.estimatedHours ?? null,
     assignees: [],
     comments: [],
     workSessions: [],
@@ -519,6 +514,7 @@ function mergeTaskDetails(task: MyTask, details: EmployeeTaskDetailsDto): MyTask
     dueDate: formatDate(details.deadline),
     timeLogged: `${details.workHours}h`,
     workHours: details.workHours,
+    estimatedHours: details.estimatedHours ?? task.estimatedHours ?? null,
     assignees: details.assignedUsers,
     comments: details.comments,
     workSessions: details.workSessions,
@@ -770,6 +766,12 @@ function EmployeeTaskDetailModal({
                 <Icon name="clock" />
                 Total Time: {task.workHours}h
               </span>
+              {task.estimatedHours ? (
+                <span>
+                  <Icon name="warning" />
+                  Estimated: {task.estimatedHours}h
+                </span>
+              ) : null}
             </div>
           </section>
 
@@ -836,20 +838,18 @@ function EmployeeTaskDetailModal({
 
           {activeTab === 'history' ? (
             <section className={managerStyles.taskTabPanel}>
-              {combinedHistory.length ? (
-                combinedHistory.map((item) => (
-                  <article className={managerStyles.taskRecord} key={item.id}>
-                    <strong>{item.action}</strong>
-                    <span>{item.changedByUsername}</span>
-                    <time>{new Date(item.createdAt).toLocaleString()}</time>
-                    {(item as any).description ? (
-                      <p className="text-sm text-[#6b7280] mt-1">{(item as any).description}</p>
-                    ) : null}
-                  </article>
-                ))
-              ) : (
-                <p className="text-[14px] text-[#6b7280]">No history yet.</p>
-              )}
+              {combinedHistory.length
+                ? combinedHistory.map((item) => (
+                    <article className={managerStyles.taskRecord} key={item.id}>
+                      <strong>{item.action}</strong>
+                      <span>{item.changedByUsername}</span>
+                      <time>{new Date(item.createdAt).toLocaleString()}</time>
+                      {(item as any).description ? (
+                        <p className="text-sm text-[#6b7280] mt-1">{(item as any).description}</p>
+                      ) : null}
+                    </article>
+                  ))
+                : null}
             </section>
           ) : null}
         </div>
@@ -883,6 +883,11 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
   const [calendarDate, setCalendarDate] = useState(new Date())
   const [selectedCalendarTask, setSelectedCalendarTask] =
     useState<EmployeeCalendarItem | null>(null)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    return date
+  })
 
   const calendarItems = useMemo(
     () =>
@@ -943,6 +948,17 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
     return weeks
   }, [calendarDays])
 
+  const selectedCalendarDayTasks = useMemo(
+    () =>
+      calendarItems
+        .filter(
+          (task) =>
+            selectedCalendarDate >= task.start && selectedCalendarDate <= task.end,
+        )
+        .sort((taskA, taskB) => taskA.end.getTime() - taskB.end.getTime()),
+    [calendarItems, selectedCalendarDate],
+  )
+
   return (
     <>
       <section className={managerStyles.calendarPanel} aria-label="Calendar">
@@ -993,70 +1009,111 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
             </button>
           </div>
         </div>
-        <div className={managerStyles.calendarGrid}>
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className={managerStyles.calendarWeekday}>
-              {day}
-            </div>
-          ))}
-          {calendarWeeks.map((week) => {
-            const weekStart = week[0]
-            const weekEnd = week[6]
-            const weekTasks = calendarItems
-              .filter((task) => task.start <= weekEnd && task.end >= weekStart)
-              .sort((taskA, taskB) => {
-                const startDiff = taskA.start.getTime() - taskB.start.getTime()
-                if (startDiff !== 0) return startDiff
-
-                return taskB.end.getTime() - taskA.end.getTime()
-              })
-
-            return (
-              <div className={managerStyles.calendarWeekRow} key={getDayKey(weekStart)}>
-                <div className={managerStyles.calendarWeekDays}>
-                  {week.map((day) => (
-                    <article
-                      key={getDayKey(day)}
-                      className={managerStyles.calendarDay(
-                        calendarView === 'monthly' &&
-                          day.getMonth() !== calendarDate.getMonth(),
-                        isSameDay(day, new Date()),
-                      )}
-                    >
-                      <div className={managerStyles.calendarDayNumber}>
-                        {day.getDate()}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-                <div className={managerStyles.calendarBars}>
-                  {weekTasks.map((task) => {
-                    const barStart = task.start < weekStart ? weekStart : task.start
-                    const barEnd = task.end > weekEnd ? weekEnd : task.end
-                    const columnStart = daysBetween(weekStart, barStart) + 1
-                    const columnEnd = daysBetween(weekStart, barEnd) + 2
-
-                    return (
-                      <button
-                        className={managerStyles.calendarRangeBar(task.colorIndex)}
-                        key={`${task.id}-${getDayKey(weekStart)}`}
-                        style={{
-                          gridColumn: `${columnStart} / ${columnEnd}`,
-                        }}
-                        title={`${task.title} - ${task.teamName}`}
-                        type="button"
-                        onClick={() => setSelectedCalendarTask(task)}
-                      >
-                        <span className={managerStyles.calendarRangeName}>
-                          {task.title}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
+        <div className={managerStyles.calendarLayout}>
+          <div className={managerStyles.calendarGrid}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className={managerStyles.calendarWeekday}>
+                {day}
               </div>
-            )
-          })}
+            ))}
+            {calendarWeeks.flatMap((week) =>
+              week.map((day) => {
+                const dayTasks = calendarItems.filter(
+                  (task) => day >= task.start && day <= task.end,
+                )
+                const previewTask = dayTasks[0]
+                const visibleDots = dayTasks.slice(0, 4)
+
+                return (
+                  <button
+                    type="button"
+                    key={getDayKey(day)}
+                    className={managerStyles.calendarDayButton(
+                      calendarView === 'monthly' &&
+                        day.getMonth() !== calendarDate.getMonth(),
+                      isSameDay(day, new Date()),
+                      isSameDay(day, selectedCalendarDate),
+                    )}
+                    onClick={() => setSelectedCalendarDate(day)}
+                  >
+                    <span className={managerStyles.calendarDayTop}>
+                      <span className={managerStyles.calendarDayNumber}>
+                        {day.getDate()}
+                      </span>
+                      {dayTasks.length ? (
+                        <span className={managerStyles.calendarDayCount}>
+                          {dayTasks.length}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className={managerStyles.calendarDayDots}>
+                      {visibleDots.map((task) => (
+                        <span
+                          className={managerStyles.calendarStatusDot(
+                            statusTone(task.status),
+                          )}
+                          key={task.id}
+                        />
+                      ))}
+                    </span>
+                    {previewTask ? (
+                      <span className={managerStyles.calendarDayPreview}>
+                        {previewTask.title}
+                        {dayTasks.length > 1 ? ` +${dayTasks.length - 1} more` : ''}
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              }),
+            )}
+          </div>
+
+          <aside className={managerStyles.calendarAgenda}>
+            <div className={managerStyles.calendarAgendaHeader}>
+              <div>
+                <p>Selected day</p>
+                <strong>
+                  {selectedCalendarDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </strong>
+              </div>
+              <span className={managerStyles.calendarAgendaCount}>
+                {selectedCalendarDayTasks.length} tasks
+              </span>
+            </div>
+
+            {selectedCalendarDayTasks.length ? (
+              <div className={managerStyles.calendarAgendaList}>
+                {selectedCalendarDayTasks.map((task) => (
+                  <button
+                    type="button"
+                    className={managerStyles.calendarAgendaItem}
+                    key={task.id}
+                    onClick={() => setSelectedCalendarTask(task)}
+                  >
+                    <strong>{task.title}</strong>
+                    <span>
+                      {task.teamName || 'No team'} - {statusLabel(task.status)}
+                    </span>
+                    <span>
+                      {formatDate(getDayKey(task.start))} - {task.dueDate || '-'}
+                    </span>
+                    {task.estimatedHours ? (
+                      <span>
+                        Logged {task.workHours}h / Estimated {task.estimatedHours}h
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className={managerStyles.calendarAgendaEmpty}>
+                No tasks for this day.
+              </p>
+            )}
+          </aside>
         </div>
       </section>
 
@@ -1080,6 +1137,12 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
               <strong>{formatDate(getDayKey(selectedCalendarTask.start))}</strong>
               <span>Deadline</span>
               <strong>{selectedCalendarTask.dueDate || '-'}</strong>
+              {selectedCalendarTask.estimatedHours ? (
+                <>
+                  <span>Estimate</span>
+                  <strong>{selectedCalendarTask.estimatedHours}h</strong>
+                </>
+              ) : null}
             </div>
             <div className={managerStyles.modalActions}>
               <button
@@ -1130,7 +1193,7 @@ function MyTasksView({
 
       {tasks.length ? (
         <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
-          <div className="grid min-h-[44px] grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085]">
+          <div className="grid min-h-[44px] grid-cols-[1.55fr_0.45fr_0.45fr_0.45fr_0.5fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085]">
             <span>TITLE</span>
             <span>STATUS</span>
             <span>PRIORITY</span>
@@ -1140,7 +1203,7 @@ function MyTasksView({
 
           {tasks.map((task) => (
             <article
-              className="grid min-h-[62px] cursor-pointer grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] transition hover:bg-[#f8fafc]"
+              className="grid min-h-[62px] cursor-pointer grid-cols-[1.55fr_0.45fr_0.45fr_0.45fr_0.5fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] transition hover:bg-[#f8fafc]"
               key={task.id}
               onClick={() => void onSelectTask(task)}
               onKeyDown={(event) => {
@@ -1164,7 +1227,11 @@ function MyTasksView({
                 </TaskBadge>
               </span>
               <span className="text-[#475467]">{task.dueDate || '-'}</span>
-              <span className="text-[#475467]">{task.timeLogged}</span>
+              <span className="text-[#475467]">
+                {task.estimatedHours
+                  ? `${task.workHours}h / ${task.estimatedHours}h`
+                  : task.timeLogged}
+              </span>
             </article>
           ))}
         </div>
@@ -1718,3 +1785,4 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
 }
 
 export default EmployeePage
+

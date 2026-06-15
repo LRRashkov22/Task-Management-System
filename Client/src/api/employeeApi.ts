@@ -27,6 +27,7 @@ export type EmployeeTaskPreviewDto = {
   createdAt?: string | null
   deadline?: string | null
   workHours: number
+  estimatedHours?: number | null
 }
 
 export type EmployeeMemberDto = {
@@ -66,6 +67,7 @@ export type EmployeeTaskDetailsDto = {
   status: string
   deadline?: string | null
   workHours: number
+  estimatedHours?: number | null
   assignedUsers: EmployeeMemberDto[]
   comments: EmployeeTaskCommentDto[]
   workSessions: EmployeeTaskWorkSessionDto[]
