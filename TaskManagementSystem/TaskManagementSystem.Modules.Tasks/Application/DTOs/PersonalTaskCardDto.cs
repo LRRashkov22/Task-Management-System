@@ -11,8 +11,10 @@ namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
         public string? Description { get; set; }
         public string Priority { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
         public DateTime Deadline { get; set; }
 
+        public int EstimatedHours { get; set; }
         public int WorkHours { get; set; }
 
     }

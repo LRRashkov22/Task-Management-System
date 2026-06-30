@@ -1007,6 +1007,9 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
     ? teamDetails[Number(taskForm.teamId)] ??
       teamsWithDetails.find((team) => team.id === Number(taskForm.teamId))
     : null
+  const selectedCreateTaskAssignees = (selectedTaskTeam?.members ?? []).filter(
+    (member) => taskForm.assignments.includes(String(member.id)),
+  )
 
   const transferTaskTargetTeams = selectedTask
     ? teamsWithDetails.filter((team) => team.id !== selectedTask.teamId)
@@ -2785,7 +2788,24 @@ function ManagerPage({ onLogout }: { onLogout: () => void }) {
 
             {selectedTaskTeam ? (
               <>
-                <div className={managerStyles.taskAssignLabel}>Assign To</div>
+                <div className={managerStyles.taskAssignHeader}>
+                  <div className={managerStyles.taskAssignLabel}>Assign To</div>
+                  <span>
+                    {selectedCreateTaskAssignees.length
+                      ? `${selectedCreateTaskAssignees.length} selected`
+                      : 'No one selected'}
+                  </span>
+                </div>
+                {selectedCreateTaskAssignees.length ? (
+                  <div
+                    className={managerStyles.taskAssignSelection}
+                    aria-label="Selected assignees"
+                  >
+                    {selectedCreateTaskAssignees.map((member) => (
+                      <span key={member.id}>{member.username}</span>
+                    ))}
+                  </div>
+                ) : null}
                 <fieldset className={managerStyles.taskAssignPanel}>
                 {(selectedTaskTeam.members ?? []).length ? (
                   <div className={managerStyles.memberList}>

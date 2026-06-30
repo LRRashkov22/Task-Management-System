@@ -369,7 +369,11 @@ export const managerStyles = {
   checkboxPanelTall: 'max-h-60',
   taskAssignPanel:
     'mb-4 max-h-[176px] overflow-y-auto rounded-[10px] border border-[#dfe4ec] bg-white px-5 py-3',
+  taskAssignHeader:
+    'mb-3 flex items-center justify-between gap-3 [&>div]:mb-0 [&>span]:text-[13px] [&>span]:font-bold [&>span]:text-[#64748b]',
   taskAssignLabel: 'mb-3 text-[15px] leading-none font-extrabold text-[#050505]',
+  taskAssignSelection:
+    'mb-3 flex flex-wrap gap-2 [&>span]:rounded-full [&>span]:bg-[#eef5ff] [&>span]:px-3 [&>span]:py-1.5 [&>span]:text-[13px] [&>span]:font-bold [&>span]:text-[#315af2]',
   memberListPanel:
     'mb-[22px] rounded-[10px] border border-[#dfe4ec] bg-white px-7 py-[18px]',
   memberListLabel: 'mb-3 text-[16px] leading-none font-extrabold text-[#050505]',

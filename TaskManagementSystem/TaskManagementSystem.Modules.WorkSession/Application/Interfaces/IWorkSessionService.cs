@@ -5,6 +5,6 @@ namespace TaskManagementSystem.Modules.WorkSessions.Application.Interfaces;
 public interface IWorkSessionService
 {
     Task<IEnumerable<WorkSessionDto>> GetAllSessionsAsync();
-    Task<IEnumerable<WorkSessionDto>> GetSessionsByTaskIdAsync(int taskId);
+    Task<IEnumerable<WorkSessionDto>> GetSessionsByTaskIdAsync(int taskId, int userId);
     Task<WorkSessionDto> CreateSessionAsync(CreateWorkSessionDto dto, int userId);
 }
