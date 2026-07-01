@@ -225,6 +225,9 @@ namespace TaskManagementSystem.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<int>("EstimatedHours")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
 
@@ -238,7 +241,7 @@ namespace TaskManagementSystem.Data.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<int>("TeamId")
+                    b.Property<int?>("TeamId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
@@ -486,8 +489,7 @@ namespace TaskManagementSystem.Data.Migrations
                     b.HasOne("TaskManagementSystem.Data.Domain.Entities.Team", "Team")
                         .WithMany("Tasks")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedBy");
 

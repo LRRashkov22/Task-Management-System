@@ -11,6 +11,7 @@ namespace TaskManagementSystem.Modules.Tasks.Application.DTOs
       //  public int Id { get; set; }
 
         public string Title { get; set; } = string.Empty;
+        public int EstimatedHours { get; set; }
 
         public string? Description { get; set; }
 

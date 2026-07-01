@@ -11,8 +11,6 @@ namespace TaskManagementSystem.Modules.Statistics.Application.Interfaces
         Task<EmployeeDashboardDto> GetEmployeeDashboardAsync(int userid);
         Task<List<EmployeeTaskPreviewDto>> GetEmployeeTasksPreviewAsync(int userid);
         Task<TaskDetailsDto?> GetEmployeeTaskDetailsAsync(int taskId, int userid);
-        Task<List<GetCommentMentionedNamesDto>> GetCommentMentionSearchAsync(
-            string? search,
-            int taskId);
+        Task<List<GetCommentMentionedNamesDto>> GetCommentMentionSearchAsync(string? search,int taskId);
     }
 }

@@ -43,6 +43,8 @@ export type ManagerTaskCardDto = {
   status: string
   priority: string
   deadline?: string | null
+  createdAt?: string
+  estimatedHours?: number
   assignedEmployeesCount: number
   workHours: number
   assignedEmployees?: ManagerMemberDto[]
@@ -55,6 +57,8 @@ export type ManagerTaskDetailsDto = {
   priority: string
   status: string
   deadline?: string | null
+  createdAt?: string
+  estimatedHours?: number
   workHours: number
   assignedUsers: ManagerMemberDto[]
   comments: TaskCommentDto[]
@@ -84,6 +88,7 @@ export type ManagerCalendarTaskDto = {
   status: string | number
   deadline: string
   startDate: string
+  estimatedHours?: number | null
 }
 
 export type EditManagerTaskRequest = {
@@ -91,6 +96,7 @@ export type EditManagerTaskRequest = {
   description?: string
   deadline?: string
   members?: number[]
+  estimatedHours?: number
 }
 
 export type TransferTeamPreviewDto = {
@@ -108,6 +114,7 @@ export type CreateManagerTaskRequest = {
   deadline: string
   teamId: number
   assignments: number[]
+  estimatedHours: number
 }
 
 export type CreateManagerTeamRequest = {

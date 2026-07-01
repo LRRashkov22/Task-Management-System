@@ -31,8 +31,15 @@ public class WorkSessionService : IWorkSessionService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<WorkSessionDto>> GetSessionsByTaskIdAsync(int taskId)
+    public async Task<IEnumerable<WorkSessionDto>> GetSessionsByTaskIdAsync(
+        int taskId,
+        int userId)
     {
+        if (!await CanAccessTaskAsync(taskId, userId))
+        {
+            throw new UnauthorizedAccessException("You cannot access this task.");
+        }
+
         return await _context.WorkSessions
             .Include(ws => ws.User)
             .Where(ws => ws.TaskId == taskId)
@@ -50,6 +57,12 @@ public class WorkSessionService : IWorkSessionService
 
     public async Task<WorkSessionDto> CreateSessionAsync(CreateWorkSessionDto dto, int userId)
     {
+        if (!await CanAccessTaskAsync(dto.TaskId, userId))
+        {
+            throw new UnauthorizedAccessException(
+                "You cannot add time to this task.");
+        }
+
         var session = new WorkSession
         {
             TaskId = dto.TaskId,
@@ -73,5 +86,16 @@ public class WorkSessionService : IWorkSessionService
             Description = session.Description,
             Date = session.Date
         };
+    }
+
+    private Task<bool> CanAccessTaskAsync(int taskId, int userId)
+    {
+        return _context.TaskItems.AnyAsync(task =>
+            task.Id == taskId &&
+            !task.IsArchived &&
+            (
+                (task.TeamId == null && task.CreatedById == userId) ||
+                task.Assignments.Any(assignment => assignment.UserId == userId)
+            ));
     }
 }

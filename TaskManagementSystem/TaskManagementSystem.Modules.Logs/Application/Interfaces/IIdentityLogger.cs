@@ -9,8 +9,7 @@ public interface IIdentityLogger
     Task UserCreatedLog(User user);
     Task UserEditedLog(User user);
     Task UserDeletedLog(User user);
-    Task OwnershipTransferredLog(User oldManager,
-        User newManager);
+    Task OwnershipTransferredLog(User oldManager, User newManager);
 
     Task ManagerForceDeletedLog(User manager);
 

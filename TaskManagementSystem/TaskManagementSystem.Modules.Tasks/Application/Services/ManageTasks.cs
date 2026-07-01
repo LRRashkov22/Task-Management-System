@@ -19,16 +19,27 @@ public class ManageTasks : IManageTasks
     private readonly TaskManagementDbContext context;
     private readonly ITaskNotificationService taskMotificationService;
     private readonly ITaskLogger _taskLogger;
+    private readonly TimeProvider _timeProvider;
 
     public ManageTasks(
         TaskManagementDbContext context,
         ITaskNotificationService taskMotificationService,
         ITaskLogger taskLogger
+        ) : this(context, taskMotificationService, taskLogger, TimeProvider.System)
+    {
+    }
+
+    public ManageTasks(
+        TaskManagementDbContext context,
+        ITaskNotificationService taskMotificationService,
+        ITaskLogger taskLogger,
+        TimeProvider timeProvider
         )
     {
         this.context = context;
         this.taskMotificationService = taskMotificationService;
         _taskLogger = taskLogger;
+        _timeProvider = timeProvider;
     }
     //get preview information for all task in kanban the section
     public async Task<List<TaskCardDto>> GetBoardTasks(int userid)
@@ -39,6 +50,7 @@ public class ManageTasks : IManageTasks
             .Select(t => new TaskCardDto
             {
                 Id = t.Id,
+                EstimatedHours = t.EstimatedHours,
                 Title = t.Title,
                 Description = t.Description,
                 Priority = t.Priority.ToString(),
@@ -59,6 +71,7 @@ public class ManageTasks : IManageTasks
             .Select(t => new TaskDetailsDto
             {
                 Id = t.Id,
+                EstimatedHours = t.EstimatedHours,
                 Title = t.Title,
                 Description = t.Description,
                 Priority = t.Priority.ToString(),
@@ -131,7 +144,7 @@ public class ManageTasks : IManageTasks
 
         if (string.IsNullOrWhiteSpace(request.Title) ||
             string.IsNullOrWhiteSpace(request.Description) ||
-            request.Deadline < DateTime.UtcNow)
+            request.Deadline < _timeProvider.GetUtcNow().UtcDateTime)
             return (null, "Title and description are required. Deadline cannot be in the past");
 
         bool teamExist = await context.Teams.AsNoTracking()
@@ -142,15 +155,19 @@ public class ManageTasks : IManageTasks
             .AnyAsync(m => m.Id == request.TeamId && m.ManagerId == userid);
         if (!managerOwnership) return (null, "You do not own this team");
 
-        if (request.Assignments.Count == 0)
+        var assignments = request.Assignments?
+            .Distinct()
+            .ToList() ?? new List<int>();
+
+        if (assignments.Count == 0)
             return (null, "At least one assignment is required");
 
-        var validAssignmentsCount = await context.TeamMemberships.AsNoTracking()
-            .CountAsync(tm =>
-                tm.TeamId == request.TeamId &&
-                request.Assignments.Contains(tm.UserId));
+        if (request.EstimatedHours <= 0)
+        {
+            return (null, "Estimated hours must be greater than zero");
+        }
 
-        if (validAssignmentsCount != request.Assignments.Count)
+        if (!await AreUsersTeamMembersAsync(request.TeamId, assignments))
         {
             return (null, "Some assigned users are not part of the team");
         }
@@ -161,18 +178,37 @@ public class ManageTasks : IManageTasks
             Description = request.Description,
             Priority = request.Priority,
             Status = Data.Domain.Enums.Status.ToDo,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
             Deadline = request.Deadline,
+            EstimatedHours = request.EstimatedHours,
             TeamId = request.TeamId,
             CreatedById = userid
         };
-        foreach (var memberId in request.Assignments)
+
+        foreach (var memberId in assignments)
+        {
+            var hasCapacity = await HasCapacityAsync(
+                memberId,
+                request.EstimatedHours,
+                request.Deadline);
+
+            if (!hasCapacity)
+            {
+                return (null,
+                    $"Employee {memberId} exceeds capacity before deadline");
+            }
+        }
+
+        foreach (var memberId in assignments)
         {
             task.Assignments.Add(new TaskAssignment
             {
                 UserId = memberId
             });
         }
+
+        request.Assignments = assignments;
+
         context.TaskItems.Add(task);
         await context.SaveChangesAsync();
 
@@ -182,12 +218,12 @@ public class ManageTasks : IManageTasks
         .Select(u => u.Username)
         .FirstAsync();
         //SignalR
-        await taskMotificationService.NotifyTaskAssignedAsync(task, request.Assignments, managerName);
+        await taskMotificationService.NotifyTaskAssignedAsync(task, assignments, managerName);
         await _taskLogger.TaskAssignedLog(new CreateLogDto
         {
             UserId = userid,
             ActionType = ActionType.Create
-        }, task, request.Assignments, managerName);
+        }, task, assignments, managerName);
         return (request, null);
     }
     public async Task<(bool isDeleted, string? error)> ArchiveTask(RecoverOrArchiveDto request, int userid)
@@ -221,8 +257,7 @@ public class ManageTasks : IManageTasks
 
     public async Task<(bool? status, string? error)> TransferTaskAsync(TransferTaskDto request, int userid, bool isAdmin)
     {
-        using var transaction =
-            await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
             var task = await context.TaskItems
@@ -252,25 +287,51 @@ public class ManageTasks : IManageTasks
             if (!isAdmin && newTeam.ManagerId != userid)
                 return (false, "You can transfer only to your own teams");
 
-            var assignments = request.Assignments.Distinct().ToList();
-            var validAssignmentsCount = await context.TeamMemberships
-                .CountAsync(tm =>
-                    tm.TeamId == request.NewTeamId &&
-                    assignments.Contains(tm.UserId));
+            var assignments = request.Assignments?
+                .Distinct()
+                .ToList() ?? new List<int>();
 
-            if (validAssignmentsCount != assignments.Count)
+            if (assignments.Count == 0)
+            {
+                return (false, "At least one assignment is required");
+            }
+
+            if (!await AreUsersTeamMembersAsync(request.NewTeamId, assignments))
             {
                 return (false, "Some users are not part of the new team");
             }
+
+            foreach (var userId in assignments)
+            {
+                if (!await HasCapacityAsync(
+                        userId,
+                        task.EstimatedHours,
+                        task.Deadline,
+                        task.Id))
+                {
+                    return (false,
+                        $"Employee {userId} exceeds capacity before deadline");
+                }
+            }
             var oldAssignedUsers = task.Assignments.Select(a => a.UserId).ToList();
+            var removedUsers = oldAssignedUsers
+                .Except(assignments)
+                .ToList();
+
+            var addedUsers = assignments
+                .Except(oldAssignedUsers)
+                .ToList();
 
             var oldTeamId = task.TeamId;
 
             task.TeamId = request.NewTeamId;
-            context.TaskAssignments.RemoveRange(task.Assignments);
-            task.Assignments.Clear();
+            var assignmentsToRemove = task.Assignments
+                .Where(a => removedUsers.Contains(a.UserId))
+                .ToList();
 
-            foreach (var userId in request.Assignments)
+            context.TaskAssignments.RemoveRange(assignmentsToRemove);
+
+            foreach (var userId in addedUsers)
             {
                 task.Assignments.Add(new TaskAssignment
                 {
@@ -292,12 +353,12 @@ public class ManageTasks : IManageTasks
             await transaction.CommitAsync();
 
             //SignalR
-            await taskMotificationService.NotifyTaskTransferedAsync(task, oldAssignedUsers);
+            await taskMotificationService.NotifyTaskTransferedAsync(task, removedUsers);
             await _taskLogger.TaskTransferedLog(new CreateLogDto
             {
                 UserId = userid,
                 ActionType = ActionType.Modify
-            }, task, oldAssignedUsers);
+            }, task, removedUsers);
             return (true, null);
 
         }
@@ -380,25 +441,56 @@ public class ManageTasks : IManageTasks
 
         if (task == null) return (null, "No task was found");
 
+        if (request.EstimatedHours.HasValue && request.EstimatedHours <= 0) return (false, "Estimated hours must be greater than zero");
+
+        var deadline = request.Deadline ?? task.Deadline;
+        if (deadline < _timeProvider.GetUtcNow().UtcDateTime)
+        {
+            return (false, "Deadline cannot be in the past");
+        }
+
+        var estimatedHours = request.EstimatedHours ?? task.EstimatedHours;
+        var assignedUserIds = request.Members?
+            .Distinct()
+            .ToList() ?? task.Assignments
+            .Select(assignment => assignment.UserId)
+            .Distinct()
+            .ToList();
+
+        if (assignedUserIds.Count == 0)
+        {
+            return (false, "At least one assignment is required");
+        }
+
+        if (!await AreUsersTeamMembersAsync(task.TeamId, assignedUserIds))
+        {
+            return (false, "Some assigned users are not part of the team");
+        }
+
+        foreach (var userId in assignedUserIds)
+        {
+            if (!await HasCapacityAsync(
+                    userId,
+                    estimatedHours,
+                    deadline,
+                    task.Id))
+            {
+                return (false,
+                    $"Employee {userId} exceeds capacity before deadline");
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Name)) task.Title = request.Name;
-
         if (!string.IsNullOrWhiteSpace(request.Description)) task.Description = request.Description;
-
-        if (request.Deadline.HasValue) task.Deadline = request.Deadline.Value;
-        task.Title = request.Name ?? task.Title;
-        task.Description = request.Description ?? task.Description;
-        task.Deadline = request.Deadline ?? task.Deadline;
-
+        task.Deadline = deadline;
+        task.EstimatedHours = estimatedHours;
 
         if (request.Members != null)
         {
+            var newAssignedUserIds = assignedUserIds;
             var oldAssignedUserIds = task.Assignments
                   .Select(a => a.UserId)
                   .ToList();
-
-            var newAssignedUserIds = request.Members
-                .Distinct()
-                .ToList();
 
             var removedUsers = oldAssignedUserIds
                 .Except(newAssignedUserIds)
@@ -408,11 +500,13 @@ public class ManageTasks : IManageTasks
                 .Except(oldAssignedUserIds)
                 .ToList();
 
-            context.TaskAssignments.RemoveRange(task.Assignments);
+            var assignmentsToRemove = task.Assignments
+                .Where(a => removedUsers.Contains(a.UserId))
+                .ToList();
 
-            task.Assignments.Clear();
+            context.TaskAssignments.RemoveRange(assignmentsToRemove);
 
-            foreach (var memberId in newAssignedUserIds)
+            foreach (var memberId in addedUsers)
             {
                 task.Assignments.Add(new TaskAssignment
                 {
@@ -454,7 +548,7 @@ public class ManageTasks : IManageTasks
     public async Task<(bool?, string?)> RequestReviewTaskAsync(int userid, int taskid)
     {
         var task = await context.TaskItems
-            .Include(t => t.Assignments)
+            .Include(t => t.Assignments)    
             .FirstOrDefaultAsync(t =>
                 t.Id == taskid &&
                 !t.IsArchived &&
@@ -464,5 +558,181 @@ public class ManageTasks : IManageTasks
         task.Status = Data.Domain.Enums.Status.Review;
         await context.SaveChangesAsync();
         return (true, null);
+    }
+
+    //Helpers
+    private static int GetWorkingDays(
+        DateTime startDate,
+        DateTime endDate)
+    {
+        int workingDays = 0;
+
+        for (var date = startDate.Date;
+             date <= endDate.Date;
+             date = date.AddDays(1))
+        {
+            if (date.DayOfWeek != DayOfWeek.Saturday &&
+                date.DayOfWeek != DayOfWeek.Sunday)
+            {
+                workingDays++;
+            }
+        }
+
+        return Math.Max(1, workingDays);
+    }
+    private async Task<bool> HasCapacityAsync(
+    int userId,
+    int estimatedHours,
+    DateTime deadline,
+    int? excludeTaskId = null)
+    {
+        var availableHours =
+            GetWorkingDays(
+                _timeProvider.GetUtcNow().UtcDateTime.Date,
+                deadline.Date) * 8;
+
+        var query = context.TaskAssignments
+            .Where(a =>
+                a.UserId == userId &&
+                !a.TaskItem.IsArchived &&
+                a.TaskItem.Status != Status.Done &&
+                a.TaskItem.Deadline <= deadline);
+
+        if (excludeTaskId.HasValue)
+        {
+            query = query.Where(a =>
+                a.TaskId != excludeTaskId.Value);
+        }
+
+        var workload = await query
+            .SumAsync(a => a.TaskItem.EstimatedHours);
+
+        return workload + estimatedHours <= availableHours;
+    }
+
+    private async Task<bool> AreUsersTeamMembersAsync(int? teamId, IReadOnlyCollection<int> userIds)
+    {
+        if (!teamId.HasValue) return false;
+
+        var validAssignmentsCount = await context.TeamMemberships
+            .AsNoTracking()
+            .CountAsync(tm =>
+                tm.TeamId == teamId.Value &&
+                userIds.Contains(tm.UserId));
+
+        return validAssignmentsCount == userIds.Count;
+    }
+
+    public async Task<List<PersonalTaskCardDto>> GetPersonalTasksAsync(int userid)
+    {
+        return await context.TaskItems
+            .Where(t => t.CreatedById == userid && t.TeamId == null && !t.IsArchived)
+            .Select(t => new PersonalTaskCardDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                Priority = t.Priority.ToString(),
+                Status = t.Status.ToString(),
+                CreatedAt = t.CreatedAt,
+                Deadline = t.Deadline,
+                EstimatedHours = t.EstimatedHours,
+                WorkHours = t.WorkSessions.Sum(w => w.Hours)
+            })
+            .ToListAsync();
+    }
+
+    public async Task<(PersonalTaskCardDto?, string?)> CreatePersonalTaskAsync(CreatePersonalTaskDto request, int userid)
+    {
+        var utcDeadline = DateTime.SpecifyKind(request.Deadline, DateTimeKind.Utc);
+
+        if (string.IsNullOrWhiteSpace(request.Title) || utcDeadline < DateTime.UtcNow)
+        {
+            return (null, "Title is required and Deadline cannot be in the past.");
+        }
+
+        var task = new TaskItem
+        {
+            Title = request.Title,
+            Description = request.Description,
+            Priority = request.Priority,
+            Status = Status.ToDo,
+            CreatedAt = DateTime.UtcNow,
+
+            Deadline = utcDeadline,
+
+            EstimatedHours = request.EstimatedHours,
+            TeamId = null,
+            CreatedById = userid       
+        };
+
+        task.Assignments.Add(new TaskAssignment { UserId = userid });
+
+        context.TaskItems.Add(task);
+        await context.SaveChangesAsync();
+
+        var response = new PersonalTaskCardDto
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            Priority = task.Priority.ToString(),
+            Status = task.Status.ToString(),
+            CreatedAt = task.CreatedAt,
+            Deadline = task.Deadline,
+            EstimatedHours = task.EstimatedHours,
+            WorkHours = 0
+        };
+
+        return (response, null);
+    }
+
+    public async Task<(bool status, string? error)> ChangePersonalTaskStatusAsync(int userid, int taskid, Status newStatus)
+    {
+        var task = await context.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == taskid && t.CreatedById == userid && t.TeamId == null);
+
+        if (task == null) return (false, "Personal task not found");
+
+        if (Enum.IsDefined<Status>(newStatus) == false) return (false, "Status not valid");
+
+        // Personal tasks don't need a manager's "Review" loop; they can go directly to Done
+        task.Status = newStatus;
+        await context.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool status, string? error)> DeletePersonalTaskAsync(int userid, int taskid)
+    {
+        var task = await context.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == taskid && t.CreatedById == userid && t.TeamId == null);
+
+        if (task == null) return (false, "Personal task not found");
+
+        // Direct deletion or simple archiving since it doesn't affect team history
+        context.TaskItems.Remove(task);
+        await context.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<PersonalTaskCardDto?> GetPersonalTaskDetailsAsync(int taskId, int userid)
+    {
+        return await context.TaskItems
+            .Where(t => t.Id == taskId && t.CreatedById == userid && t.TeamId == null && !t.IsArchived)
+            .Select(t => new PersonalTaskCardDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                Priority = t.Priority.ToString(),
+                Status = t.Status.ToString(),
+                CreatedAt = t.CreatedAt,
+                Deadline = t.Deadline,
+                EstimatedHours = t.EstimatedHours,
+                WorkHours = t.WorkSessions.Sum(w => w.Hours)
+            })
+            .FirstOrDefaultAsync();
     }
 }

@@ -244,13 +244,13 @@ export const managerStyles = {
   kanban: 'grid grid-cols-4 items-start gap-4 overflow-visible pb-1 max-[1180px]:grid-cols-2 max-[760px]:grid-cols-1',
   kanbanColumn: (id: string) =>
     cx(
-      'overflow-visible rounded-[14px] border-2 border-[#d1d5db] bg-[#f8f9fc]',
+      'flex max-h-[68svh] min-h-[320px] flex-col overflow-hidden rounded-[14px] border-2 border-[#d1d5db] bg-[#f8f9fc] max-[760px]:max-h-[560px]',
       id === 'inprogress' && 'border-[#86b7ff] bg-[#eef6ff]',
       id === 'review' && 'border-[#facc15] bg-[#fffde8]',
       id === 'done' && 'border-[#75e59b] bg-[#effdf4]',
     ),
   kanbanHeader: 'box-border min-h-[70px] border-b border-[rgba(17,24,39,0.13)] p-[18px_16px] [&_h3]:mb-2 [&_h3]:text-[14px] [&_h3]:leading-none [&_h3]:font-extrabold [&_h3]:text-[#050505] [&_span]:text-[13px] [&_span]:font-medium [&_span]:text-[#25324a]',
-  kanbanList: 'flex flex-col gap-4 p-4',
+  kanbanList: 'min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 [scrollbar-gutter:stable] [&>*+*]:mt-4',
   taskCard: (selected = false) =>
     cx(
       panel,
@@ -275,14 +275,42 @@ export const managerStyles = {
   calendarNav: 'min-h-8 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3 text-[12px] leading-none font-bold text-[#1f2937]',
   calendarToggle: (active = false) =>
     cx('min-h-8 cursor-pointer rounded-full border border-[#d1d5db] bg-white px-3 text-[12px] leading-none font-bold text-[#1f2937]', active && 'border-[#315af2] bg-[#315af2] text-white'),
+  calendarLayout: 'grid grid-cols-[minmax(0,1fr)_320px] gap-5 max-[1180px]:grid-cols-1',
   calendarGrid: 'grid grid-cols-7 overflow-hidden rounded border border-[#e5e7eb] bg-white',
   calendarWeekday: 'border-r border-b border-[#edf0f4] px-2 py-2 text-center text-[10px] font-bold text-[#6b7280] uppercase last:border-r-0',
-  calendarWeekRow: 'col-span-7 grid min-h-[118px] border-b border-[#edf0f4] last:border-b-0',
-  calendarWeekDays: 'col-start-1 row-start-1 grid grid-cols-7',
-  calendarBars: 'pointer-events-none col-start-1 row-start-1 grid grid-cols-7 auto-rows-[24px] content-start gap-y-1 px-0 pt-[38px]',
-  calendarDay: (outside: boolean, today: boolean) =>
-    cx('min-h-[118px] border-r border-[#edf0f4] bg-white p-2 last:border-r-0 max-[760px]:min-h-[92px] max-[760px]:p-1.5', outside && 'bg-[#f8fafc] text-[#9ca3af]', today && 'bg-[#eff6ff]'),
-  calendarDayNumber: 'inline-grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] leading-none font-bold text-[#0f172a]',
+  calendarDayButton: (outside: boolean, today: boolean, selected: boolean) =>
+    cx(
+      'min-h-[116px] cursor-pointer border-r border-b border-[#edf0f4] bg-white p-2.5 text-left transition hover:bg-[#f8fbff] focus-visible:outline-[3px] focus-visible:outline-inset focus-visible:outline-[rgba(49,90,242,0.28)] nth-[7n]:border-r-0 max-[760px]:min-h-[86px] max-[760px]:p-1.5',
+      outside && 'bg-[#f8fafc] text-[#9ca3af]',
+      today && 'bg-[#eff6ff]',
+      selected && 'bg-[#eef5ff] ring-2 ring-inset ring-[#315af2]',
+    ),
+  calendarDayTop: 'mb-2 flex min-h-6 items-center justify-between gap-2',
+  calendarDayNumber: 'inline-grid h-6 min-w-6 place-items-center rounded-full px-1 text-[12px] leading-none font-extrabold text-[#0f172a]',
+  calendarDayCount:
+    'inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-[#111827] px-1.5 text-[11px] leading-none font-extrabold text-white',
+  calendarDayDots: 'flex min-h-5 flex-wrap items-center gap-1',
+  calendarStatusDot: (tone: string) =>
+    cx(
+      'h-2 w-2 rounded-full',
+      tone === 'done' && 'bg-[#16a34a]',
+      tone === 'inprogress' && 'bg-[#315af2]',
+      tone === 'review' && 'bg-[#f59e0b]',
+      tone === 'todo' && 'bg-[#94a3b8]',
+    ),
+  calendarDayPreview:
+    'mt-2 line-clamp-2 text-[11px] leading-[1.25] font-bold text-[#475569] max-[760px]:hidden',
+  calendarAgenda:
+    'min-h-[360px] rounded-lg border border-[#e5e7eb] bg-[#f8fafc] p-4',
+  calendarAgendaHeader:
+    'mb-4 flex items-start justify-between gap-3 border-b border-[#e5e7eb] pb-3 [&_p]:text-[12px] [&_p]:font-extrabold [&_p]:tracking-[0.06em] [&_p]:text-[#64748b] [&_p]:uppercase [&_strong]:mt-1 [&_strong]:block [&_strong]:text-[20px] [&_strong]:leading-none [&_strong]:font-extrabold [&_strong]:text-[#0f172a]',
+  calendarAgendaCount:
+    'rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-[#315af2] shadow-[0_1px_3px_rgba(17,24,39,0.08)]',
+  calendarAgendaList: 'grid max-h-[520px] gap-2 overflow-y-auto pr-1',
+  calendarAgendaItem:
+    'w-full cursor-pointer rounded-lg border border-[#e5e7eb] bg-white p-3 text-left shadow-[0_1px_3px_rgba(17,24,39,0.06)] hover:border-[#b8c7ff] hover:bg-[#f8fbff] [&_strong]:block [&_strong]:line-clamp-2 [&_strong]:text-[14px] [&_strong]:leading-[1.25] [&_strong]:font-extrabold [&_strong]:text-[#0f172a] [&_span]:mt-1 [&_span]:block [&_span]:text-[12px] [&_span]:font-bold [&_span]:text-[#64748b]',
+  calendarAgendaEmpty:
+    'rounded-lg border border-dashed border-[#cbd5e1] bg-white px-4 py-8 text-center text-[14px] font-bold text-[#64748b]',
   calendarDayTasks: 'grid gap-1',
   calendarTaskPill: (more = false) =>
     cx('block overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-[10px] leading-none font-bold', more ? 'bg-[#e2e8f0] text-[#475569]' : 'bg-[#eff6ff] text-[#1d4ed8]'),
@@ -325,6 +353,12 @@ export const managerStyles = {
   modalCancel: 'border border-[#d1d5db] bg-white text-[#050505] hover:bg-[#f9fafb] hover:border-[#9ca3af]',
   modalSave: 'border border-[#315af2] bg-[#315af2] text-white hover:bg-[#254be0] hover:shadow-[0_4px_12px_rgba(49,90,242,0.24)] active:scale-[0.98]',
   modalDanger: 'border border-[#ef1d32] bg-[#ef1d32] text-white hover:not-disabled:bg-[#dc1025] hover:not-disabled:shadow-[0_4px_12px_rgba(239,29,50,0.24)] active:not-disabled:scale-[0.98]',
+  modalAlert: (type: 'error' | 'success') =>
+    cx(
+      'mb-5 rounded-lg border px-4 py-3 text-[14px] leading-[1.4] font-extrabold',
+      type === 'error' && 'border-[#fecaca] bg-[#fef2f2] text-[#b91c1c]',
+      type === 'success' && 'border-[#bbf7d0] bg-[#f0fdf4] text-[#047857]',
+    ),
   modalGrid: 'grid grid-cols-2 gap-4 max-[760px]:grid-cols-1',
   checkboxPanel:
     'mb-4 rounded-[14px] border border-[#e5e7eb] bg-gradient-to-b from-white to-[#f9fafb] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)]',
@@ -335,7 +369,11 @@ export const managerStyles = {
   checkboxPanelTall: 'max-h-60',
   taskAssignPanel:
     'mb-4 max-h-[176px] overflow-y-auto rounded-[10px] border border-[#dfe4ec] bg-white px-5 py-3',
+  taskAssignHeader:
+    'mb-3 flex items-center justify-between gap-3 [&>div]:mb-0 [&>span]:text-[13px] [&>span]:font-bold [&>span]:text-[#64748b]',
   taskAssignLabel: 'mb-3 text-[15px] leading-none font-extrabold text-[#050505]',
+  taskAssignSelection:
+    'mb-3 flex flex-wrap gap-2 [&>span]:rounded-full [&>span]:bg-[#eef5ff] [&>span]:px-3 [&>span]:py-1.5 [&>span]:text-[13px] [&>span]:font-bold [&>span]:text-[#315af2]',
   memberListPanel:
     'mb-[22px] rounded-[10px] border border-[#dfe4ec] bg-white px-7 py-[18px]',
   memberListLabel: 'mb-3 text-[16px] leading-none font-extrabold text-[#050505]',

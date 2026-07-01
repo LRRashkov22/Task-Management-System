@@ -51,7 +51,7 @@ public class CRUDLogService : ICRUDLogService
 
     public async Task<(List<Log>? log, string?)> GetLogs(GetLogsRequestDto request)
     {
-        IQueryable<Log> query = _context.Logs;
+        IQueryable<Log> query = _context.Logs.AsNoTracking();
 
         if (request.UserId.HasValue)
             query = query.Where(x => x.UserId == request.UserId);
@@ -62,6 +62,20 @@ public class CRUDLogService : ICRUDLogService
         if (request.Module.HasValue)
             query = query.Where(x => x.Module == request.Module);
 
+        if (request.FromDate.HasValue)
+        {
+            query = query.Where(x =>
+                x.CreatedAt >= request.FromDate.Value);
+        }
+
+        if (request.ToDate.HasValue)
+        {
+            var endDate =
+                request.ToDate.Value.Date.AddDays(1);
+
+            query = query.Where(x =>
+                x.CreatedAt < endDate);
+        }
 
         query = request.SortBy?.ToLower() switch
         {

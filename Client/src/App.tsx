@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { loginApi, logoutApi } from './api/authApi'
+import { loginApi, logoutApi, mapTokenResponse } from './api/authApi'
 import AdminPage from './pages/AdminPage'
 import EmployeePage from './pages/EmployeePage'
 import ManagerPage from './pages/ManagerPage'
@@ -63,7 +63,7 @@ type Message = {
           return
         }
 
-        saveAuth(await response.json())
+        saveAuth(mapTokenResponse(await response.json()))
         const role = getRole()
 
         if (role === 'Admin') {

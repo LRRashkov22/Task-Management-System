@@ -27,6 +27,7 @@ export type EmployeeTaskPreviewDto = {
   createdAt?: string | null
   deadline?: string | null
   workHours: number
+  estimatedHours?: number | null
 }
 
 export type EmployeeMemberDto = {
@@ -66,10 +67,31 @@ export type EmployeeTaskDetailsDto = {
   status: string
   deadline?: string | null
   workHours: number
+  estimatedHours?: number | null
   assignedUsers: EmployeeMemberDto[]
   comments: EmployeeTaskCommentDto[]
   workSessions: EmployeeTaskWorkSessionDto[]
   history: EmployeeTaskHistoryDto[]
+}
+
+export type PersonalTaskDto = {
+  id: number
+  title: string
+  description?: string | null
+  priority: string
+  status: string
+  createdAt?: string | null
+  deadline: string
+  estimatedHours: number
+  workHours: number
+}
+
+export type CreatePersonalTaskRequest = {
+  title: string
+  description?: string
+  priority: number
+  deadline: string
+  estimatedHours: number
 }
 
 export function getEmployeeDashboardApi() {
@@ -87,5 +109,33 @@ export function getEmployeeTaskDetailsApi(taskId: number) {
 export function requestTaskReviewApi(taskId: number) {
   return apiJson<boolean>(`/Task/Request-Review/${taskId}`, {
     method: 'PATCH',
+  })
+}
+
+export function getPersonalTasksApi() {
+  return apiJson<PersonalTaskDto[]>('/Task/personal-board')
+}
+
+export function getPersonalTaskDetailsApi(taskId: number) {
+  return apiJson<PersonalTaskDto>(`/Task/personal-task/${taskId}`)
+}
+
+export function createPersonalTaskApi(request: CreatePersonalTaskRequest) {
+  return apiJson<PersonalTaskDto>('/Task/create-personal', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+}
+
+export function changePersonalTaskStatusApi(taskId: number, status: number) {
+  return apiJson<boolean>(`/Task/personal-status/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(status),
+  })
+}
+
+export function deletePersonalTaskApi(taskId: number) {
+  return apiJson<boolean>(`/Task/delete-personal/${taskId}`, {
+    method: 'DELETE',
   })
 }

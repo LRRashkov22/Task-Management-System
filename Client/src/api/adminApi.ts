@@ -78,6 +78,8 @@ export type GetAdminLogsRequest = {
   userId?: number
   actionType?: number
   module?: number
+  fromDate?: string
+  toDate?: string
 }
 
 export function getAdminDashboardApi() {

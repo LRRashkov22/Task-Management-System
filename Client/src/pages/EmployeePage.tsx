@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
 import {
+  changePersonalTaskStatusApi,
+  createPersonalTaskApi,
+  deletePersonalTaskApi,
   getEmployeeDashboardApi,
+  getPersonalTaskDetailsApi,
+  getPersonalTasksApi,
   getEmployeeTaskDetailsApi,
   getEmployeeTaskPreviewApi,
   requestTaskReviewApi,
   type EmployeeDashboardDto,
   type EmployeeTaskDetailsDto,
   type EmployeeTaskPreviewDto,
+  type PersonalTaskDto,
 } from '../api/employeeApi'
 import {
   fetchNotifications,
@@ -24,11 +30,20 @@ import { NotificationsPanel } from '../components/NotificationsPanel'
 import { TaskCommentsPanel } from '../components/TaskCommentsPanel'
 import type { CommentDto } from '../api/commentsApi'
 import { getCommentsByTaskIdApi } from '../api/commentsApi'
-import { createWorkSessionApi } from '../api/workSessionApi'
+import {
+  createWorkSessionApi,
+  getWorkSessionsByTaskIdApi,
+  type WorkSessionDto,
+} from '../api/workSessionApi'
 import { commonStyles, cx, managerStyles } from '../styles'
 import { getToken, getUsername } from '../utils/auth'
 
-type EmployeeView = 'dashboard' | 'notifications' | 'myTasks' | 'calendar'
+type EmployeeView =
+  | 'dashboard'
+  | 'notifications'
+  | 'myTasks'
+  | 'personalTasks'
+  | 'calendar'
 
 type TaskTab = 'comments' | 'time' | 'history'
 
@@ -79,6 +94,14 @@ type TaskHistoryItem = {
   createdAt: string
 }
 
+type PersonalTaskForm = {
+  title: string
+  description: string
+  priority: string
+  deadline: string
+  estimatedHours: string
+}
+
 type MyTask = {
   id: number
   title: string
@@ -90,6 +113,7 @@ type MyTask = {
   dueDate: string
   timeLogged: string
   workHours: number
+  estimatedHours?: number | null
   assignees: TaskAssignee[]
   comments: TaskComment[]
   workSessions: TaskWorkSession[]
@@ -112,6 +136,14 @@ const emptyEmployeeDashboard: EmployeeDashboardDto = {
   tasksCompleted: 0,
   avgTimePerTask: 0,
   recentTasks: [],
+}
+
+const emptyPersonalTaskForm: PersonalTaskForm = {
+  title: '',
+  description: '',
+  priority: '2',
+  deadline: '',
+  estimatedHours: '',
 }
 
 const initialMyTasks: MyTask[] = [
@@ -411,14 +443,6 @@ function parseCalendarDate(value?: string | null) {
   return date
 }
 
-function daysBetween(start: Date, end: Date) {
-  const oneDay = 24 * 60 * 60 * 1000
-  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())
-  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate())
-
-  return Math.round((endUtc - startUtc) / oneDay)
-}
-
 function isSameDay(dateA: Date, dateB: Date) {
   return (
     dateA.getFullYear() === dateB.getFullYear() &&
@@ -483,6 +507,7 @@ function mapRecentTaskToMyTask(task: EmployeeDashboardDto['recentTasks'][number]
     dueDate: formatDate(task.deadline),
     timeLogged: '0h',
     workHours: 0,
+    estimatedHours: null,
     assignees: [],
     comments: [],
     workSessions: [],
@@ -502,6 +527,7 @@ function mapPreviewTaskToMyTask(task: EmployeeTaskPreviewDto): MyTask {
     dueDate: formatDate(task.deadline),
     timeLogged: `${task.workHours}h`,
     workHours: task.workHours,
+    estimatedHours: task.estimatedHours ?? null,
     assignees: [],
     comments: [],
     workSessions: [],
@@ -519,6 +545,7 @@ function mergeTaskDetails(task: MyTask, details: EmployeeTaskDetailsDto): MyTask
     dueDate: formatDate(details.deadline),
     timeLogged: `${details.workHours}h`,
     workHours: details.workHours,
+    estimatedHours: details.estimatedHours ?? task.estimatedHours ?? null,
     assignees: details.assignedUsers,
     comments: details.comments,
     workSessions: details.workSessions,
@@ -712,13 +739,16 @@ function EmployeeTaskDetailModal({
   onTaskRefresh: () => Promise<void>
 }) {
   const combinedHistory = useMemo(() => {
-    const historyItems = (task.history || []).map((h) => ({ ...h }))
+    const historyItems = (task.history || []).map((historyItem) => ({
+      ...historyItem,
+      description: '',
+    }))
     const sessionItems = (task.workSessions || []).map((ws) => ({
       id: `ws-${ws.id}`,
       action: `Work session (${ws.hours}h)`,
       changedByUsername: ws.username,
       createdAt: ws.date,
-      description: (ws as any).description ?? '',
+      description: ws.description ?? '',
     }))
 
     const combined = [...historyItems, ...sessionItems]
@@ -770,6 +800,12 @@ function EmployeeTaskDetailModal({
                 <Icon name="clock" />
                 Total Time: {task.workHours}h
               </span>
+              {task.estimatedHours ? (
+                <span>
+                  <Icon name="warning" />
+                  Estimated: {task.estimatedHours}h
+                </span>
+              ) : null}
             </div>
           </section>
 
@@ -836,20 +872,18 @@ function EmployeeTaskDetailModal({
 
           {activeTab === 'history' ? (
             <section className={managerStyles.taskTabPanel}>
-              {combinedHistory.length ? (
-                combinedHistory.map((item) => (
-                  <article className={managerStyles.taskRecord} key={item.id}>
-                    <strong>{item.action}</strong>
-                    <span>{item.changedByUsername}</span>
-                    <time>{new Date(item.createdAt).toLocaleString()}</time>
-                    {(item as any).description ? (
-                      <p className="text-sm text-[#6b7280] mt-1">{(item as any).description}</p>
-                    ) : null}
-                  </article>
-                ))
-              ) : (
-                <p className="text-[14px] text-[#6b7280]">No history yet.</p>
-              )}
+              {combinedHistory.length
+                ? combinedHistory.map((item) => (
+                    <article className={managerStyles.taskRecord} key={item.id}>
+                      <strong>{item.action}</strong>
+                      <span>{item.changedByUsername}</span>
+                      <time>{new Date(item.createdAt).toLocaleString()}</time>
+                      {item.description ? (
+                        <p className="text-sm text-[#6b7280] mt-1">{item.description}</p>
+                      ) : null}
+                    </article>
+                  ))
+                : null}
             </section>
           ) : null}
         </div>
@@ -883,6 +917,11 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
   const [calendarDate, setCalendarDate] = useState(new Date())
   const [selectedCalendarTask, setSelectedCalendarTask] =
     useState<EmployeeCalendarItem | null>(null)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    return date
+  })
 
   const calendarItems = useMemo(
     () =>
@@ -943,6 +982,17 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
     return weeks
   }, [calendarDays])
 
+  const selectedCalendarDayTasks = useMemo(
+    () =>
+      calendarItems
+        .filter(
+          (task) =>
+            selectedCalendarDate >= task.start && selectedCalendarDate <= task.end,
+        )
+        .sort((taskA, taskB) => taskA.end.getTime() - taskB.end.getTime()),
+    [calendarItems, selectedCalendarDate],
+  )
+
   return (
     <>
       <section className={managerStyles.calendarPanel} aria-label="Calendar">
@@ -993,70 +1043,111 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
             </button>
           </div>
         </div>
-        <div className={managerStyles.calendarGrid}>
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className={managerStyles.calendarWeekday}>
-              {day}
-            </div>
-          ))}
-          {calendarWeeks.map((week) => {
-            const weekStart = week[0]
-            const weekEnd = week[6]
-            const weekTasks = calendarItems
-              .filter((task) => task.start <= weekEnd && task.end >= weekStart)
-              .sort((taskA, taskB) => {
-                const startDiff = taskA.start.getTime() - taskB.start.getTime()
-                if (startDiff !== 0) return startDiff
-
-                return taskB.end.getTime() - taskA.end.getTime()
-              })
-
-            return (
-              <div className={managerStyles.calendarWeekRow} key={getDayKey(weekStart)}>
-                <div className={managerStyles.calendarWeekDays}>
-                  {week.map((day) => (
-                    <article
-                      key={getDayKey(day)}
-                      className={managerStyles.calendarDay(
-                        calendarView === 'monthly' &&
-                          day.getMonth() !== calendarDate.getMonth(),
-                        isSameDay(day, new Date()),
-                      )}
-                    >
-                      <div className={managerStyles.calendarDayNumber}>
-                        {day.getDate()}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-                <div className={managerStyles.calendarBars}>
-                  {weekTasks.map((task) => {
-                    const barStart = task.start < weekStart ? weekStart : task.start
-                    const barEnd = task.end > weekEnd ? weekEnd : task.end
-                    const columnStart = daysBetween(weekStart, barStart) + 1
-                    const columnEnd = daysBetween(weekStart, barEnd) + 2
-
-                    return (
-                      <button
-                        className={managerStyles.calendarRangeBar(task.colorIndex)}
-                        key={`${task.id}-${getDayKey(weekStart)}`}
-                        style={{
-                          gridColumn: `${columnStart} / ${columnEnd}`,
-                        }}
-                        title={`${task.title} - ${task.teamName}`}
-                        type="button"
-                        onClick={() => setSelectedCalendarTask(task)}
-                      >
-                        <span className={managerStyles.calendarRangeName}>
-                          {task.title}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
+        <div className={managerStyles.calendarLayout}>
+          <div className={managerStyles.calendarGrid}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className={managerStyles.calendarWeekday}>
+                {day}
               </div>
-            )
-          })}
+            ))}
+            {calendarWeeks.flatMap((week) =>
+              week.map((day) => {
+                const dayTasks = calendarItems.filter(
+                  (task) => day >= task.start && day <= task.end,
+                )
+                const previewTask = dayTasks[0]
+                const visibleDots = dayTasks.slice(0, 4)
+
+                return (
+                  <button
+                    type="button"
+                    key={getDayKey(day)}
+                    className={managerStyles.calendarDayButton(
+                      calendarView === 'monthly' &&
+                        day.getMonth() !== calendarDate.getMonth(),
+                      isSameDay(day, new Date()),
+                      isSameDay(day, selectedCalendarDate),
+                    )}
+                    onClick={() => setSelectedCalendarDate(day)}
+                  >
+                    <span className={managerStyles.calendarDayTop}>
+                      <span className={managerStyles.calendarDayNumber}>
+                        {day.getDate()}
+                      </span>
+                      {dayTasks.length ? (
+                        <span className={managerStyles.calendarDayCount}>
+                          {dayTasks.length}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className={managerStyles.calendarDayDots}>
+                      {visibleDots.map((task) => (
+                        <span
+                          className={managerStyles.calendarStatusDot(
+                            statusTone(task.status),
+                          )}
+                          key={task.id}
+                        />
+                      ))}
+                    </span>
+                    {previewTask ? (
+                      <span className={managerStyles.calendarDayPreview}>
+                        {previewTask.title}
+                        {dayTasks.length > 1 ? ` +${dayTasks.length - 1} more` : ''}
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              }),
+            )}
+          </div>
+
+          <aside className={managerStyles.calendarAgenda}>
+            <div className={managerStyles.calendarAgendaHeader}>
+              <div>
+                <p>Selected day</p>
+                <strong>
+                  {selectedCalendarDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </strong>
+              </div>
+              <span className={managerStyles.calendarAgendaCount}>
+                {selectedCalendarDayTasks.length} tasks
+              </span>
+            </div>
+
+            {selectedCalendarDayTasks.length ? (
+              <div className={managerStyles.calendarAgendaList}>
+                {selectedCalendarDayTasks.map((task) => (
+                  <button
+                    type="button"
+                    className={managerStyles.calendarAgendaItem}
+                    key={task.id}
+                    onClick={() => setSelectedCalendarTask(task)}
+                  >
+                    <strong>{task.title}</strong>
+                    <span>
+                      {task.teamName || 'No team'} - {statusLabel(task.status)}
+                    </span>
+                    <span>
+                      {formatDate(getDayKey(task.start))} - {task.dueDate || '-'}
+                    </span>
+                    {task.estimatedHours ? (
+                      <span>
+                        Logged {task.workHours}h / Estimated {task.estimatedHours}h
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className={managerStyles.calendarAgendaEmpty}>
+                No tasks for this day.
+              </p>
+            )}
+          </aside>
         </div>
       </section>
 
@@ -1080,6 +1171,12 @@ function CalendarView({ tasks }: { tasks: MyTask[] }) {
               <strong>{formatDate(getDayKey(selectedCalendarTask.start))}</strong>
               <span>Deadline</span>
               <strong>{selectedCalendarTask.dueDate || '-'}</strong>
+              {selectedCalendarTask.estimatedHours ? (
+                <>
+                  <span>Estimate</span>
+                  <strong>{selectedCalendarTask.estimatedHours}h</strong>
+                </>
+              ) : null}
             </div>
             <div className={managerStyles.modalActions}>
               <button
@@ -1130,7 +1227,7 @@ function MyTasksView({
 
       {tasks.length ? (
         <div className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_3px_7px_rgba(17,24,39,0.08)]">
-          <div className="grid min-h-[44px] grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085]">
+          <div className="grid min-h-[44px] grid-cols-[1.55fr_0.45fr_0.45fr_0.45fr_0.5fr] items-center bg-white px-6 text-[13px] font-extrabold tracking-[0.02em] text-[#667085]">
             <span>TITLE</span>
             <span>STATUS</span>
             <span>PRIORITY</span>
@@ -1140,7 +1237,7 @@ function MyTasksView({
 
           {tasks.map((task) => (
             <article
-              className="grid min-h-[62px] cursor-pointer grid-cols-[1.6fr_0.45fr_0.45fr_0.45fr_0.35fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] transition hover:bg-[#f8fafc]"
+              className="grid min-h-[62px] cursor-pointer grid-cols-[1.55fr_0.45fr_0.45fr_0.45fr_0.5fr] items-center border-t border-[#e5e7eb] px-6 text-[16px] font-medium text-[#050505] transition hover:bg-[#f8fafc]"
               key={task.id}
               onClick={() => void onSelectTask(task)}
               onKeyDown={(event) => {
@@ -1164,7 +1261,11 @@ function MyTasksView({
                 </TaskBadge>
               </span>
               <span className="text-[#475467]">{task.dueDate || '-'}</span>
-              <span className="text-[#475467]">{task.timeLogged}</span>
+              <span className="text-[#475467]">
+                {task.estimatedHours
+                  ? `${task.workHours}h / ${task.estimatedHours}h`
+                  : task.timeLogged}
+              </span>
             </article>
           ))}
         </div>
@@ -1177,6 +1278,135 @@ function MyTasksView({
   )
 }
 
+function personalStatusValue(status: string) {
+  const normalized = normalizeTaskStatus(status)
+  if (normalized === 'inprogress') return 2
+  if (normalized === 'done') return 3
+  return 1
+}
+
+function PersonalTasksView({
+  tasks,
+  isLoading,
+  taskMessage,
+  onCreate,
+  onSelectTask,
+  onStatusChange,
+  onDelete,
+}: {
+  tasks: PersonalTaskDto[]
+  isLoading: boolean
+  taskMessage: string | null
+  onCreate: () => void
+  onSelectTask: (task: PersonalTaskDto) => void
+  onStatusChange: (taskId: number, status: number) => void
+  onDelete: (task: PersonalTaskDto) => void
+}) {
+  return (
+    <section className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2
+            className="text-[25px] leading-none font-extrabold text-[#050505]"
+            id="employee-page-title"
+          >
+            Personal Tasks
+          </h2>
+          <p className="mt-2 text-[14px] font-medium text-[#667085]">
+            Private tasks created and managed by you.
+          </p>
+        </div>
+        <button
+          className="min-h-11 rounded-[10px] border border-[#315af2] bg-[#315af2] px-5 text-[15px] font-extrabold text-white hover:bg-[#254be0]"
+          type="button"
+          onClick={onCreate}
+        >
+          + Create Personal Task
+        </button>
+      </div>
+
+      {taskMessage ? (
+        <p className="rounded-lg border border-[#dbeafe] bg-[#eff6ff] px-4 py-3 text-[14px] font-bold text-[#315af2]">
+          {taskMessage}
+        </p>
+      ) : null}
+
+      {isLoading ? (
+        <p className="rounded-xl border border-[#e5e7eb] bg-white px-6 py-8 text-[#667085]">
+          Loading personal tasks...
+        </p>
+      ) : tasks.length ? (
+        <div className="grid grid-cols-3 gap-5 max-[1200px]:grid-cols-2 max-[760px]:grid-cols-1">
+          {tasks.map((task) => (
+            <article
+              className="grid min-h-[240px] grid-rows-[auto_1fr_auto] rounded-xl border border-[#e5e7eb] bg-white p-5 shadow-[0_3px_7px_rgba(17,24,39,0.08)]"
+              key={task.id}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <button
+                  className="min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left"
+                  type="button"
+                  onClick={() => onSelectTask(task)}
+                >
+                  <h3 className="line-clamp-2 text-[18px] leading-[1.3] font-extrabold text-[#111827] hover:text-[#315af2]">
+                    {task.title}
+                  </h3>
+                </button>
+                <TaskBadge tone={priorityTone(task.priority) === 'high' ? 'high' : 'urgent'}>
+                  {task.priority.toUpperCase()}
+                </TaskBadge>
+              </div>
+
+              <div>
+                <p className="mt-4 line-clamp-3 text-[14px] leading-[1.5] text-[#475467]">
+                  {task.description || 'No description'}
+                </p>
+                <div className="mt-4 grid gap-2 text-[13px] font-semibold text-[#667085]">
+                  <span>Deadline: {formatDate(task.deadline)}</span>
+                  <span>
+                    Time: {task.workHours}h / {task.estimatedHours}h
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center gap-2 border-t border-[#edf0f4] pt-4">
+                <select
+                  aria-label={`Status for ${task.title}`}
+                  className="min-h-10 flex-1 rounded-lg border border-[#d1d5db] bg-white px-3 text-[14px] font-bold text-[#111827]"
+                  value={personalStatusValue(task.status)}
+                  onChange={(event) =>
+                    onStatusChange(task.id, Number(event.target.value))
+                  }
+                >
+                  <option value={1}>To Do</option>
+                  <option value={2}>In Progress</option>
+                  <option value={3}>Done</option>
+                </select>
+                <button
+                  className="min-h-10 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-3 text-[14px] font-extrabold text-[#dc2626] hover:bg-[#fee2e2]"
+                  type="button"
+                  onClick={() => onDelete(task)}
+                >
+                  Delete
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-[#cbd5e1] bg-white px-6 py-12 text-center">
+          <h3 className="text-[18px] font-extrabold text-[#111827]">
+            No personal tasks yet
+          </h3>
+          <p className="mt-2 text-[14px] text-[#667085]">
+            Create one for reminders and work outside your assigned team tasks.
+          </p>
+        </div>
+      )}
+    </section>
+  )
+}
+
 function EmployeePage({ onLogout }: { onLogout: () => void }) {
   const [activeView, setActiveView] = useState<EmployeeView>('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -1184,6 +1414,25 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
   const [dashboard, setDashboard] =
     useState<EmployeeDashboardDto>(emptyEmployeeDashboard)
   const [myTasks, setMyTasks] = useState<MyTask[]>(initialMyTasks)
+  const [personalTasks, setPersonalTasks] = useState<PersonalTaskDto[]>([])
+  const [isPersonalTasksLoading, setIsPersonalTasksLoading] = useState(true)
+  const [isPersonalTaskModalOpen, setIsPersonalTaskModalOpen] = useState(false)
+  const [personalTaskForm, setPersonalTaskForm] =
+    useState<PersonalTaskForm>(emptyPersonalTaskForm)
+  const [selectedPersonalTask, setSelectedPersonalTask] =
+    useState<PersonalTaskDto | null>(null)
+  const [personalTaskSessions, setPersonalTaskSessions] = useState<
+    WorkSessionDto[]
+  >([])
+  const [personalSessionHours, setPersonalSessionHours] = useState('')
+  const [personalSessionDescription, setPersonalSessionDescription] =
+    useState('')
+  const [personalTaskDeleteCandidate, setPersonalTaskDeleteCandidate] =
+    useState<PersonalTaskDto | null>(null)
+  const [isPersonalTaskSaving, setIsPersonalTaskSaving] = useState(false)
+  const [personalTaskMessage, setPersonalTaskMessage] = useState<string | null>(
+    null,
+  )
   const [isEmployeeDataLoading, setIsEmployeeDataLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState<MyTask | null>(null)
   const [activeTaskTab, setActiveTaskTab] = useState<TaskTab>('comments')
@@ -1202,6 +1451,7 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
         { id: 'notifications', label: 'Notifications', icon: 'bell' },
         { id: 'myTasks', label: 'My Tasks', icon: 'list' },
+        { id: 'personalTasks', label: 'Personal Tasks', icon: 'checkCircle' },
         { id: 'calendar', label: 'Calendar', icon: 'calendar' },
       ] satisfies Array<{ id: EmployeeView; label: string; icon: IconName }>,
     [],
@@ -1240,6 +1490,193 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
     setSelectedTask(null)
   }
 
+  async function loadPersonalTasks() {
+    setIsPersonalTasksLoading(true)
+    try {
+      setPersonalTasks(await getPersonalTasksApi())
+    } catch (error) {
+      setPersonalTaskMessage(
+        error instanceof Error
+          ? error.message
+          : 'Could not load personal tasks.',
+      )
+    } finally {
+      setIsPersonalTasksLoading(false)
+    }
+  }
+
+  async function handleCreatePersonalTask(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const estimatedHours = Number(personalTaskForm.estimatedHours)
+    if (
+      !personalTaskForm.title.trim() ||
+      !personalTaskForm.deadline ||
+      !estimatedHours ||
+      estimatedHours <= 0
+    ) {
+      setPersonalTaskMessage(
+        'Title, deadline and estimated hours greater than zero are required.',
+      )
+      return
+    }
+
+    setIsPersonalTaskSaving(true)
+    setPersonalTaskMessage(null)
+
+    try {
+      const createdTask = await createPersonalTaskApi({
+        title: personalTaskForm.title.trim(),
+        description: personalTaskForm.description.trim(),
+        priority: Number(personalTaskForm.priority),
+        deadline: new Date(`${personalTaskForm.deadline}T23:59:59Z`).toISOString(),
+        estimatedHours,
+      })
+
+      setPersonalTasks((current) => [createdTask, ...current])
+      setPersonalTaskForm(emptyPersonalTaskForm)
+      setIsPersonalTaskModalOpen(false)
+      setPersonalTaskMessage('Personal task created successfully.')
+    } catch (error) {
+      setPersonalTaskMessage(
+        error instanceof Error
+          ? error.message
+          : 'Could not create personal task.',
+      )
+    } finally {
+      setIsPersonalTaskSaving(false)
+    }
+  }
+
+  async function handlePersonalTaskStatus(taskId: number, status: number) {
+    const previousTasks = personalTasks
+    const statusName = status === 2 ? 'InProgress' : status === 3 ? 'Done' : 'ToDo'
+
+    setPersonalTasks((current) =>
+      current.map((task) =>
+        task.id === taskId ? { ...task, status: statusName } : task,
+      ),
+    )
+    setSelectedPersonalTask((current) =>
+      current?.id === taskId ? { ...current, status: statusName } : current,
+    )
+    setPersonalTaskMessage(null)
+
+    try {
+      await changePersonalTaskStatusApi(taskId, status)
+      setPersonalTaskMessage('Personal task status updated.')
+    } catch (error) {
+      setPersonalTasks(previousTasks)
+      setSelectedPersonalTask(
+        previousTasks.find((task) => task.id === taskId) ?? null,
+      )
+      setPersonalTaskMessage(
+        error instanceof Error
+          ? error.message
+          : 'Could not update personal task.',
+      )
+    }
+  }
+
+  async function openPersonalTask(task: PersonalTaskDto) {
+    setPersonalTaskMessage(null)
+    try {
+      const [details, sessions] = await Promise.all([
+        getPersonalTaskDetailsApi(task.id),
+        getWorkSessionsByTaskIdApi(task.id),
+      ])
+      setSelectedPersonalTask(details)
+      setPersonalTaskSessions(sessions)
+      setPersonalSessionHours('')
+      setPersonalSessionDescription('')
+      setPersonalTasks((current) =>
+        current.map((item) => (item.id === details.id ? details : item)),
+      )
+    } catch (error) {
+      setPersonalTaskMessage(
+        error instanceof Error
+          ? error.message
+          : 'Could not load personal task details.',
+      )
+    }
+  }
+
+  async function handleAddPersonalWorkSession(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+    if (!selectedPersonalTask) return
+
+    const hours = Number(personalSessionHours)
+    if (
+      !Number.isInteger(hours) ||
+      hours < 1 ||
+      hours > 24 ||
+      !personalSessionDescription.trim()
+    ) {
+      setPersonalTaskMessage(
+        'Enter whole hours between 1 and 24 and describe the work completed.',
+      )
+      return
+    }
+
+    setIsPersonalTaskSaving(true)
+    setPersonalTaskMessage(null)
+    try {
+      await createWorkSessionApi({
+        taskId: selectedPersonalTask.id,
+        hours,
+        description: personalSessionDescription.trim(),
+      })
+
+      const [details, sessions] = await Promise.all([
+        getPersonalTaskDetailsApi(selectedPersonalTask.id),
+        getWorkSessionsByTaskIdApi(selectedPersonalTask.id),
+      ])
+
+      setSelectedPersonalTask(details)
+      setPersonalTaskSessions(sessions)
+      setPersonalTasks((current) =>
+        current.map((task) => (task.id === details.id ? details : task)),
+      )
+      setPersonalSessionHours('')
+      setPersonalSessionDescription('')
+      setPersonalTaskMessage('Work session added.')
+    } catch (error) {
+      setPersonalTaskMessage(
+        error instanceof Error ? error.message : 'Could not add work session.',
+      )
+    } finally {
+      setIsPersonalTaskSaving(false)
+    }
+  }
+
+  async function handleDeletePersonalTask() {
+    if (!personalTaskDeleteCandidate) return
+
+    setIsPersonalTaskSaving(true)
+    setPersonalTaskMessage(null)
+    try {
+      await deletePersonalTaskApi(personalTaskDeleteCandidate.id)
+      setPersonalTasks((current) =>
+        current.filter((task) => task.id !== personalTaskDeleteCandidate.id),
+      )
+      setSelectedPersonalTask((current) =>
+        current?.id === personalTaskDeleteCandidate.id ? null : current,
+      )
+      setPersonalTaskDeleteCandidate(null)
+      setPersonalTaskMessage('Personal task deleted.')
+    } catch (error) {
+      setPersonalTaskMessage(
+        error instanceof Error
+          ? error.message
+          : 'Could not delete personal task.',
+      )
+    } finally {
+      setIsPersonalTaskSaving(false)
+    }
+  }
+
   useEffect(() => {
     let cancelled = false
 
@@ -1253,14 +1690,12 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         ])
         if (cancelled) return
 
-        console.log('[EmployeePage] raw dashboard API response:', data)
         const coerced = {
           ...data,
-          totalHoursLogged: Number((data as any).totalHoursLogged ?? 0),
-          avgTimePerTask: Number((data as any).avgTimePerTask ?? 0),
+          totalHoursLogged: Number(data.totalHoursLogged ?? 0),
+          avgTimePerTask: Number(data.avgTimePerTask ?? 0),
         }
         setDashboard(coerced)
-        console.log('[EmployeePage] setDashboard called with (coerced):', coerced)
 
         if (taskPreviews.length) {
           setMyTasks(taskPreviews.map(mapPreviewTaskToMyTask))
@@ -1285,9 +1720,13 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
     }
 
     void loadEmployeeDashboard()
+    const personalTasksTimeoutId = window.setTimeout(() => {
+      void loadPersonalTasks()
+    }, 0)
 
     return () => {
       cancelled = true
+      window.clearTimeout(personalTasksTimeoutId)
     }
   }, [])
 
@@ -1654,6 +2093,24 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
               taskMessage={taskMessage}
               onSelectTask={openTask}
             />
+          ) : activeView === 'personalTasks' ? (
+            <PersonalTasksView
+              tasks={personalTasks}
+              isLoading={isPersonalTasksLoading}
+              taskMessage={personalTaskMessage}
+              onCreate={() => {
+                setPersonalTaskForm(emptyPersonalTaskForm)
+                setPersonalTaskMessage(null)
+                setIsPersonalTaskModalOpen(true)
+              }}
+              onSelectTask={(task) => {
+                void openPersonalTask(task)
+              }}
+              onStatusChange={(taskId, status) => {
+                void handlePersonalTaskStatus(taskId, status)
+              }}
+              onDelete={setPersonalTaskDeleteCandidate}
+            />
           ) : activeView === 'calendar' ? (
             <CalendarView tasks={myTasks} />
           ) : null}
@@ -1703,6 +2160,359 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
         />
       ) : null}
 
+      {isPersonalTaskModalOpen ? (
+        <div className={managerStyles.modalBackdrop} role="presentation">
+          <form
+            className={`${managerStyles.modal} w-[min(100%,620px)]`}
+            aria-label="Create Personal Task"
+            onSubmit={handleCreatePersonalTask}
+          >
+            <h2>Create Personal Task</h2>
+
+            {personalTaskMessage ? (
+              <p className={managerStyles.modalAlert('error')} role="alert">
+                {personalTaskMessage}
+              </p>
+            ) : null}
+
+            <label>
+              <span>Title</span>
+              <input
+                value={personalTaskForm.title}
+                onChange={(event) =>
+                  setPersonalTaskForm((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label>
+              <span>Description</span>
+              <textarea
+                value={personalTaskForm.description}
+                onChange={(event) =>
+                  setPersonalTaskForm((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <div className={managerStyles.modalGrid}>
+              <label>
+                <span>Priority</span>
+                <select
+                  value={personalTaskForm.priority}
+                  onChange={(event) =>
+                    setPersonalTaskForm((current) => ({
+                      ...current,
+                      priority: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="1">Low</option>
+                  <option value="2">Medium</option>
+                  <option value="3">High</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Deadline</span>
+                <input
+                  type="date"
+                  min={new Date().toISOString().slice(0, 10)}
+                  value={personalTaskForm.deadline}
+                  onChange={(event) =>
+                    setPersonalTaskForm((current) => ({
+                      ...current,
+                      deadline: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Estimated Hours</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={personalTaskForm.estimatedHours}
+                  onChange={(event) =>
+                    setPersonalTaskForm((current) => ({
+                      ...current,
+                      estimatedHours: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <div className={managerStyles.modalActions}>
+              <button
+                className={managerStyles.modalCancel}
+                type="button"
+                disabled={isPersonalTaskSaving}
+                onClick={() => {
+                  setIsPersonalTaskModalOpen(false)
+                  setPersonalTaskMessage(null)
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className={managerStyles.modalSave}
+                type="submit"
+                disabled={isPersonalTaskSaving}
+              >
+                {isPersonalTaskSaving ? 'Creating...' : 'Create Task'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {selectedPersonalTask ? (
+        <div className={managerStyles.modalBackdrop} role="presentation">
+          <section
+            className={`${managerStyles.modal} max-h-[90svh] w-[min(100%,620px)] overflow-y-auto`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="personal-task-title"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="!mb-3" id="personal-task-title">
+                  {selectedPersonalTask.title}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  <TaskBadge tone={statusTone(selectedPersonalTask.status)}>
+                    {statusLabel(selectedPersonalTask.status)}
+                  </TaskBadge>
+                  <TaskBadge
+                    tone={
+                      priorityTone(selectedPersonalTask.priority) === 'high'
+                        ? 'high'
+                        : 'urgent'
+                    }
+                  >
+                    {selectedPersonalTask.priority.toUpperCase()}
+                  </TaskBadge>
+                </div>
+              </div>
+              <button
+                className={managerStyles.taskDetailClose}
+                type="button"
+                aria-label="Close personal task details"
+                onClick={() => setSelectedPersonalTask(null)}
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+
+            <p className="mb-6 text-[15px] leading-[1.6] text-[#374151]">
+              {selectedPersonalTask.description || 'No description'}
+            </p>
+
+            <div className={managerStyles.calendarTaskInfo}>
+              <span>Status</span>
+              <strong>{statusLabel(selectedPersonalTask.status)}</strong>
+              <span>Created</span>
+              <strong>{formatDate(selectedPersonalTask.createdAt)}</strong>
+              <span>Deadline</span>
+              <strong>{formatDate(selectedPersonalTask.deadline)}</strong>
+              <span>Time</span>
+              <strong>
+                {selectedPersonalTask.workHours}h /{' '}
+                {selectedPersonalTask.estimatedHours}h
+              </strong>
+            </div>
+
+            <section className="mb-6 rounded-xl border border-[#e5e7eb] bg-[#f8fafc] p-4">
+              <div className="mb-2 flex items-center justify-between gap-4">
+                <h3 className="text-[15px] font-extrabold text-[#111827]">
+                  Progress
+                </h3>
+                <strong className="text-[14px] text-[#315af2]">
+                  {selectedPersonalTask.workHours}h /{' '}
+                  {selectedPersonalTask.estimatedHours}h
+                </strong>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#e2e8f0]">
+                <div
+                  className="h-full rounded-full bg-[#315af2] transition-all"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      selectedPersonalTask.estimatedHours > 0
+                        ? (selectedPersonalTask.workHours /
+                            selectedPersonalTask.estimatedHours) *
+                            100
+                        : 0,
+                    )}%`,
+                  }}
+                />
+              </div>
+            </section>
+
+            <form
+              className="mb-6 grid gap-3 rounded-xl border border-[#e5e7eb] p-4"
+              onSubmit={handleAddPersonalWorkSession}
+            >
+              <h3 className="text-[15px] font-extrabold text-[#111827]">
+                Track Work
+              </h3>
+              <div className="grid grid-cols-[120px_1fr] gap-3 max-[600px]:grid-cols-1">
+                <label className="!mb-0">
+                  <span>Hours</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="24"
+                    step="1"
+                    value={personalSessionHours}
+                    onChange={(event) =>
+                      setPersonalSessionHours(event.target.value)
+                    }
+                  />
+                </label>
+                <label className="!mb-0">
+                  <span>What did you do?</span>
+                  <input
+                    value={personalSessionDescription}
+                    onChange={(event) =>
+                      setPersonalSessionDescription(event.target.value)
+                    }
+                    placeholder="Describe completed work"
+                  />
+                </label>
+              </div>
+              <button
+                className="min-h-10 justify-self-end rounded-lg border-0 bg-[#315af2] px-4 text-[14px] font-extrabold text-white disabled:opacity-60"
+                type="submit"
+                disabled={isPersonalTaskSaving}
+              >
+                {isPersonalTaskSaving ? 'Adding...' : 'Add Work Session'}
+              </button>
+            </form>
+
+            <section className="mb-6">
+              <h3 className="mb-3 text-[15px] font-extrabold text-[#111827]">
+                Work History
+              </h3>
+              {personalTaskSessions.length ? (
+                <div className="grid max-h-48 gap-2 overflow-y-auto">
+                  {personalTaskSessions
+                    .slice()
+                    .sort(
+                      (sessionA, sessionB) =>
+                        new Date(sessionB.date).getTime() -
+                        new Date(sessionA.date).getTime(),
+                    )
+                    .map((session) => (
+                      <article
+                        className="rounded-lg border border-[#e5e7eb] bg-white p-3"
+                        key={session.id}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <strong className="text-[14px] text-[#111827]">
+                            {session.hours}h
+                          </strong>
+                          <time className="text-[12px] font-semibold text-[#667085]">
+                            {new Date(session.date).toLocaleString()}
+                          </time>
+                        </div>
+                        <p className="mt-1 text-[13px] text-[#475467]">
+                          {session.description}
+                        </p>
+                      </article>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-[14px] text-[#667085]">
+                  No work sessions yet.
+                </p>
+              )}
+            </section>
+
+            <label>
+              <span>Status</span>
+              <select
+                value={personalStatusValue(selectedPersonalTask.status)}
+                onChange={(event) =>
+                  void handlePersonalTaskStatus(
+                    selectedPersonalTask.id,
+                    Number(event.target.value),
+                  )
+                }
+              >
+                <option value={1}>To Do</option>
+                <option value={2}>In Progress</option>
+                <option value={3}>Done</option>
+              </select>
+            </label>
+
+            <div className={managerStyles.modalActions}>
+              <button
+                className={managerStyles.modalDanger}
+                type="button"
+                onClick={() => {
+                  setPersonalTaskDeleteCandidate(selectedPersonalTask)
+                  setSelectedPersonalTask(null)
+                }}
+              >
+                Delete
+              </button>
+              <button
+                className={managerStyles.modalSave}
+                type="button"
+                onClick={() => setSelectedPersonalTask(null)}
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {personalTaskDeleteCandidate ? (
+        <div className={managerStyles.modalBackdrop} role="presentation">
+          <section
+            className={`${managerStyles.modal} w-[min(100%,480px)]`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-personal-task-title"
+          >
+            <h2 id="delete-personal-task-title">Delete Personal Task</h2>
+            <p className="mb-6">
+              Delete “{personalTaskDeleteCandidate.title}”? This cannot be
+              undone.
+            </p>
+            <div className={managerStyles.modalActions}>
+              <button
+                className={managerStyles.modalCancel}
+                type="button"
+                disabled={isPersonalTaskSaving}
+                onClick={() => setPersonalTaskDeleteCandidate(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={managerStyles.modalDanger}
+                type="button"
+                disabled={isPersonalTaskSaving}
+                onClick={() => void handleDeletePersonalTask()}
+              >
+                {isPersonalTaskSaving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
       <ChangePasswordModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -1718,3 +2528,4 @@ function EmployeePage({ onLogout }: { onLogout: () => void }) {
 }
 
 export default EmployeePage
+
