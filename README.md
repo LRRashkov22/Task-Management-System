@@ -105,24 +105,7 @@ cd Task-Management-System
 
 ### 2. Configure the backend
 
-The API project reads configuration from the app settings and environment variables. Ensure your database connection string and authentication settings are properly configured.
-
-Example configuration values:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Username=postgres;Password=your_password;Database=tms"
-  },
-  "JwtSettings": {
-    "Key": "your-super-secret-key",
-    "Issuer": "TaskManagementSystem",
-    "Audience": "TaskManagementSystemUsers"
-  }
-}
-```
-
-If the project is using a `.env` file, make sure it is available in the application directory tree so the API can load it at startup.
+The API project reads configuration from the .env 
 
 ### 3. Run the backend
 
